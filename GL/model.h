@@ -9,7 +9,7 @@ namespace GL {
 	public:
 		Model();
 		~Model();
-		bool CreateModel(const std::string& vertexShader, const std::string& colorShader,float vertices[], int vsize, unsigned int indices[] = nullptr, int isize = 0);
+		bool CreateModel(const std::string& vertexShader, const std::string& colorShader, bool copy, float vertices[], int vsize, unsigned int indices[] = nullptr, int isize = 0);
 		Model* CopyModel(bool& success);
 		glm::mat4 UpdatePoisition(const Data& data);
 		void Render();

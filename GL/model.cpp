@@ -35,16 +35,27 @@ namespace GL {
 	/// <param name="indices"></param>
 	/// <param name="isize"></param>
 	/// <returns></returns>
-	bool Model::CreateModel(const std::string& vertexShader, const std::string& colorShader,float vertices[], int vsize, unsigned int indices[], int isize) {
-		eboMode = indices != nullptr;
+	bool Model::CreateModel(const std::string& vertexShader, const std::string& colorShader,bool copy, float vertices[], int vsize, unsigned int indices[], int isize) {
+	/*	eboMode = (indices != nullptr);*/
+		eboMode = true;
 		verticesSize = vsize;
-		this->vertices = new float[verticesSize];
-		std::memcpy(this->vertices, vertices, sizeof(float) * verticesSize);  //拷贝数据的内存到指针
-		if (eboMode) {
-			indicesSize = isize;
-			this->indices = new unsigned int[indicesSize];
-			std::memcpy(this->indices, indices, sizeof(unsigned int) * indicesSize);
+		if (copy) { //如果在栈区创建，需要拷贝内存
+			this->vertices = new float[verticesSize];
+			std::memcpy(this->vertices, vertices, sizeof(float) * verticesSize);  //拷贝数据的内存到指针
+			if (eboMode) {
+				indicesSize = isize;
+				this->indices = new unsigned int[indicesSize];
+				std::memcpy(this->indices, indices, sizeof(unsigned int) * indicesSize);
+			}
 		}
+		else { //如果已经创建了堆区内存，直接赋值即可
+			this->vertices = vertices;
+			if (eboMode) {
+				indicesSize = isize;
+				this->indices = indices;
+			}
+		}
+		
 		glGenVertexArrays(1, &VAO);
 		glBindVertexArray(VAO);// 绑定VAO
 		glGenBuffers(1, &VBO);//new一个顶点缓冲对象，存在VBO中
@@ -92,6 +103,7 @@ namespace GL {
 		cmodel->indices = indices;
 		cmodel->verticesSize = verticesSize;
 		cmodel->indicesSize = indicesSize;
+		cmodel->pshader = pshader;
 		cmodel->position = position;
 		success = true;
 		return cmodel;
@@ -128,6 +140,7 @@ namespace GL {
 	/// </summary>
 	void Model::Render() {
 		glBindVertexArray(VAO);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		//参数三是需要绘制的顶点个数，单个三角形就是3个顶点，注意矩形是6个顶点而不是4个，就这么规定的，它的大小就是indices的长度
 		eboMode ? glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0) : glDrawArrays(GL_TRIANGLES, 0, verticesSize);
 	}

@@ -7,6 +7,7 @@ namespace GL {
 	class GlManager {
 	public:
 		void Render(const Data& data);
+		void CreateRandomData(unsigned int width, unsigned int height,float xoffset, float yoffset, float** vertices, unsigned int** indices,int * vsize,int*isize);
 		GlManager();
 		~GlManager() {};
 		void ClearModels();

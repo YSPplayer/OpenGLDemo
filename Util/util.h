@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 #include <iostream>
+#include <random>
 namespace GL {
 	namespace Tool {
 		class Util {
@@ -31,6 +32,12 @@ namespace GL {
 				return angle;
 			}
 
+            static float GetRandomFloat(float min, float max) {
+                std::random_device rd;
+                std::mt19937 gen(rd());
+                std::uniform_real_distribution<float> dis(min, max);
+                return dis(gen);
+            }
 		};
 	}
 }

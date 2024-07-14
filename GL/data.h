@@ -5,6 +5,16 @@ namespace GL {
 #define MOVE_LEFT 2
 #define MOVE_RIGHT 3
 #define MOVE_NONE 4
+	struct Point {
+		float x;
+		float y;
+		float z;
+	};
+	struct Indice {
+		unsigned int index1;
+		unsigned int index2;
+		unsigned int index3;
+	};
 	struct Data {
 		//ÆÁÄ»³¤¿í
 		int width;
