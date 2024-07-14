@@ -21,7 +21,8 @@ namespace Window {
 		data.rotateX = false;
 		data.lastRotationZ = 0.0f;
 		data.lastRotationX = 0.0f;
-		data.aspect = 1.0f;
+		data.aspect = 0.3f;
+		data.drawLine = false;
 	}
 
 	/// <summary>
@@ -31,7 +32,7 @@ namespace Window {
 	/// <param name="height"></param>
 	/// <param name="name"></param>
 	/// <returns></returns>
-	bool CWindow::CreateWindow(int width, int height, const std::string& name) {
+	bool CWindow::CreateWindow(int width, int height, Param* args,const std::string& name) {
 		OpenGLInit();
 		window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
 		if(window == nullptr) {
@@ -44,7 +45,7 @@ namespace Window {
 			return false;//加载opengl的函数指针
 		} 
 		//初始化管理器
-		if(!glmanager->Init()) return false;
+		if(!glmanager->Init(args)) return false;
 		glViewport(0, 0, width, height); //设置opengl的窗口大小，这里设置为和主窗口大小一样
 		BindCallback();
 		return true;
@@ -101,6 +102,10 @@ namespace Window {
 			data.moveType = MOVE_LEFT;
 		else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 			data.moveType = MOVE_RIGHT;
+		else if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) //重置模型位置
+			data.reset = true;
+		else if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+			data.drawLine = !data.drawLine;
 		else 
 			data.moveType = MOVE_NONE;
 	}
@@ -223,6 +228,7 @@ namespace Window {
 		data.rotateZ = false;
 		data.rotateX = false;
 		data.isYaw = false;
+		data.reset = false;
 	}
 
 	void CWindow::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {

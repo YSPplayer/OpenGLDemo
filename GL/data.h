@@ -5,6 +5,13 @@ namespace GL {
 #define MOVE_LEFT 2
 #define MOVE_RIGHT 3
 #define MOVE_NONE 4
+	struct Param {
+		int w;
+		int h;
+		float x;
+		float y;
+		int random;
+	};
 	struct Point {
 		float x;
 		float y;
@@ -32,5 +39,7 @@ namespace GL {
 		float pitch;
 		float yaw;
 		bool isYaw;
+		bool reset;//重置模型+相机位置
+		bool drawLine;//是否开启线条绘制模式
 	};
 }

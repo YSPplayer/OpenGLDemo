@@ -7,6 +7,8 @@ namespace GL {
 		cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		projection = glm::mat4(1.0f);
+		centerPosition = glm::vec3(0.0f, 0.0f, 0.0f);
+		aspect = 0.3;
 	}
 	Camera::~Camera(){}
 
@@ -41,5 +43,18 @@ namespace GL {
 	glm::mat4 Camera::UpdateProjection(const Data& data) {
 		projection = glm::perspective(data.aspect, static_cast<float>(data.width) / static_cast<float>(data.height), 0.1f, 100.0f);
 		return projection;
+	}
+
+	/// <summary>
+	/// 重置相机位置
+	/// </summary>
+	/// <param name="pos"></param>
+	glm::mat4  Camera::ReSetPoisition() {
+		// 相机位置到模型中心的向量
+		glm::vec3 direction = centerPosition - cameraPos;
+		cameraFront = glm::normalize(direction);
+		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		return view;
 	}
 }

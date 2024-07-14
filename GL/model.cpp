@@ -15,6 +15,7 @@ namespace GL {
 		VAO = NULL;
 		EBO = NULL;
 		position = glm::mat4(1.0f);
+		centerPosition = glm::vec3(0.0f,0.0f,0.0f);//默认模型的中心位置为0,0
 	}
 
 	Model::~Model() {
@@ -105,6 +106,7 @@ namespace GL {
 		cmodel->indicesSize = indicesSize;
 		cmodel->pshader = pshader;
 		cmodel->position = position;
+		cmodel->centerPosition = centerPosition;
 		success = true;
 		return cmodel;
 	}
@@ -117,7 +119,9 @@ namespace GL {
 	/// <returns></returns>
 	glm::mat4 Model::UpdatePoisition(const Data& data) {
 		if ((!data.rotateX && !data.rotateZ)) return position;//(!rotateX && !rotateZ) || 
-		position = glm::mat4(1.0f);
+		// 先将模型平移到指定中心，以使得模型始终围绕自身的中心旋转
+		glm::mat4 translationToCenter = glm::translate(glm::mat4(1.0f), centerPosition);
+		position = translationToCenter;
 		if (data.rotateX) {
 			float x = data.enable ? data.rotationX + data.lastRotationX : data.lastRotationZ;
 			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(x, 360.0f)), glm::vec3(1.0f, 0.0f, 0.0f)); //先进行X轴的旋转
@@ -132,16 +136,27 @@ namespace GL {
 		else {
 			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(data.lastRotationZ, 360.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
 		}
+		// 再将模型平移回原来的位置
+		glm::mat4 translationBack = glm::translate(glm::mat4(1.0f), glm::vec3(-centerPosition.x, -centerPosition.y, 0.0f));
+		position = position * translationBack;
 		return position;
 	}
 
 	/// <summary>
 	/// 渲染绘制
 	/// </summary>
-	void Model::Render() {
+	void Model::Render(const Data& data) {
 		glBindVertexArray(VAO);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		data.drawLine ? glPolygonMode(GL_FRONT_AND_BACK, GL_LINE) : glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		//参数三是需要绘制的顶点个数，单个三角形就是3个顶点，注意矩形是6个顶点而不是4个，就这么规定的，它的大小就是indices的长度
 		eboMode ? glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0) : glDrawArrays(GL_TRIANGLES, 0, verticesSize);
+	}
+
+	/// <summary>
+	/// 重置模型到初始坐标
+	/// </summary>
+	glm::mat4 Model::ReSetPoisition() {
+		position = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
+		return position;
 	}
 }

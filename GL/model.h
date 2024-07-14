@@ -11,11 +11,15 @@ namespace GL {
 		~Model();
 		bool CreateModel(const std::string& vertexShader, const std::string& colorShader, bool copy, float vertices[], int vsize, unsigned int indices[] = nullptr, int isize = 0);
 		Model* CopyModel(bool& success);
+		inline void SetModelCenterPoisition(const glm::vec3& centerPosition) {
+			this->centerPosition = centerPosition;
+		};
 		glm::mat4 UpdatePoisition(const Data& data);
-		void Render();
+		void Render(const Data& data);
 		inline Shader* GetShader() {
 			return pshader;
 		}
+		glm::mat4 ReSetPoisition();
 	private:
 		bool copy;//检测当前模型是否是拷贝出来的
 		float* vertices;//存放绘制图像的顶点数据
@@ -28,5 +32,6 @@ namespace GL {
 		GLuint EBO;//【顶点索引对象，绘制矩形时使用，提升绘制效率】
 		glm::mat4 position;//默认的模型矩阵，用于控制模型的位置和方向
 		Shader* pshader;//着色器管理对象
+		glm::vec3 centerPosition;//模型的中心位置
 	};
 }
