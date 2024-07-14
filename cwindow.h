@@ -1,6 +1,6 @@
 #pragma once
-#include "glManager.h"
-#include <glad/glad.h> 
+#include "GL/glManager.h"
+#include "GL/data.h"
 #include <GLFW/glfw3.h> //glfw3要后于glad包含，glad要优先加载Opengl的函数
 #include <string>
 /// <summary>
@@ -37,7 +37,6 @@ namespace Window {
 			static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 			void BindCallback();
 			void OpenGLInit();
-			void SetRenderData();
 			static void UpdateScroll(GLFWwindow* window, double xoffset, double yoffset);
 			GLFWwindow* window;//主窗口
 			GlManager* glmanager;//GL管理对象

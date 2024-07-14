@@ -43,10 +43,8 @@ namespace Window {
 			glfwTerminate(); 
 			return false;//加载opengl的函数指针
 		} 
-		//设置绘制的值
-		SetRenderData();
-		//绑定VAO/VBO
-		if(!glmanager->InitGL()) return false;
+		//初始化管理器
+		if(!glmanager->Init()) return false;
 		glViewport(0, 0, width, height); //设置opengl的窗口大小，这里设置为和主窗口大小一样
 		BindCallback();
 		return true;
@@ -63,6 +61,7 @@ namespace Window {
 			Render();
 			glfwSwapBuffers(window);//双缓冲机制来渲染图形，前缓冲用于显示图像，后缓冲用于图像绘制，防止图像闪烁显示
 		}
+		glmanager->ClearModels();
 		glfwTerminate();
 		return true;
 	}
@@ -201,37 +200,7 @@ namespace Window {
 		//指定使用Opengl的核心配置文件，不使用旧的功能
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	}
-	/// <summary>
-	/// 设置我们要绘制的值
-	/// </summary>
-	void CWindow::SetRenderData() {
-	/*	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.0f,  0.5f, 0.0f
-		};
-		glmanager->SetVerticeData(vertices,sizeof(vertices));*/
-		float vertices[] = {
-			0.5f, 0.5f, 0.0f,   // 右上角
-			0.5f, -0.5f, 0.0f,  // 右下角
-			-0.5f, -0.5f, 0.0f, // 左下角
-			-0.5f, 0.5f, 0.0f,   // 左上角
-			1.0f,0.5f,0.0f,
-			1.0f,-0.5f,1.0f
-		};
-		unsigned int indices[] = {
-			// 注意索引从0开始! 
-			// 此例的索引(0,1,2,3)就是顶点数组vertices的下标，
-			// 这样可以由下标代表顶点组合成矩形
-
-			0, 1, 3, // 第一个三角形
-			1, 2, 3,  // 第二个三角形
-			0,4,5,
-			0,1,5
-		};
-		glmanager->SetVerticeData(vertices,sizeof(vertices) /sizeof(vertices[0]) );
-		glmanager->SetIndicesData(indices,sizeof(indices) /sizeof(indices[0]) );
-	}
+	
 	void CWindow::UpdateScroll(GLFWwindow* window, double xoffset, double yoffset) {
 		if (data.aspect >= 0.0f && data.aspect <= 3.0f)
 			data.aspect = data.aspect - (yoffset / 10.0f);
@@ -250,7 +219,7 @@ namespace Window {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glfwGetWindowSize(window, &data.width, &data.height);//获取到当前窗口的宽高
-		glmanager->Draw(data);
+		glmanager->Render(data);
 		data.rotateZ = false;
 		data.rotateX = false;
 		data.isYaw = false;

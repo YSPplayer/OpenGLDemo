@@ -24,13 +24,19 @@
     <ClCompile Include="..\Include\glad\glad.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="glManager.cpp">
+    <ClCompile Include="GL\glManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
+    <ClCompile Include="GL\camera.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="lightControl.cpp">
+    <ClCompile Include="GL\lightControl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="GL\shader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="GL\model.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,16 +44,28 @@
     <ClInclude Include="cwindow.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="glManager.h">
+    <ClInclude Include="GL\glManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="shader.h">
+    <ClInclude Include="GL\shaderTag.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h">
+    <ClInclude Include="GL\camera.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="lightControl.h">
+    <ClInclude Include="GL\lightControl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="GL\data.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="GL\shader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="GL\model.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Util\util.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -146,18 +146,24 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Include\glad\glad.c" />
-    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="GL\camera.cpp" />
     <ClCompile Include="cwindow.cpp" />
-    <ClCompile Include="glManager.cpp" />
-    <ClCompile Include="lightControl.cpp" />
+    <ClCompile Include="GL\glManager.cpp" />
+    <ClCompile Include="GL\lightControl.cpp" />
+    <ClCompile Include="GL\model.cpp" />
+    <ClCompile Include="GL\shader.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h" />
+    <ClInclude Include="GL\camera.h" />
     <ClInclude Include="cwindow.h" />
-    <ClInclude Include="glManager.h" />
-    <ClInclude Include="lightControl.h" />
-    <ClInclude Include="shader.h" />
+    <ClInclude Include="GL\data.h" />
+    <ClInclude Include="GL\glManager.h" />
+    <ClInclude Include="GL\model.h" />
+    <ClInclude Include="GL\shader.h" />
+    <ClInclude Include="GL\lightControl.h" />
+    <ClInclude Include="GL\shaderTag.h" />
+    <ClInclude Include="Util\util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
