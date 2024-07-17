@@ -56,6 +56,8 @@ namespace Window {
 	/// </summary>
 	/// <returns></returns>
 	bool CWindow::Exe() {
+		// 启用 V-Sync
+		glfwSwapInterval(1);
 		while(!glfwWindowShouldClose(window)) {
 			ProcessInput();//监听按键事件
 			glfwPollEvents(); //接收事件，用于事件的触发

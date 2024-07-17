@@ -43,23 +43,23 @@ namespace GL {
 			CreateRandomData(args->w, args->h, args->x, args->y, args->random == 1, &pvertices, &pindices, &vsize, &isize, &centerX, &centerY);
 		}
 		else {
-			CreateRandomData(20, 6, 1, 1, true, &pvertices, &pindices, &vsize, &isize, &centerX, &centerY);
+			CreateRandomData(2, 2, 1, 1, false, &pvertices, &pindices, &vsize, &isize, &centerX, &centerY);
 		}
-		/*float vertices[] = {
-			0.0f,0.0f,0.0,
-			0.5,0,0,
-			0,0.5,0,
-			0.5,0.5,0
-		};
+		//float vertices[] = {
+		//	0.0f,0.0f,0.0,
+		//	0.5,0,0,
+		//	0,0.5,0,
+		//	0.5,0.5,0
+		//};
 
-		vsize = sizeof(vertices) / sizeof(vertices[0]);
+		//vsize = sizeof(vertices) / sizeof(vertices[0]);
 
-		unsigned int indices[] = {
-			0,1,3,
-			0,2,3
-		};
+		//unsigned int indices[] = {
+		//	0,1,3,
+		//	0,2,3
+		//};
 
-		isize = sizeof(indices) / sizeof(indices[0]);*/
+		//isize = sizeof(indices) / sizeof(indices[0]);
 		Model* model = new Model;
 		bool success = model->CreateModel(vertexShader,colorShader, true, pvertices, vsize, pindices,isize);
 		model->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
@@ -128,11 +128,6 @@ namespace GL {
 			(*vertices)[i * 3 + 0] = point.x;
 			(*vertices)[i * 3 + 1] = point.y;
 			(*vertices)[i * 3 + 2] = point.z;
-	/*		std::cout << "=== point_start ===" << std::endl;
-			std::cout << "=== point_x ===" << point.x << std::endl;
-			std::cout << "=== point_y ===" << point.y << std::endl;
-			std::cout << "=== point_z ===" << point.z << std::endl;
-			std::cout << "=== point_end ===" << std::endl;*/
 		}
 		*isize = vindices.size() * 3;
 		*indices = new unsigned int[vindices.size() * 3];
@@ -141,11 +136,6 @@ namespace GL {
 			(*indices)[i * 3 + 0] = indice.index1;
 			(*indices)[i * 3 + 1] = indice.index2;
 			(*indices)[i * 3 + 2] = indice.index3;
-			/*std::cout << "=== indice_start ===" << std::endl;
-			std::cout << "=== indice_0 ===" << indice.index1 << std::endl;
-			std::cout << "=== indice_1 ===" << indice.index2 << std::endl;
-			std::cout << "=== indice_2 ===" << indice.index3 << std::endl;
-			std::cout << "=== indice_end ===" << std::endl;*/
 		}
 	}
 

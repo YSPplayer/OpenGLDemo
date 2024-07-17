@@ -62,12 +62,13 @@ namespace GL {
 		glGenBuffers(1, &VBO);//new一个顶点缓冲对象，存在VBO中
 		glBindBuffer(GL_ARRAY_BUFFER, VBO); //设置当前VBO上下文
 		/*
+		* 如果顶点数据过多，则迁移到循环中分块处理
 		  3个参数用于提升显卡渲染效率：
 		  GL_STATIC_DRAW 数据不变
 		  GL_DYNAMIC_DRAW 数据会改变很多
 		  GL_STREAM_DRAW 数据每次绘制都会改变
 		*/
-		glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(vertices), vertices, GL_STATIC_DRAW);
+		//glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(vertices), vertices, GL_STATIC_DRAW);
 		/*
 			-1.设置顶点属性指针
 			0.顶点数据首个元素的索引
@@ -81,8 +82,8 @@ namespace GL {
 		glEnableVertexAttribArray(0);//启动顶点属性，默认索引为0的地方开始启用
 		if (eboMode) {
 			glGenBuffers(1, &EBO);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize * sizeof(indices), indices, GL_STATIC_DRAW);
+			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+			/*glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize * sizeof(indices), indices, GL_STATIC_DRAW);*/
 		}
 		position = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
 		pshader = new Shader;
@@ -148,8 +149,43 @@ namespace GL {
 	void Model::Render(const Data& data) {
 		glBindVertexArray(VAO);
 		data.drawLine ? glPolygonMode(GL_FRONT_AND_BACK, GL_LINE) : glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		int indicesCount = indicesSize / 3;
+		// 对每一块顶点数据，逐块上传索引数据并绘制
+		for (int i = 0; i < indicesCount; i += PLANE_BLOCK_SIZE) {
+			int currentBlockSize = std::min(PLANE_BLOCK_SIZE, indicesCount - i);
+		
+			int indicesIndex = i;
+			/*
+			0 ,1 ,2
+			1,2,0,
+			0,1,0,
+			1,1,0
+			*/
+			// 创建一个临时数组存储需要的顶点数据，一个索引数组[0,1,2]代表*3倍数的顶点数据
+			float* tempVertices = new float[currentBlockSize * 3 * 3];
+			int* tempIndices = new int[currentBlockSize * 3];
+			int tempIndex = 0;
+			for (int j = 0; j < currentBlockSize * 3; ++j) {//我们一次只读取了索引数组一个位置的值，一个位置的值对应的顶点数据是3个
+				int index = indices[indicesIndex++];
+				tempVertices[tempIndex++] = vertices[index * 3 + 0];
+				tempVertices[tempIndex++] = vertices[index * 3 + 1];
+				tempVertices[tempIndex++] = vertices[index * 3 + 2];
+				tempIndices[j] = j;
+			}
+			//上传临时顶点数据到VBO
+			glBindBuffer(GL_ARRAY_BUFFER, VBO);
+			glBufferData(GL_ARRAY_BUFFER, currentBlockSize * 3 * 3 * sizeof(float), tempVertices, GL_DYNAMIC_DRAW);
+			//再绑定EBO
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+			//*3是因为代表一组索引数组
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, currentBlockSize * 3 * sizeof(unsigned int), tempIndices, GL_DYNAMIC_DRAW);
+			delete[] tempVertices;
+			delete[] tempIndices;
+			// 绘制当前块的顶点
+			glDrawElements(GL_TRIANGLES, currentBlockSize * 3, GL_UNSIGNED_INT, 0);
+		}
 		//参数三是需要绘制的顶点个数，单个三角形就是3个顶点，注意矩形是6个顶点而不是4个，就这么规定的，它的大小就是indices的长度
-		eboMode ? glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0) : glDrawArrays(GL_TRIANGLES, 0, verticesSize);
+		//eboMode ? glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0) : glDrawArrays(GL_TRIANGLES, 0, verticesSize);
 	}
 
 	/// <summary>
