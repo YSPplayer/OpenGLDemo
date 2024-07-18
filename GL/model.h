@@ -6,7 +6,7 @@
 #include "data.h"
 namespace GL {
 #define POINT_BLOCK_SIZE 16 //点云数据处理的分块数量
-#define PLANE_BLOCK_SIZE 5 //面数据处理的分块数量
+#define PLANE_BLOCK_SIZE 50 //面数据单位上传显存处理的分块数量
 	class Model {
 	public:
 		Model();

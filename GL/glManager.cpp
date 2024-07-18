@@ -43,7 +43,10 @@ namespace GL {
 			CreateRandomData(args->w, args->h, args->x, args->y, args->random == 1, &pvertices, &pindices, &vsize, &isize, &centerX, &centerY);
 		}
 		else {
-			CreateRandomData(2, 2, 1, 1, false, &pvertices, &pindices, &vsize, &isize, &centerX, &centerY);
+			/*
+			长宽最大值 5000 * 5000 2GB
+			*/
+			CreateRandomData(1224, 1028, 1.38, 1.38, false, &pvertices, &pindices, &vsize, &isize, &centerX, &centerY);
 		}
 		//float vertices[] = {
 		//	0.0f,0.0f,0.0,
