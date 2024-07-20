@@ -160,6 +160,7 @@
   <ItemGroup>
     <ClInclude Include="GL\camera.h" />
     <ClInclude Include="cwindow.h" />
+    <ClInclude Include="GL\common.h" />
     <ClInclude Include="GL\data.h" />
     <ClInclude Include="GL\glManager.h" />
     <ClInclude Include="GL\model.h" />

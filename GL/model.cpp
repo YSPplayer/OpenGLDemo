@@ -11,9 +11,10 @@ namespace GL {
 		eboMode = false;
 		verticesSize = 0;
 		indicesSize = 0;
-		VBO = NULL;
+		PVBOS = new std::vector<GLuint>(VBO_MAX,NULL);
 		VAO = NULL;
 		EBO = NULL;
+		TEXTURE = NULL;
 		position = glm::mat4(1.0f);
 		centerPosition = glm::vec3(0.0f,0.0f,0.0f);//默认模型的中心位置为0,0
 	}
@@ -21,7 +22,11 @@ namespace GL {
 	Model::~Model() {
 		if (copy) return;//拷贝的模型不做内存的释放，只释放唯一的那一个
 		if(EBO) glDeleteBuffers(1, &EBO);
-		if(VBO) glDeleteBuffers(1, &VBO);
+		if (PVBOS) {
+			for (int i = 0; i < PVBOS->size(); ++i) 
+				glDeleteBuffers(1, &PVBOS->at(i));
+			Util::ReleasePointer(PVBOS);
+		}
 	 	if(VAO) glDeleteVertexArrays(1,&VAO);
 		Util::ReleasePointer(vertices, true);
 		Util::ReleasePointer(indices, true);
@@ -59,8 +64,8 @@ namespace GL {
 		
 		glGenVertexArrays(1, &VAO);
 		glBindVertexArray(VAO);// 绑定VAO
-		glGenBuffers(1, &VBO);//new一个顶点缓冲对象，存在VBO中
-		glBindBuffer(GL_ARRAY_BUFFER, VBO); //设置当前VBO上下文
+		glGenBuffers(1, &PVBOS->at(VBO_VERTEX));//new一个顶点缓冲对象，存在VBO中
+		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_VERTEX)); //设置当前VBO上下文
 		/*
 		* 如果顶点数据过多，则迁移到循环中分块处理
 		  3个参数用于提升显卡渲染效率：
@@ -75,7 +80,7 @@ namespace GL {
 		float* verticesBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesSize * sizeof(float), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 		if (!verticesBuffer) return false;
 		std::memcpy(verticesBuffer, this->vertices, sizeof(float) * verticesSize);//拷贝内存到gpu
-		glUnmapBuffer(GL_ARRAY_BUFFER);//如果不再需要cpu上的gpu指针，就取消映射
+		glUnmapBuffer(GL_ARRAY_BUFFER);//必须取消映射
 		/*
 			-1.设置顶点属性指针
 			0.顶点数据首个元素的索引
@@ -97,21 +102,55 @@ namespace GL {
 			std::memcpy(indicesBuffer, this->indices, sizeof(unsigned int) * indicesSize);//拷贝内存到gpu
 			glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);//如果不再需要cpu上的gpu指针，就取消映射
 		}
-		//分块把数据上传到gpu
-		position = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
+		//分块把数据上传到gpu -55
+		position = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
 		pshader = new Shader;
 		return pshader->CreateShader(vertexShader,colorShader);
 	}
 
+	/// <summary>
+	/// 设置模型的贴图
+	/// </summary>
+	/// <returns></returns>
+	bool Model::SetTexture(unsigned char* texture, int width, int height, int nrChannels, float datas[], int size) {
+		glBindVertexArray(VAO);
+		glGenBuffers(1, &PVBOS->at(VBO_TEXTURE));
+		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_TEXTURE));
+		glBufferData(GL_ARRAY_BUFFER, size * sizeof(float), nullptr, GL_STATIC_DRAW);//绑定空指针
+		float* textureBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, size * sizeof(float), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+		if (!textureBuffer) return false;
+		std::memcpy(textureBuffer, datas, sizeof(float) * size);//拷贝内存到gpu
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		//因为纹理对象的单位长度是2.所以指定2
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		//作用纹理
+		glGenTextures(1, &TEXTURE);
+		glBindTexture(GL_TEXTURE_2D, TEXTURE); 
+		//当纹理坐标的范围超出0-1，超出范围用弥补
+		float borderColor[] = { 255.0f, 255.0f, 255.0f, 1.0f };
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+		/*
+			设置纹理过滤方式，当模型放大或缩小时纹理的变化方式，这里使用远近差值法
+		*/
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//给当前的vbo纹理对象绑定纹理图象
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		return true;
+	}
+
 	Model* Model::CopyModel(bool& success) {
 		Model* cmodel = new Model;
-		if (!VAO && !VBO) {
+		if (!VAO && (!PVBOS || !PVBOS->at(VBO_VERTEX))) {
 			success = false;
 			return cmodel;
 		}
 		cmodel->copy = true;
 		cmodel->VAO = VAO;
-		cmodel->VBO = VBO;
+		cmodel->TEXTURE = TEXTURE;
+		cmodel->PVBOS = PVBOS;
 		cmodel->eboMode = eboMode;
 		cmodel->EBO = EBO;
 		cmodel->vertices = vertices;

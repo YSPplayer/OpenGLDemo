@@ -7,8 +7,9 @@ namespace GL {
 	class GlManager {
 	public:
 		void Render(const Data& data);
-		void CreateRandomData(unsigned int width, unsigned int height,float xoffset, float yoffset, bool random,float** vertices, unsigned int** indices,int * vsize,int*isize,
-			float* centerX, float* centerY);
+		void CreateRandomData(unsigned int width, unsigned int height,float xoffset, float yoffset, bool random,float** vertices, unsigned int** indices,float** textures,int * vsize,int*isize,
+			int* tsize,float* centerX, float* centerY);
+		void CreateModelTexture(const char* path, Model* model,float* ptextures,int tsize);
 		GlManager();
 		~GlManager() {};
 		void ClearModels();
