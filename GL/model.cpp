@@ -102,8 +102,8 @@ namespace GL {
 			std::memcpy(indicesBuffer, this->indices, sizeof(unsigned int) * indicesSize);//拷贝内存到gpu
 			glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);//如果不再需要cpu上的gpu指针，就取消映射
 		}
-		//分块把数据上传到gpu -55
-		position = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
+		//分块把数据上传到gpu 
+		position = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
 		pshader = new Shader;
 		return pshader->CreateShader(vertexShader,colorShader);
 	}

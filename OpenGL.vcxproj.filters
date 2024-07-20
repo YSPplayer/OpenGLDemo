@@ -39,6 +39,9 @@
     <ClCompile Include="GL\model.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="GL\shaderTag.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cwindow.h">

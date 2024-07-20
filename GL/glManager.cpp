@@ -9,6 +9,12 @@ namespace GL {
 	using namespace Tool;
 	GlManager::GlManager() {
 		cmaera = new Camera;
+		lightControl = new LightControl;
+	}
+
+	GlManager::~GlManager() {
+		Util::ReleasePointer(cmaera);
+		Util::ReleasePointer(lightControl);
 	}
 
 	void GlManager::ClearModels() {
@@ -50,7 +56,7 @@ namespace GL {
 			/*
 			长宽最大值 5000 * 5000 2GB 400 580
 			*/
-			CreateRandomData(50, 100, 1, 1, true, &pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
+			CreateRandomData(400, 580, 1, 1, false, &pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
 		}
 		/*float vertices[] = {
 			 0.5f,  0.5f, 0.0f,
@@ -68,14 +74,15 @@ namespace GL {
 
 		isize = sizeof(indices) / sizeof(indices[0]);*/
 		Model* model = new Model;
-		bool success = model->CreateModel(vertexShader,colorShader, true, pvertices, vsize, pindices,isize);
-		CreateModelTexture("C:/Users/YSP/Desktop/pics/3.jpg", model,ptextures,tsize);
+		bool success = model->CreateModel(vertexShader,colorShader, false, pvertices, vsize, pindices,isize);
+		/*CreateModelTexture("C:/Users/YSP/Desktop/pics/1.jpg", model,ptextures,tsize);*/
 		model->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
 		cmaera->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
 		cmaera->ReSetPoisition();
 		if (!success) return false;
 		models.push_back(model);
 	/*	models.push_back(model->CopyModel(success));*/
+		lightControl->EnableLightModel();//启用光照模型
 		return true;
 	}
 
@@ -85,15 +92,25 @@ namespace GL {
 		const glm::mat4& projection = cmaera->UpdateProjection(data);
 		for (int i = 0; i < models.size(); ++i) {
 			Model* model = models[i];
-			glBindTexture(GL_TEXTURE_2D, model->TEXTURE);
+			if(model->TEXTURE) glBindTexture(GL_TEXTURE_2D, model->TEXTURE);
 			Shader* shader = model->GetShader();
 			const glm::mat4& mposition = data.reset ? model->ReSetPoisition() : model->UpdatePoisition(data);
 			shader->UseShader();
 			shader->SetShaderMat4(view, "view");
 			shader->SetShaderMat4(mposition, "model");
 			shader->SetShaderMat4(projection, "projection");
+			shader->SetShaderBoolean(model->TEXTURE,"useTexture");
 			model->Render(data);
 		}
+		//绘制灯光模型
+		Model* lightModel = lightControl->lightModel;
+		Shader* shader = lightModel->GetShader();
+		const glm::mat4& mposition = data.reset ? lightModel->ReSetPoisition() : lightModel->UpdatePoisition(data);
+		shader->UseShader();
+		shader->SetShaderMat4(view, "view");
+		shader->SetShaderMat4(lightControl->lightModelPos, "model");//灯光模型固定一个位置
+		shader->SetShaderMat4(projection, "projection");
+		lightModel->Render(data);
 	}
 
 	/// <summary>
@@ -123,10 +140,10 @@ namespace GL {
 				point.z = random ? (Util::GetRandomFloat(-10.0f, 10.0f) / 1000.0f) : 0.0f;;//归一化
 				x = static_cast<float>((i * xoffset));
 				y = static_cast<float>((j * yoffset));
-				point.x = x / static_cast<float>(max); //归一化
-				point.y = y / static_cast<float>(max);//归一化
-				(*textures)[tindex++] = x / static_cast<float>(width);
-				(*textures)[tindex++] = y / static_cast<float>(height);
+				point.x = x / static_cast<float>(max * xoffset); //归一化
+				point.y = y / static_cast<float>(max * yoffset);//归一化
+				(*textures)[tindex++] = x / static_cast<float>(width * xoffset);
+				(*textures)[tindex++] = y / static_cast<float>(height * yoffset);
 				xSum += point.x;
 				ySum += point.y;
 				points.push_back(point);

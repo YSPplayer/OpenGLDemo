@@ -58,6 +58,16 @@ namespace GL {
 	}
 
 	/// <summary>
+	/// 设置shader中的布尔变量
+	/// </summary>
+	/// <param name="value"></param>
+	/// <param name="key"></param>
+	void Shader::SetShaderBoolean(bool value, const std::string& key) {
+		int loc = glGetUniformLocation(shaderProgram, key.c_str());
+		glUniform1i(loc, value ? GL_TRUE : GL_FALSE);
+	}
+
+	/// <summary>
     /// 创建单个的着色器对象
     /// </summary>
     /// <param name="type"></param>

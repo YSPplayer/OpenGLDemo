@@ -155,6 +155,7 @@
     <ClCompile Include="GL\lightControl.cpp" />
     <ClCompile Include="GL\model.cpp" />
     <ClCompile Include="GL\shader.cpp" />
+    <ClCompile Include="GL\shaderTag.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
