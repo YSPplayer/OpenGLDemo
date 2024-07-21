@@ -9,6 +9,7 @@ namespace GL {
 		indices = nullptr;
 		pshader = nullptr;
 		eboMode = false;
+		hasTexture = false;
 		verticesSize = 0;
 		indicesSize = 0;
 		PVBOS = new std::vector<GLuint>(VBO_MAX,NULL);
@@ -103,7 +104,7 @@ namespace GL {
 			std::memcpy(indicesBuffer, this->indices, sizeof(unsigned int) * indicesSize);//拷贝内存到gpu
 			glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);//如果不再需要cpu上的gpu指针，就取消映射
 		}
-		//分块把数据上传到gpu 
+		//分块把数据上传到gpu  
 		position = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
 		pshader = new Shader;
 		return pshader->CreateShader(vertexShader,colorShader);
@@ -114,31 +115,42 @@ namespace GL {
 	/// </summary>
 	/// <returns></returns>
 	bool Model::SetTexture(unsigned char* texture, int width, int height, int nrChannels, float datas[], int size) {
-		glBindVertexArray(VAO);
-		glGenBuffers(1, &PVBOS->at(VBO_TEXTURE));
-		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_TEXTURE));
-		glBufferData(GL_ARRAY_BUFFER, size * sizeof(float), nullptr, GL_STATIC_DRAW);//绑定空指针
-		float* textureBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, size * sizeof(float), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
-		if (!textureBuffer) return false;
-		std::memcpy(textureBuffer, datas, sizeof(float) * size);//拷贝内存到gpu
-		glUnmapBuffer(GL_ARRAY_BUFFER);
-		//因为纹理对象的单位长度是2.所以指定2
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(1);
-		//作用纹理
-		glGenTextures(1, &TEXTURE);
-		glBindTexture(GL_TEXTURE_2D, TEXTURE); 
-		//当纹理坐标的范围超出0-1，超出范围用弥补
-		float borderColor[] = { 255.0f, 255.0f, 255.0f, 1.0f };
-		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-		/*
-			设置纹理过滤方式，当模型放大或缩小时纹理的变化方式，这里使用远近差值法
-		*/
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		if (datas != nullptr) {
+			glBindVertexArray(VAO);
+			glGenBuffers(1, &PVBOS->at(VBO_TEXTURE));
+			glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_TEXTURE));
+			glBufferData(GL_ARRAY_BUFFER, size * sizeof(float), nullptr, GL_STATIC_DRAW);//绑定空指针
+			float* textureBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, size * sizeof(float), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+			if (!textureBuffer) return false;
+			std::memcpy(textureBuffer, datas, sizeof(float) * size);//拷贝内存到gpu
+			glUnmapBuffer(GL_ARRAY_BUFFER);
+			//因为纹理对象的单位长度是2.所以指定2
+			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(1);
+			//作用纹理
+			glGenTextures(1, &TEXTURE);
+			glBindTexture(GL_TEXTURE_2D, TEXTURE);
+			//当纹理坐标的范围超出0-1，超出范围用弥补
+			float borderColor[] = { 255.0f, 255.0f, 255.0f, 1.0f };
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+			/*
+				设置纹理过滤方式，当模型放大或缩小时纹理的变化方式，这里使用远近差值法
+			*/
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		}
+		else {
+			/*如果是2次设置贴图，opengl会覆盖掉旧贴图的数据，但是不会释放内存，如果第一次的
+			作用的贴图内存比第二次大，实际的纹理对象内存还是和第一次的一样，只是新部分的对象内存被
+			覆盖掉了*/
+			glBindTexture(GL_TEXTURE_2D, TEXTURE);
+		}
 		//给当前的vbo纹理对象绑定纹理图象
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
-		glGenerateMipmap(GL_TEXTURE_2D);
+		if (texture) {
+			hasTexture = true;
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
+			glGenerateMipmap(GL_TEXTURE_2D);
+		}
 		return true;
 	}
 
@@ -154,6 +166,7 @@ namespace GL {
 		cmodel->PVBOS = PVBOS;
 		cmodel->eboMode = eboMode;
 		cmodel->EBO = EBO;
+		cmodel->hasTexture = hasTexture;
 		cmodel->vertices = vertices;
 		cmodel->indices = indices;
 		cmodel->verticesSize = verticesSize;
@@ -201,8 +214,19 @@ namespace GL {
 	/// </summary>
 	void Model::Render(const Data& data) {
 		glBindVertexArray(VAO);
-		data.drawLine ? glPolygonMode(GL_FRONT_AND_BACK, GL_LINE) : glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
+		if (data.drawMode == DRAW_MODE_POINT) { //绘制点云
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glDrawElements(GL_POINTS, indicesSize, GL_UNSIGNED_INT, 0);
+		}
+		else if (data.drawMode == DRAW_MODE_GRID) { //绘制网格
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
+		}
+		else {
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); //绘制面
+			glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
+		}
+		
 		//int indicesCount = indicesSize / 3;
 		//// 对每一块顶点数据，逐块上传索引数据并绘制
 		//for (int i = 0; i < indicesCount; i += PLANE_BLOCK_SIZE) {

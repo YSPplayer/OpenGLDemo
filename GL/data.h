@@ -5,6 +5,10 @@ namespace GL {
 #define MOVE_LEFT 2
 #define MOVE_RIGHT 3
 #define MOVE_NONE 4
+
+#define DRAW_MODE_POINT 0
+#define DRAW_MODE_GRID 1
+#define DRAW_MODE_SURFACE 2
 	struct Param {
 		int w;
 		int h;
@@ -40,6 +44,17 @@ namespace GL {
 		float yaw;
 		bool isYaw;
 		bool reset;//重置模型+相机位置
-		bool drawLine;//是否开启线条绘制模式
+		int drawMode;//绘制模式
+	};
+	//UI组件存放的数据
+	struct UData {
+		double modelWidth;
+		double modelHeight;
+		double modelXOffset;
+		double modelYOffset;
+		double modelRandomRange;
+		bool modelRandomZ;
+		char pathBuf[256];
+		int selectedRadio;
 	};
 }

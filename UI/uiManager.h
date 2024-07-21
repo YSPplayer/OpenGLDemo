@@ -8,13 +8,15 @@ namespace GL {
 			UiManager(GlManager* glmanager);
 			~UiManager();
 			void Init(GLFWwindow* window);
-			void Render(int width,int height);
+			void Render(Data& data);
 			static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 			static void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
+			static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 		private:
-			void Draw(int width,int height);
+			void Draw(Data& data);
 			void SetStyle();
 			GlManager* glmanager;//该对象的内存在主窗口中释放
+			static UData udata;
 		};
 	}
 }

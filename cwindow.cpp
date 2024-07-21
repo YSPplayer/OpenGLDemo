@@ -23,7 +23,7 @@ namespace Window {
 		data.lastRotationZ = 0.0f;
 		data.lastRotationX = 0.0f;
 		data.aspect = 0.3f;
-		data.drawLine = false;
+		data.drawMode = DRAW_MODE_SURFACE;
 	}
 
 	/// <summary>
@@ -109,8 +109,6 @@ namespace Window {
 			data.moveType = MOVE_RIGHT;
 		else if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) //重置模型位置
 			data.reset = true;
-		else if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-			data.drawLine = !data.drawLine;
 		else 
 			data.moveType = MOVE_NONE;
 	}
@@ -231,7 +229,7 @@ namespace Window {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glfwGetWindowSize(window, &data.width, &data.height);//获取到当前窗口的宽高
 		glmanager->Render(data); 
-		uimanager->Render(data.width,data.height);//先绘制模型，后渲染ui，ui层级在模型之上
+		uimanager->Render(data);//先绘制模型，后渲染ui，ui层级在模型之上
 		data.rotateZ = false;
 		data.rotateX = false;
 		data.isYaw = false;
@@ -248,6 +246,7 @@ namespace Window {
 				//mouseDragging = false; // 停止拖拽
 			}
 		}
+		UiManager::KeyCallback(window, key, scancode, action, mods);
 	}
 }
 }

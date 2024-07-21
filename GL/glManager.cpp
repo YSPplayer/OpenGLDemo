@@ -23,7 +23,33 @@ namespace GL {
 		models.clear();
 	}
 
+	/// <summary>
+	/// 创建一个标准化随机模型
+	/// </summary>
+	/// <param name="udata"></param>
+	bool GlManager::CreateRandomModel(const UData& udata) {
+		float* pvertices = nullptr;
+		unsigned int* pindices = nullptr;
+		float* ptextures = nullptr;
+		int vsize = 0;
+		int isize = 0;
+		int tsize = 0;
+		float centerX = 0.0f;
+		float centerY = 0.0f;
+		CreateRandomData(udata.modelWidth, udata.modelHeight, udata.modelXOffset, udata.modelYOffset, udata.modelRandomZ, udata.modelRandomRange,&pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
+		Model* model = new Model;
+		bool success = model->CreateModel(vertexShader, colorShader, false, pvertices, vsize, pindices, isize);
+		CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
+		model->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
+		cmaera->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
+		cmaera->ReSetPoisition();
+		if (!success) return false;
+		models.push_back(model);
+		return true;
+	}
+
 	bool GlManager::Init(Param* args) {
+		return true;
 		//float vertices[] = {
 		//	0.5f, 0.5f, 0.0f,   // 右上角
 		//	0.5f, -0.5f, 0.0f,  // 右下角
@@ -50,13 +76,13 @@ namespace GL {
 		float centerX = 0.0f;
 		float centerY = 0.0f;
 		if (args) {
-			CreateRandomData(args->w, args->h, args->x, args->y, args->random == 1, &pvertices, &pindices,&ptextures, &vsize, &isize,&tsize,&centerX, &centerY);
+			CreateRandomData(args->w, args->h, args->x, args->y, args->random == 1,10.0f,&pvertices, &pindices,&ptextures, &vsize, &isize,&tsize,&centerX, &centerY);
 		}
 		else {
 			/*
 			长宽最大值 5000 * 5000 2GB 400 580 
 			*/ 
-			CreateRandomData(1, 1, 1, 1, false, &pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
+			CreateRandomData(1, 1, 1, 1, false, 10.0f, &pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
 		}
 		/*float vertices[] = {
 			 0.5f,  0.5f, 0.0f,
@@ -75,7 +101,8 @@ namespace GL {
 		isize = sizeof(indices) / sizeof(indices[0]);*/
 		Model* model = new Model;
 		bool success = model->CreateModel(vertexShader,colorShader, false, pvertices, vsize, pindices,isize);
-		/*CreateModelTexture("C:/Users/YSP/Desktop/pics/1.jpg", model,ptextures,tsize);*/
+		CreateModelTexture("", model,ptextures,tsize);//初始化纹理对象
+		delete[] ptextures;
 		model->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
 		cmaera->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
 		cmaera->ReSetPoisition();
@@ -99,18 +126,18 @@ namespace GL {
 			shader->SetShaderMat4(view, "view");
 			shader->SetShaderMat4(mposition, "model");
 			shader->SetShaderMat4(projection, "projection");
-			shader->SetShaderBoolean(model->TEXTURE,"useTexture");
+			shader->SetShaderBoolean(model->HasTexture(), "useTexture");
 			model->Render(data);
 		}
 		//绘制灯光模型
-		Model* lightModel = lightControl->lightModel;
-		Shader* shader = lightModel->GetShader();
-		const glm::mat4& mposition = data.reset ? lightModel->ReSetPoisition() : lightModel->UpdatePoisition(data);
-		shader->UseShader();
-		shader->SetShaderMat4(view, "view");
-		shader->SetShaderMat4(lightControl->lightModelPos, "model");//灯光模型固定一个位置
-		shader->SetShaderMat4(projection, "projection");
-		lightModel->Render(data);
+		//Model* lightModel = lightControl->lightModel;
+		//Shader* shader = lightModel->GetShader();
+		//const glm::mat4& mposition = data.reset ? lightModel->ReSetPoisition() : lightModel->UpdatePoisition(data);
+		//shader->UseShader();
+		//shader->SetShaderMat4(view, "view");
+		//shader->SetShaderMat4(lightControl->lightModelPos, "model");//灯光模型固定一个位置
+		//shader->SetShaderMat4(projection, "projection");
+		//lightModel->Render(data);
 	}
 
 	/// <summary>
@@ -120,13 +147,12 @@ namespace GL {
 	/// <param name="height"></param>
 	/// <param name="vertices"></param>
 	/// <param name="indices"></param>
-	void GlManager::CreateRandomData(unsigned int width, unsigned int height, float xoffset, float yoffset, bool random, float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize,
+	void GlManager::CreateRandomData(unsigned int width, unsigned int height, float xoffset, float yoffset, bool random, float randomRange, float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize,
 		int* tsize, float* centerX, float* centerY) {
 		int max = width > height ? width : height;
 		int count = width * height;
 		std::vector<Point> points;
 		std::vector<Indice> vindices;
-	/*	points.resize(count);*/
 		*tsize = (height + 1) * (width + 1) * 2;
 		*textures = new float[*tsize];
 		float xSum = 0.0f;
@@ -136,14 +162,14 @@ namespace GL {
 		int y = 0;
 		for (unsigned int j = 0; j < height + 1; ++j) {//先赋值横向的宽度，再赋值纵向的高度
 			for (unsigned int i = 0; i < width + 1; ++i) {
-				Point point;
-				point.z = random ? (Util::GetRandomFloat(-10.0f, 10.0f) / 1000.0f) : 0.0f;;//归一化
-				x = static_cast<float>((i * xoffset));
-				y = static_cast<float>((j * yoffset));
-				point.x = x / static_cast<float>(max * xoffset); //归一化
-				point.y = y / static_cast<float>(max * yoffset);//归一化
-				(*textures)[tindex++] = x / static_cast<float>(width * xoffset);
-				(*textures)[tindex++] = y / static_cast<float>(height * yoffset);
+				Point point;//10.0f
+				point.z = random ? (Util::GetRandomFloat(-randomRange, randomRange) / 1000.0f) : 0.0f;;//归一化
+				x = static_cast<float>(i) * xoffset;
+				y = static_cast<float>(j) * yoffset;
+				point.x = x / (static_cast<float>(max) * xoffset); //归一化
+				point.y = y / (static_cast<float>(max) * yoffset);//归一化
+				(*textures)[tindex++] = x / (static_cast<float>(width) * xoffset);
+				(*textures)[tindex++] = y / (static_cast<float>(height) * yoffset);
 				xSum += point.x;
 				ySum += point.y;
 				points.push_back(point);
@@ -184,19 +210,22 @@ namespace GL {
 	/// </summary>
 	/// <param name="path"></param>
 	void GlManager::CreateModelTexture(const char* path,Model* model,float* ptextures, int tsize) {
+		if (!model) {
+			std::cout << "[GlManager::CreateModelTexture] model is nullptr." << std::endl;
+			return;
+		} 
 		int width, height, nrChannels;
 		stbi_set_flip_vertically_on_load(true);//如果图片读取颠倒，修改这个参数
 		unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
-		if (data) { //外部图片加载成功
-			//float textures[] = {
+		//float textures[] = {
 			// 1.0f, 1.0f,
 			// 1.0f, 0.0f,
 			// 0.0f, 0.0f,
 			// 0.0f, 1.0f
 			//};
 			//tsize = sizeof(textures) / sizeof(textures[0]);
-			model->SetTexture(data, width, height, nrChannels, ptextures, tsize);
-		}
+		//如果没有图片，我们不会存在贴图，如果没有纹理数组，我们不创建纹理对象
+		model->SetTexture(data, width, height, nrChannels, ptextures, tsize);
 		stbi_image_free(data);
 	}
 

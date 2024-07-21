@@ -24,7 +24,11 @@ namespace GL {
 		}
 		glm::mat4 ReSetPoisition();
 		GLuint TEXTURE;//贴图管理对象，不是贴图数据的顶点对象，顶点对象放在VBO管理
+		inline bool HasTexture() {
+			return hasTexture;
+		};
 	private:
+		bool hasTexture;//检查 当前模型是否有贴图
 		bool copy;//检测当前模型是否是拷贝出来的
 		float* vertices;//存放绘制图像的顶点数据
 		unsigned int* indices;//存放顶点数据的索引位数据
