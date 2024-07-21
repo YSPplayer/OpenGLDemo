@@ -15,6 +15,7 @@ namespace Window {
 	CWindow::CWindow() {
 		window = nullptr;
 		glmanager = new GlManager;
+		uimanager = new UiManager;
 		deltaTime = 0.0f;
 		lastFrame = 0.0f;
 		data.rotateZ = false;
@@ -32,7 +33,7 @@ namespace Window {
 	/// <param name="height"></param>
 	/// <param name="name"></param>
 	/// <returns></returns>
-	bool CWindow::CreateWindow(int width, int height, Param* args,const std::string& name) {
+	bool CWindow::CreateWindow(int width, int height, Param* args,const std::string& name){
 		OpenGLInit();
 		window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
 		if(window == nullptr) {
@@ -47,6 +48,8 @@ namespace Window {
 		//初始化管理器
 		if(!glmanager->Init(args)) return false;
 		glViewport(0, 0, width, height); //设置opengl的窗口大小，这里设置为和主窗口大小一样
+		//初始化imggui
+		uimanager->Init(window);
 		BindCallback();
 		return true;
 	}
@@ -227,6 +230,7 @@ namespace Window {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glfwGetWindowSize(window, &data.width, &data.height);//获取到当前窗口的宽高
 		glmanager->Render(data);
+		uimanager->Render(data.width,data.height);
 		data.rotateZ = false;
 		data.rotateX = false;
 		data.isYaw = false;

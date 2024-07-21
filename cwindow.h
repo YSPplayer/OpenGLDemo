@@ -2,12 +2,14 @@
 #include "GL/glManager.h"
 #include "GL/data.h"
 #include <GLFW/glfw3.h> //glfw3要后于glad包含，glad要优先加载Opengl的函数
+#include "UI/uiManager.h"
 #include <string>
 /// <summary>
 /// 自定义glfw窗口类
 /// </summary>
 namespace GL {
 namespace Window {
+	using namespace GL::UI;
 #define DEFAULT_WINDOW_NAME "OpenGL"
 	class CWindow {
 		public:
@@ -40,6 +42,7 @@ namespace Window {
 			static void UpdateScroll(GLFWwindow* window, double xoffset, double yoffset);
 			GLFWwindow* window;//主窗口
 			GlManager* glmanager;//GL管理对象
+			UiManager* uimanager;//imggui对象
 	};
 }
 }
