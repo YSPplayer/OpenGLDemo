@@ -54,9 +54,9 @@ namespace GL {
 		}
 		else {
 			/*
-			长宽最大值 5000 * 5000 2GB 400 580
-			*/
-			CreateRandomData(400, 580, 1, 1, false, &pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
+			长宽最大值 5000 * 5000 2GB 400 580 
+			*/ 
+			CreateRandomData(1, 1, 1, 1, false, &pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
 		}
 		/*float vertices[] = {
 			 0.5f,  0.5f, 0.0f,

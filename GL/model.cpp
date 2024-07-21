@@ -22,6 +22,7 @@ namespace GL {
 	Model::~Model() {
 		if (copy) return;//拷贝的模型不做内存的释放，只释放唯一的那一个
 		if(EBO) glDeleteBuffers(1, &EBO);
+		if (TEXTURE) glDeleteTextures(1, &TEXTURE);
 		if (PVBOS) {
 			for (int i = 0; i < PVBOS->size(); ++i) 
 				glDeleteBuffers(1, &PVBOS->at(i));

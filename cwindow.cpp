@@ -15,7 +15,7 @@ namespace Window {
 	CWindow::CWindow() {
 		window = nullptr;
 		glmanager = new GlManager;
-		uimanager = new UiManager;
+		uimanager = new UiManager(glmanager);
 		deltaTime = 0.0f;
 		lastFrame = 0.0f;
 		data.rotateZ = false;
@@ -41,6 +41,7 @@ namespace Window {
 			return false;
 		}
 		glfwMakeContextCurrent(window); //设置glfw窗口当前的上下文 
+		glfwSwapInterval(1); // Enable vsync
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 			glfwTerminate(); 
 			return false;//加载opengl的函数指针
@@ -59,8 +60,6 @@ namespace Window {
 	/// </summary>
 	/// <returns></returns>
 	bool CWindow::Exe() {
-		// 启用 V-Sync
-		glfwSwapInterval(1);
 		while(!glfwWindowShouldClose(window)) {
 			ProcessInput();//监听按键事件
 			glfwPollEvents(); //接收事件，用于事件的触发
@@ -74,6 +73,7 @@ namespace Window {
 	CWindow::~CWindow() {}
 
 	void CWindow::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+		UiManager::MouseButtonCallback(window, button, action, mods);
 		CWindow* self = static_cast<CWindow*>(glfwGetWindowUserPointer(window));
 		if (button == GLFW_MOUSE_BUTTON_LEFT) {
 			if (action == GLFW_PRESS) {
@@ -86,8 +86,8 @@ namespace Window {
 		else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
 		/*	if (action == GLFW_PRESS) {
 				self->rightButtonPressed = true;
-			}
-			else if (action == GLFW_RELEASE) {
+			} 
+			else if (action == GLFW_RELEASE) {  
 				self->rightButtonPressed = false;
 			}*/
 		}
@@ -130,6 +130,7 @@ namespace Window {
 	}
 
 	void CWindow::UpdatePoint(GLFWwindow* window, double xpos, double ypos) {
+		UiManager::CursorPosCallback(window, xpos, ypos);
 		CWindow* self = static_cast<CWindow*>(glfwGetWindowUserPointer(window));
 		if (shiftPressed) {
 			if (self->mousePressed) {
@@ -229,8 +230,8 @@ namespace Window {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glfwGetWindowSize(window, &data.width, &data.height);//获取到当前窗口的宽高
-		glmanager->Render(data);
-		uimanager->Render(data.width,data.height);
+		glmanager->Render(data); 
+		uimanager->Render(data.width,data.height);//先绘制模型，后渲染ui，ui层级在模型之上
 		data.rotateZ = false;
 		data.rotateX = false;
 		data.isYaw = false;
