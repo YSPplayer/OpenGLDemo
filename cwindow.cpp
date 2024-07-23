@@ -1,7 +1,9 @@
+#include "Util/util.h"
 #include "cwindow.h"
 #include <iostream>
 namespace GL {
 namespace Window {
+	using namespace Tool;
 	float CWindow::lastX = 400.0f;
 	float CWindow::lastY = 300.0f;
 	float CWindow::lastX2 = 400.0f;
@@ -33,7 +35,7 @@ namespace Window {
 	/// <param name="height"></param>
 	/// <param name="name"></param>
 	/// <returns></returns>
-	bool CWindow::CreateWindow(int width, int height, Param* args,const std::string& name){
+	bool CWindow::CreateCWindow(int width, int height, Param* args,const std::string& name){
 		OpenGLInit();
 		window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
 		if(window == nullptr) {
@@ -211,8 +213,7 @@ namespace Window {
 	}
 	
 	void CWindow::UpdateScroll(GLFWwindow* window, double xoffset, double yoffset) {
-		if (data.aspect >= 0.0f && data.aspect <= 3.0f)
-			data.aspect = data.aspect - (yoffset / 10.0f);
+		if (data.aspect >= 0.0f && data.aspect <= 3.0f) data.aspect = data.aspect - (yoffset / ((20 - GlManager::aspectUnit) * 10.0f)); 
 		if (data.aspect <= 0.0f)
 			data.aspect = 0.0f;
 		if (data.aspect >= 3.0f)

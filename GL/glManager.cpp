@@ -7,9 +7,11 @@
 
 namespace GL {
 	using namespace Tool;
+	float GlManager::aspectUnit = 0.0f;
 	GlManager::GlManager() {
 		cmaera = new Camera;
 		lightControl = new LightControl;
+		aspectUnit = 0.0f;
 	}
 
 	GlManager::~GlManager() {
@@ -149,7 +151,10 @@ namespace GL {
 	/// <param name="indices"></param>
 	void GlManager::CreateRandomData(unsigned int width, unsigned int height, float xoffset, float yoffset, bool random, float randomRange, float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize,
 		int* tsize, float* centerX, float* centerY) {
+		if (xoffset > MAX_X_OFFSET) xoffset = MAX_X_OFFSET;
+		if (yoffset > MAX_Y_OFFSET) yoffset = MAX_Y_OFFSET;
 		int max = width > height ? width : height;
+		aspectUnit = Util::DivideByTenCount(max);
 		int count = width * height;
 		std::vector<Point> points;
 		std::vector<Indice> vindices;
@@ -158,18 +163,19 @@ namespace GL {
 		float xSum = 0.0f;
 		float ySum = 0.0f;
 		int tindex = 0;
-		int x = 0;
-		int y = 0;
+		float x = 0;
+		float y = 0;
 		for (unsigned int j = 0; j < height + 1; ++j) {//先赋值横向的宽度，再赋值纵向的高度
 			for (unsigned int i = 0; i < width + 1; ++i) {
 				Point point;//10.0f
 				point.z = random ? (Util::GetRandomFloat(-randomRange, randomRange) / 1000.0f) : 0.0f;;//归一化
-				x = static_cast<float>(i) * xoffset;
-				y = static_cast<float>(j) * yoffset;
-				point.x = x / (static_cast<float>(max) * xoffset); //归一化
-				point.y = y / (static_cast<float>(max) * yoffset);//归一化
-				(*textures)[tindex++] = x / (static_cast<float>(width) * xoffset);
-				(*textures)[tindex++] = y / (static_cast<float>(height) * yoffset);
+				//实际点云长度 = (索引 * (偏移量 / 最大偏移量)) /归一化值
+				x = static_cast<float>(i) * (xoffset / MAX_X_OFFSET);
+				y = static_cast<float>(j) * (yoffset / MAX_Y_OFFSET);
+				point.x = x / static_cast<float>(max);//归一化
+				point.y = y / static_cast<float>(max);//归一化
+				(*textures)[tindex++] = static_cast<float>(i) / static_cast<float>(width);
+				(*textures)[tindex++] = static_cast<float>(j) / static_cast<float>(height);
 				xSum += point.x;
 				ySum += point.y;
 				points.push_back(point);
@@ -192,7 +198,7 @@ namespace GL {
 			(*vertices)[i * 3 + 2] = point.z;
 			//std::cout << " point.x:" << point.x << " " << " point.y:" << point.y << " " << " point.z:" << point.z << std::endl;
 		}
-	/*	for (int i = 0; i < *tsize; ++i) {
+		/*for (int i = 0; i < *tsize; ++i) {
 			std::cout << "textures:" << (*textures)[i] << std::endl;
 		}*/
 		*isize = vindices.size() * 3;

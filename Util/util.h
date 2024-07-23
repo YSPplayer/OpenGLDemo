@@ -1,9 +1,11 @@
 #pragma once
 #include <cmath>
 #include <iostream>
+#include <fstream>
 #include <random>
 #include <codecvt>
 #include <Windows.h>
+#include <chrono>
 namespace GL {
 	namespace Tool {
 		class Util {
@@ -54,6 +56,43 @@ namespace GL {
                 char* charPtr = new char[str.length() + 1]; //char内存需要手动管理释放
                 strcpy_s(charPtr, str.length() + 1, str.c_str());
                 return charPtr;
+            }
+
+            /// <summary>
+            /// 获取当前的时间
+            /// </summary>
+            /// <returns></returns>
+            static std::wstring GetCurrentDateTime() {
+                auto now = std::chrono::system_clock::now();
+                std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+                std::tm now_tm;
+                localtime_s(&now_tm, &now_time); // 使用线程安全的localtime_s
+                wchar_t buffer[100];
+                wcsftime(buffer, sizeof(buffer), L"%Y-%m-%d %H:%M:%S", &now_tm);
+                return buffer;
+            }
+
+            // 追加模式写入文本
+            static void WriteLog(const std::wstring& text) {
+                // 打开文件，以追加模式写入
+                std::wofstream ofs((rootPath + L"debug.log").c_str(), std::ios_base::app);
+                if (!ofs.is_open()) return;
+                // 设置流的区域设置为 UTF-8
+                ofs.imbue(std::locale(ofs.getloc(), new std::codecvt_utf8<wchar_t>));
+                // 获取当前时间
+                const std::wstring& currentDateTime = GetCurrentDateTime();
+                // 写入文件
+                ofs << L"[" << currentDateTime << L"]" << text << std::endl;
+                ofs.close();
+            }
+
+            static float DivideByTenCount(int n) {
+                int count = 0;
+                while (n >= 10) {
+                    n /= 10;
+                    count++;
+                }
+                return static_cast<float>(count);
             }
         private:
             static std::random_device rd;

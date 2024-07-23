@@ -14,7 +14,7 @@ namespace Window {
 	class CWindow {
 		public:
 			CWindow();
-			bool CreateWindow(int width,int height, Param* args = nullptr,const std::string& name = DEFAULT_WINDOW_NAME);
+			bool CreateCWindow(int width,int height, Param* args = nullptr,const std::string& name = DEFAULT_WINDOW_NAME);
 			bool Exe();
 		private:
 			static bool shiftPressed;

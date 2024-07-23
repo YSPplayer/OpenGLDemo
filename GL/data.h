@@ -9,6 +9,10 @@ namespace GL {
 #define DRAW_MODE_POINT 0
 #define DRAW_MODE_GRID 1
 #define DRAW_MODE_SURFACE 2
+
+//×î´óÆ«ÒÆÁ¿
+#define MAX_X_OFFSET 10.0f
+#define MAX_Y_OFFSET 10.0f
 	struct Param {
 		int w;
 		int h;

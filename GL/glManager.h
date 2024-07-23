@@ -7,6 +7,7 @@
 namespace GL {
 	class GlManager {
 	public:
+		static float aspectUnit;
 		void Render(const Data& data);
 		void CreateRandomData(unsigned int width, unsigned int height,float xoffset, float yoffset, bool random,
 			float randomRange,float** vertices, unsigned int** indices,float** textures,int * vsize,int*isize,

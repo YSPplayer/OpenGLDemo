@@ -12,6 +12,6 @@ int main(int argc, char* argv[]) {
 		std::istringstream(argv[5]) >> args->random;
 	}
 	CWindow* window = new CWindow;
-	if(!window->CreateWindow(800,600, args)) return 0;
+	if(!window->CreateCWindow(800,600, args)) return 0;
 	return window->Exe();
 }
