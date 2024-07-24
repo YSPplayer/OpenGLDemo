@@ -8,10 +8,12 @@ namespace GL {
 		vertices = nullptr;
 		indices = nullptr;
 		pshader = nullptr;
+		normals = nullptr;
 		eboMode = false;
 		hasTexture = false;
 		verticesSize = 0;
 		indicesSize = 0;
+		normalSize = 0;
 		PVBOS = new std::vector<GLuint>(VBO_MAX,NULL);
 		VAO = NULL;
 		EBO = NULL;
@@ -267,5 +269,62 @@ namespace GL {
 	glm::mat4 Model::ReSetPoisition() {
 		position = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
 		return position;
-	} 
+	}
+
+	/// <summary>
+	/// 计算当前模型的顶点法线
+	/// </summary>
+	bool Model::CalculateVertexNormals() {
+		//法线计算需要顶点数据和索引数组的数据，没有直接返回
+		if (!PVBOS->at(VBO_VERTEX) || !EBO) return false;
+		normalSize = verticesSize;//法线数据量和顶点数据量相同
+		normals = new float[normalSize];
+		int normalsv3Size = normalSize / 3;
+		glm::vec3* normalsv3 = new glm::vec3[normalsv3Size];
+
+		for (int i = 0; i < normalsv3Size; ++i) {
+			normalsv3[i] = glm::vec3(0.0f, 0.0f, 0.0f); //初始化值
+		}
+		for (int i = 0; i < indicesSize; i += 3) {
+			//三个点组成一个面，一个点需要三个坐标，所以需要9个坐标数据
+			int index = i;
+			const glm::vec3& v1 = glm::vec3(vertices[indices[index] * 3 + 0], vertices[indices[index] * 3 + 1], vertices[indices[index] * 3 + 2]);
+			/*Util::WriteLog(std::to_wstring(indices[index]));*/
+			++index;
+		/*	Util::WriteLog(std::to_wstring(indices[index]));*/
+			const glm::vec3& v2 = glm::vec3(vertices[indices[index] * 3 + 0], vertices[indices[index] * 3 + 1], vertices[indices[index] * 3 + 2]);
+			++index;
+		/*	Util::WriteLog(std::to_wstring(indices[index]));*/
+			const glm::vec3& v3 = glm::vec3(vertices[indices[index] * 3 + 0], vertices[indices[index] * 3 + 1], vertices[indices[index] * 3 + 2]);
+			glm::vec3 normal = Util::CalculateFaceNormal(v1, v2, v3);
+			normalsv3[indices[i]] += normal;
+			normalsv3[indices[i + 1]] += normal;
+			normalsv3[indices[i + 2]] += normal;
+			Util::WriteLog(L"");
+			Util::WriteLog(L"========");
+			Util::WriteLog(L"normal:" + std::to_wstring(normal.x) + L"," + std::to_wstring(normal.y) + L"," + std::to_wstring(normal.z));
+			Util::WriteLog(L"normalsv3_:" + std::to_wstring(indices[i]) + std::to_wstring(normalsv3[indices[i]].x) + L"," + std::to_wstring(normalsv3[indices[i]].y) + L"," + std::to_wstring(normalsv3[indices[i]].z));
+			Util::WriteLog(L"normalsv3_:" + std::to_wstring(indices[i + 1]) + std::to_wstring(normalsv3[indices[i + 1]].x) + L"," + std::to_wstring(normalsv3[indices[i + 1]].y) + L"," + std::to_wstring(normalsv3[indices[i + 1]].z));
+			Util::WriteLog(L"normalsv3_:" + std::to_wstring(indices[i + 2]) + std::to_wstring(normalsv3[indices[i + 2]].x) + L"," + std::to_wstring(normalsv3[indices[i + 2]].y) + L"," + std::to_wstring(normalsv3[indices[i + 2]].z));
+			Util::WriteLog(L"========");
+			Util::WriteLog(L"");
+		}
+		//存储法线的实际数据
+		for (int i = 0; i < normalsv3Size; ++i) {
+			/*Util::WriteLog(L"");
+			Util::WriteLog(L"========");*/
+			const glm::vec3& normal = glm::normalize(normalsv3[i]);
+			/*Util::WriteLog(L"normalsv3:" + std::to_wstring(normalsv3[i].x) + L"," + std::to_wstring(normalsv3[i].y) + L"," + std::to_wstring(normalsv3[i].z));*/
+			normals[i * 3 + 0] = normal.x;
+			normals[i * 3 + 1] = normal.y;
+			normals[i * 3 + 2] = normal.z;
+			Util::WriteLog(L"vec3_normal:" + std::to_wstring(normalsv3[i].x) + L"," + std::to_wstring(normalsv3[i].y) + L"," + std::to_wstring(normalsv3[i].z));
+			Util::WriteLog(L"========");
+			Util::WriteLog(L"vec3_normal:" + std::to_wstring(normal.x) + L","+ std::to_wstring(normal.y) + L"," + std::to_wstring(normal.z));
+			//Util::WriteLog(L"========");
+			//Util::WriteLog(L"");
+		}
+		return true;
+	}
+
 }

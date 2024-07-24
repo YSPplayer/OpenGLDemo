@@ -6,6 +6,8 @@
 #include <codecvt>
 #include <Windows.h>
 #include <chrono>
+#include <string>
+#include <glm/glm.hpp>
 namespace GL {
 	namespace Tool {
 		class Util {
@@ -36,6 +38,19 @@ namespace GL {
 				return angle;
 			}
 
+            /// <summary>
+            /// 计算面法线
+            /// </summary>
+            /// <param name="v1"></param>
+            /// <param name="v2"></param>
+            /// <param name="v3"></param>
+            /// <returns></returns>
+            static glm::vec3 CalculateFaceNormal(const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3) {
+                glm::vec3 edge1 = v2 - v1;
+                glm::vec3 edge2 = v3 - v1;
+                glm::vec3 normal = glm::cross(edge1, edge2);
+                return glm::normalize(normal); // 归一化法线向量
+            }
             static float GetRandomFloat(float min, float max) {
                 std::uniform_real_distribution<float> dis(min, max);
                 return dis(gen);

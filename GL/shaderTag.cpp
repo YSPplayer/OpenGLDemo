@@ -35,8 +35,10 @@ namespace GL {
 		if(useTexture) {
 			FragColor = texture(ourTexture, TexCoord);
 		} else {
-			// * vec3(1.0f, 1.0f, 1.0f)
-			FragColor = vec4(vec3(1.0f, 0.5f, 0.31f) * vec3(1.0f, 1.0f, 1.0f), 1.0f);
+			vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
+			float ambientStrength = 0.5;
+			vec3 ambient = ambientStrength * lightColor;
+			FragColor = vec4(vec3(1.0f, 0.5f, 0.31f) * lightColor, 1.0f);
 		}
 	} 
 	)glsl";

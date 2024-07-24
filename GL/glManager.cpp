@@ -42,6 +42,7 @@ namespace GL {
 		Model* model = new Model;
 		bool success = model->CreateModel(vertexShader, colorShader, false, pvertices, vsize, pindices, isize);
 		CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
+		model->CalculateVertexNormals();//计算法线
 		model->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
 		cmaera->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
 		cmaera->ReSetPoisition();
@@ -51,6 +52,32 @@ namespace GL {
 	}
 
 	bool GlManager::Init(Param* args) {
+		lightControl->EnableLightModel();//启用光照模型
+		Model* model = new Model;
+		//创建光源正方体
+		float vertices[] = {
+			-0.5f, -0.5f, -0.5f, // Vertex 0
+			 0.5f, -0.5f, -0.5f, // Vertex 1
+			 0.5f,  0.5f, -0.5f, // Vertex 2
+			-0.5f,  0.5f, -0.5f, // Vertex 3
+			-0.5f, -0.5f,  0.5f, // Vertex 4
+			 0.5f, -0.5f,  0.5f, // Vertex 5
+			 0.5f,  0.5f,  0.5f, // Vertex 6
+			-0.5f,  0.5f,  0.5f  // Vertex 7
+		};
+		int vsize = sizeof(vertices) / sizeof(vertices[0]);
+		unsigned int indices[] = {
+			0, 1, 2, 0, 2, 3,// Front face
+			4, 5, 6, 4, 6, 7,// Back face
+			4, 7, 3, 4, 3, 0,// Left face
+			1, 5, 6, 1, 6, 2,// Right face
+			0, 1, 5, 0, 5, 4,// Bottom face
+			3, 2, 6, 3, 6, 7// Top face
+		};
+		int isize = sizeof(indices) / sizeof(indices[0]);
+		bool success = model->CreateModel(vertexShader, colorShader, false, vertices, vsize, indices, isize);
+		model->CalculateVertexNormals();
+		models.push_back(model);
 		return true;
 		//float vertices[] = {
 		//	0.5f, 0.5f, 0.0f,   // 右上角
@@ -69,50 +96,50 @@ namespace GL {
 		//	0,4,5,
 		//	0,1,5
 		//};
-		float* pvertices = nullptr;
-		unsigned int* pindices = nullptr;
-		float* ptextures = nullptr;
-		int vsize = 0;
-		int isize = 0;
-		int tsize = 0;
-		float centerX = 0.0f;
-		float centerY = 0.0f;
-		if (args) {
-			CreateRandomData(args->w, args->h, args->x, args->y, args->random == 1,10.0f,&pvertices, &pindices,&ptextures, &vsize, &isize,&tsize,&centerX, &centerY);
-		}
-		else {
-			/*
-			长宽最大值 5000 * 5000 2GB 400 580 
-			*/ 
-			CreateRandomData(1, 1, 1, 1, false, 10.0f, &pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
-		}
-		/*float vertices[] = {
-			 0.5f,  0.5f, 0.0f,
-			0.5f, -0.5f, 0.0f,
-			-0.5f, -0.5f, 0.0f,
-			-0.5f,  0.5f, 0.0f
-		};
+	//	float* pvertices = nullptr;
+	//	unsigned int* pindices = nullptr;
+	//	float* ptextures = nullptr;
+	//	int vsize = 0;
+	//	int isize = 0;
+	//	int tsize = 0;
+	//	float centerX = 0.0f;
+	//	float centerY = 0.0f;
+	//	if (args) {
+	//		CreateRandomData(args->w, args->h, args->x, args->y, args->random == 1,10.0f,&pvertices, &pindices,&ptextures, &vsize, &isize,&tsize,&centerX, &centerY);
+	//	}
+	//	else {
+	//		/*
+	//		长宽最大值 5000 * 5000 2GB 400 580 
+	//		*/ 
+	//		CreateRandomData(1, 1, 1, 1, false, 10.0f, &pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
+	//	}
+	//	/*float vertices[] = {
+	//		 0.5f,  0.5f, 0.0f,
+	//		0.5f, -0.5f, 0.0f,
+	//		-0.5f, -0.5f, 0.0f,
+	//		-0.5f,  0.5f, 0.0f
+	//	};
 
-		vsize = sizeof(vertices) / sizeof(vertices[0]);
+	//	vsize = sizeof(vertices) / sizeof(vertices[0]);
 
-		unsigned int indices[] = {
-			 0, 1, 3,
-			 1, 2, 3
-		};
+	//	unsigned int indices[] = {
+	//		 0, 1, 3,
+	//		 1, 2, 3
+	//	};
 
-		isize = sizeof(indices) / sizeof(indices[0]);*/
-		Model* model = new Model;
-		bool success = model->CreateModel(vertexShader,colorShader, false, pvertices, vsize, pindices,isize);
-		CreateModelTexture("", model,ptextures,tsize);//初始化纹理对象
-		delete[] ptextures;
-		model->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
-		cmaera->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
-		cmaera->ReSetPoisition();
-		if (!success) return false;
-		models.push_back(model);
-	/*	models.push_back(model->CopyModel(success));*/
-		lightControl->EnableLightModel();//启用光照模型
-		return true;
+	//	isize = sizeof(indices) / sizeof(indices[0]);*/
+	//	Model* model = new Model;
+	//	bool success = model->CreateModel(vertexShader,colorShader, false, pvertices, vsize, pindices,isize);
+	//	CreateModelTexture("", model,ptextures,tsize);//初始化纹理对象
+	//	delete[] ptextures;
+	//	model->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
+	//	cmaera->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
+	//	cmaera->ReSetPoisition();
+	//	if (!success) return false;
+	//	models.push_back(model);
+	///*	models.push_back(model->CopyModel(success));*/
+	//	lightControl->EnableLightModel();//启用光照模型
+	//	return true;
 	}
 
 	void GlManager::Render(const Data& data) {
@@ -131,15 +158,16 @@ namespace GL {
 			shader->SetShaderBoolean(model->HasTexture(), "useTexture");
 			model->Render(data);
 		}
+		return;
 		//绘制灯光模型
-		//Model* lightModel = lightControl->lightModel;
-		//Shader* shader = lightModel->GetShader();
-		//const glm::mat4& mposition = data.reset ? lightModel->ReSetPoisition() : lightModel->UpdatePoisition(data);
-		//shader->UseShader();
-		//shader->SetShaderMat4(view, "view");
-		//shader->SetShaderMat4(lightControl->lightModelPos, "model");//灯光模型固定一个位置
-		//shader->SetShaderMat4(projection, "projection");
-		//lightModel->Render(data);
+		Model* lightModel = lightControl->lightModel;
+		Shader* shader = lightModel->GetShader();
+		const glm::mat4& mposition = data.reset ? lightModel->ReSetPoisition() : lightModel->UpdatePoisition(data);
+		shader->UseShader();
+		shader->SetShaderMat4(view, "view");
+		shader->SetShaderMat4(lightControl->lightModelPos, "model");//灯光模型固定一个位置
+		shader->SetShaderMat4(projection, "projection");
+		lightModel->Render(data);
 	}
 
 	/// <summary>
@@ -180,8 +208,13 @@ namespace GL {
 				ySum += point.y;
 				points.push_back(point);
 				if (i < width && j < height) {
+					/*
+					注意如下2次的三角形的顶点组成面的环绕顺序要保持一致，要么都是顺时针，
+					要么都是逆时针，否则计算法线会出现零向量抵消的情况
+					OpenGL的要求是逆时针右手法则，所以我们要使用逆时针，方便后续的光照等其他模式的计算
+					*/
 					vindices.push_back({ i + (width + 1) * j, i + 1 + (width + 1) * j, i + (width + 1) * (j + 1) });
-					vindices.push_back({ (i + 1) + (width + 1) * j, i + (width + 1) * (j + 1), i + 1 + (width + 1) * (j + 1) });
+					vindices.push_back({ (i + 1) + (width + 1) * j,  i + 1 + (width + 1) * (j + 1),i + (width + 1) * (j + 1) });
 				}
 			}
 		}
