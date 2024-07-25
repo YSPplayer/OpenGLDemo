@@ -106,7 +106,7 @@ namespace GL {
 			std::memcpy(indicesBuffer, this->indices, sizeof(unsigned int) * indicesSize);//拷贝内存到gpu
 			glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);//如果不再需要cpu上的gpu指针，就取消映射
 		}
-		//分块把数据上传到gpu  
+		//分块把数据上传到gpu  55
 		position = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
 		pshader = new Shader;
 		return pshader->CreateShader(vertexShader,colorShader);
@@ -281,49 +281,53 @@ namespace GL {
 		normals = new float[normalSize];
 		int normalsv3Size = normalSize / 3;
 		glm::vec3* normalsv3 = new glm::vec3[normalsv3Size];
-
+		//int* adjacentFaceCount = new int[normalsv3Size]; // 存储每个顶点相邻的三角形数量，并初始化为0
 		for (int i = 0; i < normalsv3Size; ++i) {
 			normalsv3[i] = glm::vec3(0.0f, 0.0f, 0.0f); //初始化值
+			//adjacentFaceCount[i] = 0;//初始化为0
 		}
 		for (int i = 0; i < indicesSize; i += 3) {
 			//三个点组成一个面，一个点需要三个坐标，所以需要9个坐标数据
 			int index = i;
 			const glm::vec3& v1 = glm::vec3(vertices[indices[index] * 3 + 0], vertices[indices[index] * 3 + 1], vertices[indices[index] * 3 + 2]);
-			/*Util::WriteLog(std::to_wstring(indices[index]));*/
 			++index;
-		/*	Util::WriteLog(std::to_wstring(indices[index]));*/
 			const glm::vec3& v2 = glm::vec3(vertices[indices[index] * 3 + 0], vertices[indices[index] * 3 + 1], vertices[indices[index] * 3 + 2]);
 			++index;
-		/*	Util::WriteLog(std::to_wstring(indices[index]));*/
 			const glm::vec3& v3 = glm::vec3(vertices[indices[index] * 3 + 0], vertices[indices[index] * 3 + 1], vertices[indices[index] * 3 + 2]);
 			glm::vec3 normal = Util::CalculateFaceNormal(v1, v2, v3);
 			normalsv3[indices[i]] += normal;
 			normalsv3[indices[i + 1]] += normal;
 			normalsv3[indices[i + 2]] += normal;
-			Util::WriteLog(L"");
-			Util::WriteLog(L"========");
-			Util::WriteLog(L"normal:" + std::to_wstring(normal.x) + L"," + std::to_wstring(normal.y) + L"," + std::to_wstring(normal.z));
-			Util::WriteLog(L"normalsv3_:" + std::to_wstring(indices[i]) + std::to_wstring(normalsv3[indices[i]].x) + L"," + std::to_wstring(normalsv3[indices[i]].y) + L"," + std::to_wstring(normalsv3[indices[i]].z));
-			Util::WriteLog(L"normalsv3_:" + std::to_wstring(indices[i + 1]) + std::to_wstring(normalsv3[indices[i + 1]].x) + L"," + std::to_wstring(normalsv3[indices[i + 1]].y) + L"," + std::to_wstring(normalsv3[indices[i + 1]].z));
-			Util::WriteLog(L"normalsv3_:" + std::to_wstring(indices[i + 2]) + std::to_wstring(normalsv3[indices[i + 2]].x) + L"," + std::to_wstring(normalsv3[indices[i + 2]].y) + L"," + std::to_wstring(normalsv3[indices[i + 2]].z));
-			Util::WriteLog(L"========");
-			Util::WriteLog(L"");
+			// 更新每个顶点相邻的三角形数量
+		/*	adjacentFaceCount[indices[i]]++;
+			adjacentFaceCount[indices[i + 1]]++;
+			adjacentFaceCount[indices[i + 2]]++;*/
 		}
 		//存储法线的实际数据
 		for (int i = 0; i < normalsv3Size; ++i) {
-			/*Util::WriteLog(L"");
-			Util::WriteLog(L"========");*/
+			//if (adjacentFaceCount[i] > 0) {
+			//	normalsv3[i] /= static_cast<float>(adjacentFaceCount[i]); // 将法线除以相邻三角形的数量
+			//}
 			const glm::vec3& normal = glm::normalize(normalsv3[i]);
-			/*Util::WriteLog(L"normalsv3:" + std::to_wstring(normalsv3[i].x) + L"," + std::to_wstring(normalsv3[i].y) + L"," + std::to_wstring(normalsv3[i].z));*/
 			normals[i * 3 + 0] = normal.x;
 			normals[i * 3 + 1] = normal.y;
 			normals[i * 3 + 2] = normal.z;
-			Util::WriteLog(L"vec3_normal:" + std::to_wstring(normalsv3[i].x) + L"," + std::to_wstring(normalsv3[i].y) + L"," + std::to_wstring(normalsv3[i].z));
-			Util::WriteLog(L"========");
-			Util::WriteLog(L"vec3_normal:" + std::to_wstring(normal.x) + L","+ std::to_wstring(normal.y) + L"," + std::to_wstring(normal.z));
-			//Util::WriteLog(L"========");
-			//Util::WriteLog(L"");
+		/*	Util::WriteLog(L"========");
+			Util::WriteLog(L"vec3_normal"+ std::to_wstring(i) + L":" + std::to_wstring(normal.x) + L"," + std::to_wstring(normal.y) + L"," + std::to_wstring(normal.z));*/
 		}
+		/*delete[] adjacentFaceCount;*/
+		delete[] normalsv3;
+		//绑定法线VBO
+		glBindVertexArray(VAO);
+		glGenBuffers(1, &PVBOS->at(VBO_NORMAL));
+		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_NORMAL));
+		glBufferData(GL_ARRAY_BUFFER, normalSize * sizeof(float), nullptr, GL_STATIC_DRAW);
+		float* normalBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, normalSize * sizeof(float), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+		if (!normalBuffer) return false;
+		std::memcpy(normalBuffer, this->normals, sizeof(float) * normalSize);
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(2);
 		return true;
 	}
 

@@ -55,27 +55,84 @@ namespace GL {
 		lightControl->EnableLightModel();//启用光照模型
 		Model* model = new Model;
 		//创建光源正方体
+		//float vertices[] = {
+		//	-0.5f, -0.5f, -0.5f, // Vertex 0
+		//	 0.5f, -0.5f, -0.5f, // Vertex 1
+		//	 0.5f,  0.5f, -0.5f, // Vertex 2
+		//	-0.5f,  0.5f, -0.5f, // Vertex 3
+		//	-0.5f, -0.5f,  0.5f, // Vertex 4
+		//	 0.5f, -0.5f,  0.5f, // Vertex 5
+		//	 0.5f,  0.5f,  0.5f, // Vertex 6
+		//	-0.5f,  0.5f,  0.5f  // Vertex 7
+		//};
 		float vertices[] = {
-			-0.5f, -0.5f, -0.5f, // Vertex 0
-			 0.5f, -0.5f, -0.5f, // Vertex 1
-			 0.5f,  0.5f, -0.5f, // Vertex 2
-			-0.5f,  0.5f, -0.5f, // Vertex 3
-			-0.5f, -0.5f,  0.5f, // Vertex 4
-			 0.5f, -0.5f,  0.5f, // Vertex 5
-			 0.5f,  0.5f,  0.5f, // Vertex 6
-			-0.5f,  0.5f,  0.5f  // Vertex 7
+	-0.5f, -0.5f, -0.5f,  // Vertex 0
+	 0.5f, -0.5f, -0.5f,  // Vertex 1
+	 0.5f,  0.5f, -0.5f,  // Vertex 2
+	 0.5f,  0.5f, -0.5f,  // Vertex 3
+	-0.5f,  0.5f, -0.5f,  // Vertex 4
+	-0.5f, -0.5f, -0.5f,  // Vertex 5
+
+	-0.5f, -0.5f,  0.5f,  // Vertex 6
+	 0.5f, -0.5f,  0.5f,  // Vertex 7
+	 0.5f,  0.5f,  0.5f,  // Vertex 8
+	 0.5f,  0.5f,  0.5f,  // Vertex 9
+	-0.5f,  0.5f,  0.5f,  // Vertex 10
+	-0.5f, -0.5f,  0.5f,  // Vertex 11
+
+	-0.5f,  0.5f,  0.5f,  // Vertex 12
+	-0.5f,  0.5f, -0.5f,  // Vertex 13
+	-0.5f, -0.5f, -0.5f,  // Vertex 14
+	-0.5f, -0.5f, -0.5f,  // Vertex 15
+	-0.5f, -0.5f,  0.5f,  // Vertex 16
+	-0.5f,  0.5f,  0.5f,  // Vertex 17
+
+	 0.5f,  0.5f,  0.5f,  // Vertex 18
+	 0.5f,  0.5f, -0.5f,  // Vertex 19
+	 0.5f, -0.5f, -0.5f,  // Vertex 20
+	 0.5f, -0.5f, -0.5f,  // Vertex 21
+	 0.5f, -0.5f,  0.5f,  // Vertex 22
+	 0.5f,  0.5f,  0.5f,  // Vertex 23
+
+	-0.5f, -0.5f, -0.5f,  // Vertex 24
+	 0.5f, -0.5f, -0.5f,  // Vertex 25
+	 0.5f, -0.5f,  0.5f,  // Vertex 26
+	 0.5f, -0.5f,  0.5f,  // Vertex 27
+	-0.5f, -0.5f,  0.5f,  // Vertex 28
+	-0.5f, -0.5f, -0.5f,  // Vertex 29
+
+	-0.5f,  0.5f, -0.5f,  // Vertex 30
+	 0.5f,  0.5f, -0.5f,  // Vertex 31
+	 0.5f,  0.5f,  0.5f,  // Vertex 32
+	 0.5f,  0.5f,  0.5f,  // Vertex 33
+	-0.5f,  0.5f,  0.5f,  // Vertex 34
+	-0.5f,  0.5f, -0.5f   // Vertex 35
 		};
 		int vsize = sizeof(vertices) / sizeof(vertices[0]);
+		//unsigned int indices[] = {
+		//	0, 1, 2, 0, 2, 3,// Front face
+		//	4, 5, 6, 4, 6, 7,// Back face
+		//	4, 7, 3, 4, 3, 0,// Left face
+		//	1, 5, 6, 1, 6, 2,// Right face
+		//	0, 1, 5, 0, 5, 4,// Bottom face
+		//	3, 2, 6, 3, 6, 7// Top face
+		//};
 		unsigned int indices[] = {
-			0, 1, 2, 0, 2, 3,// Front face
-			4, 5, 6, 4, 6, 7,// Back face
-			4, 7, 3, 4, 3, 0,// Left face
-			1, 5, 6, 1, 6, 2,// Right face
-			0, 1, 5, 0, 5, 4,// Bottom face
-			3, 2, 6, 3, 6, 7// Top face
+	 0,  1,  2,  // Front face
+	 3,  4,  5,
+	 6,  7,  8,  // Back face
+	 9, 10, 11,
+	12, 13, 14,  // Left face
+	15, 16, 17,
+	18, 19, 20,  // Right face
+	21, 22, 23,
+	24, 25, 26,  // Bottom face
+	27, 28, 29,
+	30, 31, 32,  // Top face
+	33, 34, 35
 		};
 		int isize = sizeof(indices) / sizeof(indices[0]);
-		bool success = model->CreateModel(vertexShader, colorShader, false, vertices, vsize, indices, isize);
+		bool success = model->CreateModel(vertexShader, colorShader, true, vertices, vsize, indices, isize);
 		model->CalculateVertexNormals();
 		models.push_back(model);
 		return true;
@@ -153,12 +210,12 @@ namespace GL {
 			const glm::mat4& mposition = data.reset ? model->ReSetPoisition() : model->UpdatePoisition(data);
 			shader->UseShader();
 			shader->SetShaderMat4(view, "view");
+			shader->SetShaderMat4(lightControl->lightModelPos,"lightPos");
 			shader->SetShaderMat4(mposition, "model");
 			shader->SetShaderMat4(projection, "projection");
 			shader->SetShaderBoolean(model->HasTexture(), "useTexture");
 			model->Render(data);
 		}
-		return;
 		//绘制灯光模型
 		Model* lightModel = lightControl->lightModel;
 		Shader* shader = lightModel->GetShader();
