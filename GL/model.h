@@ -17,7 +17,7 @@ namespace GL {
 		inline void SetModelCenterPoisition(const glm::vec3& centerPosition) {
 			this->centerPosition = centerPosition;
 		};
-		glm::mat4 UpdatePoisition(const Data& data);
+		glm::mat4 UpdatePoisition(Data& data);
 		void Render(const Data& data);
 		inline Shader* GetShader() {
 			return pshader;

@@ -51,6 +51,9 @@ namespace Window {
 		//初始化管理器
 		if(!glmanager->Init(args)) return false;
 		glViewport(0, 0, width, height); //设置opengl的窗口大小，这里设置为和主窗口大小一样
+		glEnable(GL_CULL_FACE); //启用面剔除功能
+		glCullFace(GL_BACK); // 剔除背面
+		glFrontFace(GL_CCW); // 逆时针为正面
 		//初始化imggui
 		uimanager->Init(window);
 		BindCallback();
@@ -170,14 +173,15 @@ namespace Window {
 				double xoffset = xpos - self->lastX;
 				double yoffset = ypos - self->lastY;
 				// 使用更小的缩放因子以平滑旋转
-				const double scaleFactor = 0.3;  // 减小这个值可以减小旋转的灵敏度
-				if (fabs(xoffset) > 3.0) {  // 只有当鼠标移动超过2像素时才更新
+				const double zscaleFactor = 0.3;  // 减小这个值可以减小旋转的灵敏度
+				const double xscaleFactor = 0.02;
+				if (fabs(xoffset) > 8.0) {  // 只有当鼠标移动超过2像素时才更新
 					data.rotateZ = true;
-					data.rotationZ += xoffset * scaleFactor;
+					data.rotationZ += xoffset * zscaleFactor;
 				}
-				if (fabs(yoffset) > 3.0) {  // 同样的阈值适用于Y轴
+				if (fabs(yoffset) > 8.0) {  // 同样的阈值适用于Y轴
 					data.rotateX = true;
-					data.rotationX += yoffset * scaleFactor;
+					data.rotationX += yoffset * xscaleFactor;
 				}
 				self->lastX = xpos;
 				self->lastY = ypos;

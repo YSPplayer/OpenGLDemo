@@ -199,7 +199,7 @@ namespace GL {
 	//	return true;
 	}
 
-	void GlManager::Render(const Data& data) {
+	void GlManager::Render(Data& data) {
 		if (models.size() <= 0) return;
 		const glm::mat4& view = data.reset ? cmaera->ReSetPoisition() : cmaera->UpdatePoisition(data);
 		const glm::mat4& projection = cmaera->UpdateProjection(data);

@@ -186,17 +186,41 @@ namespace GL {
 	/// </summary>
 	/// <param name="data"></param>
 	/// <returns></returns>
-	glm::mat4 Model::UpdatePoisition(const Data& data) {
+	glm::mat4 Model::UpdatePoisition(Data& data) {
 		if ((!data.rotateX && !data.rotateZ)) return position;//(!rotateX && !rotateZ) || 
 		// 先将模型平移到指定中心，以使得模型始终围绕自身的中心旋转
 		glm::mat4 translationToCenter = glm::translate(glm::mat4(1.0f), centerPosition);
 		position = translationToCenter;
 		if (data.rotateX) {
-			float x = data.enable ? data.rotationX + data.lastRotationX : data.lastRotationZ;
-			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(x, 360.0f)), glm::vec3(1.0f, 0.0f, 0.0f)); //先进行X轴的旋转
+			float x = data.enable ? data.rotationX + data.lastRotationX : data.lastRotationX;//lastRotationX
+			float rotationAngle = Util::NormalizeAngle(x, 360.0f);
+			// 限制旋转角度
+			 // 将大于180度的角度转换到负方向范围内
+			if (rotationAngle > 180.0f) {
+				rotationAngle -= 360.0f;
+			}
+			if (rotationAngle > 90.0f) {
+				rotationAngle = 90.0f;
+			}
+			else if (rotationAngle < 0.0f) {
+				rotationAngle = 0.0f;
+			}
+			data.lastRotationX = rotationAngle;
+			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f)); //先进行X轴的旋转
 		}
 		else {
-			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(data.lastRotationX, 360.0f)), glm::vec3(1.0f, 0.0f, 0.0f)); //先进行X轴的旋转
+			float rotationAngle = Util::NormalizeAngle(data.lastRotationX, 360.0f);
+			if (rotationAngle > 180.0f) {
+				rotationAngle -= 360.0f;
+			}
+			if (rotationAngle > 90.0f) {
+				rotationAngle = 90.0f;
+			}
+			else if (rotationAngle < 0.0f) {
+				rotationAngle = 0.0f;
+			}
+			data.lastRotationX = rotationAngle;
+			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f)); //先进行X轴的旋转
 		}
 		if (data.rotateZ) {
 			float z = data.enable ? data.rotationZ + data.lastRotationZ : data.lastRotationZ;
