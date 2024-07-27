@@ -25,14 +25,12 @@ namespace Window {
 			static float lastY;
 			static float lastX2;
 			static float lastY2;
-			static float yaw;
-			static float pitch;
 			static Data data;//传输的参数data类
 			static bool mousePressed;
 		/*	static bool rightButtonPressed;*/
 			~CWindow(); 
 			static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
-			static void UpdatePoint(GLFWwindow* window, double xpos, double ypos);
+			static void UpdatePoint(GLFWwindow* window, double xposIn, double yposIn);
 			void UpdateDeltaTime();
 			void ProcessInput();
 			void Render();

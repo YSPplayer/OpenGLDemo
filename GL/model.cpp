@@ -107,7 +107,7 @@ namespace GL {
 			glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);//如果不再需要cpu上的gpu指针，就取消映射
 		}
 		//分块把数据上传到gpu  55
-		position = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
+		position = glm::rotate(glm::mat4(1.0f), glm::radians(DEFAULT_MODEL_X_RADIANS), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
 		pshader = new Shader;
 		return pshader->CreateShader(vertexShader,colorShader);
 	}
@@ -291,7 +291,7 @@ namespace GL {
 	/// 重置模型到初始坐标
 	/// </summary>
 	glm::mat4 Model::ReSetPoisition() {
-		position = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
+		position = glm::rotate(glm::mat4(1.0f), glm::radians(DEFAULT_MODEL_X_RADIANS), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
 		return position;
 	}
 

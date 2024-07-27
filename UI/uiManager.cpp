@@ -90,7 +90,7 @@ namespace GL {
 				// 获取菜单栏的高度
 				float menuBarHeight = ImGui::GetFrameHeight();
 				ImGui::SetNextWindowPos(ImVec2(float(0), float(menuBarHeight + 10)));
-				ImGui::SetNextWindowSize(ImVec2(float(static_cast<float>(data.width) / 6.0f), float(data.height)));//设置ui渲染区域
+				ImGui::SetNextWindowSize(ImVec2(float(static_cast<float>(data.width) / 5.0f), float(data.height)));//设置ui渲染区域
 				ImGui::Begin(u8"设置菜单", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize);
 				{
 					//模型
@@ -181,29 +181,20 @@ namespace GL {
 						ImGui::SliderFloat(u8"反射度", &data.reflectivity, 0.0f, 256.0f);
 						ImGui::TreePop();
 					}
+					ImGui::Text(u8"");
+					if (ImGui::TreeNode(u8"系统")) {
+						ImGui::Checkbox(u8"背面剔除", &data.cullBackFace);
+						ImGui::Text(u8"");
+						ImGui::SliderFloat(u8"相机移动速度", &data.moveSpeedUnit, 1.0f, 10.0f);
+						ImGui::Text(u8"");
+						ImGui::SliderFloat(u8"相机视角灵敏度", &data.sensitivity, 0.01f, 0.1f);
+						ImGui::TreePop();
+					}
 					
 				}
 				ImGui::End();
 
 			}
-			//ImGui::SetNextWindowPos(ImVec2(float(0), float(0)));
-			//ImGui::SetNextWindowSize(ImVec2(float(static_cast<float>(width) / 6.0f), float(height)));//设置ui渲染区域
-//			ImGui::Begin(u8"设置菜单", nullptr,ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize);                          // Create a window called "Hello, world!" and append into it.
-//			
-////			ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-////			//ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-////			//ImGui::Checkbox("Another Window", &show_another_window);
-////
-/////*			ImGui::SliderFloat("float",, 0.0f, 1.0f);        */    // Edit 1 float using a slider from 0.0f to 1.0f
-////			//ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-////
-////			//if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-////			//	counter++;
-////			ImGui::SameLine();
-////			ImGui::Text("counter = %d", 1);
-//		/*	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);*/
-//			ImGui::End();
-
 		}
 		/// <summary>
 		/// 设置组件的颜色样式

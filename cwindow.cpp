@@ -11,8 +11,6 @@ namespace Window {
 	bool CWindow::mousePressed = false;
 	bool CWindow::shiftPressed = false;
 	bool CWindow::firstMouse = false;
-	float CWindow::yaw = -90.0f;
-	float CWindow::pitch = 0.0f;
 	Data CWindow::data;
 	CWindow::CWindow() {
 		window = nullptr;
@@ -20,15 +18,20 @@ namespace Window {
 		uimanager = new UiManager(glmanager);
 		deltaTime = 0.0f;
 		lastFrame = 0.0f;
+		data.yaw = -90.0f;
+		data.pitch = 0.0f;
 		data.rotateZ = false;
 		data.rotateX = false;
 		data.useLight = true;
+		data.sensitivity = 0.1f;
+		data.moveSpeedUnit = 1.0f;
 		data.lastRotationZ = 0.0f;
 		data.lastRotationX = 0.0f;
 		data.ambientStrength = 0.5f;
 		data.specularStrength = 0.5f;
+		data.cullBackFace = false;
 		data.reflectivity = 3.0f;
-		data.aspect = 0.3f;
+		data.aspect = DEFAULT_ASPECT;
 		data.drawMode = DRAW_MODE_SURFACE;
 	}
 
@@ -55,7 +58,7 @@ namespace Window {
 		//初始化管理器
 		if(!glmanager->Init(args)) return false;
 		glViewport(0, 0, width, height); //设置opengl的窗口大小，这里设置为和主窗口大小一样
-		glEnable(GL_CULL_FACE); //启用面剔除功能
+		glDisable(GL_CULL_FACE); //默认禁用面剔除功能
 		glCullFace(GL_BACK); // 剔除背面
 		glFrontFace(GL_CCW); // 逆时针为正面
 		//初始化imggui
@@ -70,6 +73,7 @@ namespace Window {
 	/// <returns></returns>
 	bool CWindow::Exe() {
 		while(!glfwWindowShouldClose(window)) {
+			UpdateDeltaTime();//更新帧率速度
 			ProcessInput();//监听按键事件
 			glfwPollEvents(); //接收事件，用于事件的触发
 			Render();
@@ -106,8 +110,7 @@ namespace Window {
 	/// 鼠标事件的监听
 	/// </summary>
 	void CWindow::ProcessInput() {
-		UpdateDeltaTime();
-		data.moveSpeed =  1.0f * deltaTime;
+		data.moveSpeed = data.moveSpeedUnit * deltaTime;
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 			data.moveType = MOVE_FORWARD;
 		else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -136,38 +139,35 @@ namespace Window {
 		glfwSetKeyCallback(window, KeyCallback);
 	}
 
-	void CWindow::UpdatePoint(GLFWwindow* window, double xpos, double ypos) {
-		UiManager::CursorPosCallback(window, xpos, ypos);
+	void CWindow::UpdatePoint(GLFWwindow* window, double xposIn, double yposIn) {
+		UiManager::CursorPosCallback(window, xposIn, yposIn);
 		CWindow* self = static_cast<CWindow*>(glfwGetWindowUserPointer(window));
+		//更换相机视角
+		float xpos = static_cast<float>(xposIn);
+		float ypos = static_cast<float>(yposIn);
 		if (shiftPressed) {
-			if (self->mousePressed) {
-				if (firstMouse) {
-					lastX2 = xpos;
-					lastY2 = ypos;
-					firstMouse = false;
-				}
-				double xoffset = xpos - lastX2;
-				double yoffset = lastY2 - ypos;
+			if (firstMouse)
+			{
 				lastX2 = xpos;
 				lastY2 = ypos;
-				GLfloat sensitivity = 0.05;
-				xoffset *= sensitivity;
-				yoffset *= sensitivity;
-				yaw += xoffset;
-				pitch += yoffset;
-				if (pitch > 89.0f)
-					pitch = 89.0f;
-				if (pitch < -89.0f)
-					pitch = -89.0f;
-				data.yaw = yaw;
-				data.pitch = pitch;
-				data.isYaw = true;
+				firstMouse = false;
 			}
-			else {
-			
-			}
+			float xoffset = xpos - lastX2;
+			float yoffset = lastY2 - ypos;
+			lastX2 = xpos;
+			lastY2 = ypos;
+			xoffset *= data.sensitivity;
+			yoffset *= data.sensitivity;
+			data.yaw += xoffset;
+			data.pitch += yoffset;
+			if (data.pitch > 89.0f)
+				data.pitch = 89.0f;
+			if (data.pitch < -89.0f)
+				data.pitch = -89.0f;
+			data.isYaw = true;
 		}	
 		else {
+			firstMouse = true;//重置相机视角的移动变量
 			if (self->mousePressed) {
 				if (self->lastX == 0.0 && self->lastY == 0.0) {
 					self->lastX = xpos;
@@ -203,7 +203,7 @@ namespace Window {
 	}
 
 	void CWindow::UpdateDeltaTime() {
-		double currentFrameTime = glfwGetTime();
+		float currentFrameTime = static_cast<float>(glfwGetTime());
 		deltaTime = currentFrameTime - lastFrame;
 		lastFrame = currentFrameTime;
 	}
@@ -234,7 +234,7 @@ namespace Window {
 	void CWindow::Render() {
 		//渲染指令
 		//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glfwGetWindowSize(window, &data.width, &data.height);//获取到当前窗口的宽高
 		glmanager->Render(data); 
@@ -249,10 +249,11 @@ namespace Window {
 		if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT) {
 			if (action == GLFW_PRESS) {
 				shiftPressed = true;
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);//按下shift时候隐藏鼠标
 			}
 			else if (action == GLFW_RELEASE) {
 				shiftPressed = false;
-				//mouseDragging = false; // 停止拖拽
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); //正常模式下显示鼠标
 			}
 		}
 		UiManager::KeyCallback(window, key, scancode, action, mods);

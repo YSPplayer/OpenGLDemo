@@ -13,6 +13,9 @@ namespace GL {
 //最大偏移量
 #define MAX_X_OFFSET 10.0f
 #define MAX_Y_OFFSET 10.0f
+//-0.0 -55.0
+#define DEFAULT_MODEL_X_RADIANS 0.0f //默认模型的开始X轴角度
+#define DEFAULT_ASPECT 0.3f //默认的缩放大小
 	struct Param {
 		int w;
 		int h;
@@ -35,7 +38,10 @@ namespace GL {
 		int width;
 		int height;
 		int moveType;//移动模式
-		float moveSpeed;//移动速度
+		bool cullBackFace;//是否剔除模型背面
+		float moveSpeed;//相机最终移动速度，带有帧率
+		float moveSpeedUnit; //[1-10]
+		float sensitivity;//相机视角灵敏度[0.01-0.1]
 		float rotationZ;
 		float lastRotationZ;
 		bool rotateZ;

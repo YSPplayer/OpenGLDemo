@@ -201,6 +201,12 @@ namespace GL {
 
 	void GlManager::Render(Data& data) {
 		if (models.size() <= 0) return;
+		data.cullBackFace ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);//是否使用面剔除功能
+		if (data.reset) {
+			data.aspect = DEFAULT_ASPECT;//更新默认的视口缩放比例
+			data.yaw = -90.0f;//更新旋转轴参数
+			data.pitch = 0.0f; //更新旋转轴参数
+		} 
 		const glm::mat4& view = data.reset ? cmaera->ReSetPoisition() : cmaera->UpdatePoisition(data);
 		const glm::mat4& projection = cmaera->UpdateProjection(data);
 		for (int i = 0; i < models.size(); ++i) {
