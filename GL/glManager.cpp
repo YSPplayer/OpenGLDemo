@@ -212,8 +212,16 @@ namespace GL {
 			shader->SetShaderMat4(view, "view");
 			shader->SetShaderMat4(lightControl->lightModelPos,"lightPos");
 			shader->SetShaderMat4(mposition, "model");
+			//计算法线矩阵，兼容模型不规则变化时同步法线的位置
+			const glm::mat3& normalMatrix = glm::transpose(glm::inverse(glm::mat3(mposition)));
+			shader->SetShaderMat3(normalMatrix,"normalMatrix");
+			shader->SetShaderVec3(cmaera->GetCameraPos(), "viewPos");
 			shader->SetShaderMat4(projection, "projection");
 			shader->SetShaderBoolean(model->HasTexture(), "useTexture");
+			shader->SetShaderBoolean(data.useLight, "useLight");
+			shader->SetShaderFloat(data.ambientStrength,"ambientStrength");//环境光照
+			shader->SetShaderFloat(data.specularStrength, "specularStrength");//镜面光照
+			shader->SetShaderFloat(data.reflectivity, "reflectivity"); //反射度
 			model->Render(data);
 		}
 		//绘制灯光模型

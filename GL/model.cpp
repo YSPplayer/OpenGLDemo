@@ -196,21 +196,21 @@ namespace GL {
 			float rotationAngle = Util::NormalizeAngle(x, 360.0f);
 			// 限制旋转角度
 			 // 将大于180度的角度转换到负方向范围内
-			if (rotationAngle > 180.0f) {
-				rotationAngle -= 360.0f;
-			}
-			if (rotationAngle > 90.0f) {
-				rotationAngle = 90.0f;
-			}
-			else if (rotationAngle < 0.0f) {
-				rotationAngle = 0.0f;
-			}
-			data.lastRotationX = rotationAngle;
+			//if (rotationAngle > 180.0f) {
+			//	rotationAngle -= 360.0f;
+			//}
+			//if (rotationAngle > 90.0f) {
+			//	rotationAngle = 90.0f;
+			//}
+			//else if (rotationAngle < 0.0f) {
+			//	rotationAngle = 0.0f;
+			//}
+			//data.lastRotationX = rotationAngle;
 			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f)); //先进行X轴的旋转
 		}
 		else {
 			float rotationAngle = Util::NormalizeAngle(data.lastRotationX, 360.0f);
-			if (rotationAngle > 180.0f) {
+	/*		if (rotationAngle > 180.0f) {
 				rotationAngle -= 360.0f;
 			}
 			if (rotationAngle > 90.0f) {
@@ -219,7 +219,7 @@ namespace GL {
 			else if (rotationAngle < 0.0f) {
 				rotationAngle = 0.0f;
 			}
-			data.lastRotationX = rotationAngle;
+			data.lastRotationX = rotationAngle;*/
 			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f)); //先进行X轴的旋转
 		}
 		if (data.rotateZ) {

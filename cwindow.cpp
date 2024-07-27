@@ -22,8 +22,12 @@ namespace Window {
 		lastFrame = 0.0f;
 		data.rotateZ = false;
 		data.rotateX = false;
+		data.useLight = true;
 		data.lastRotationZ = 0.0f;
 		data.lastRotationX = 0.0f;
+		data.ambientStrength = 0.5f;
+		data.specularStrength = 0.5f;
+		data.reflectivity = 3.0f;
 		data.aspect = 0.3f;
 		data.drawMode = DRAW_MODE_SURFACE;
 	}
@@ -174,7 +178,7 @@ namespace Window {
 				double yoffset = ypos - self->lastY;
 				// 使用更小的缩放因子以平滑旋转
 				const double zscaleFactor = 0.3;  // 减小这个值可以减小旋转的灵敏度
-				const double xscaleFactor = 0.02;
+				const double xscaleFactor = 0.08;
 				if (fabs(xoffset) > 8.0) {  // 只有当鼠标移动超过2像素时才更新
 					data.rotateZ = true;
 					data.rotationZ += xoffset * zscaleFactor;

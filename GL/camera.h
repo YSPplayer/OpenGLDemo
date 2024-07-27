@@ -14,6 +14,9 @@ namespace GL {
 		inline void SetModelCenterPoisition(const glm::vec3& centerPosition) {
 			this->centerPosition = centerPosition;
 		};
+		inline glm::vec3 GetCameraPos() {
+			return cameraPos;
+		}
 	private:
 		glm::vec3 cameraFront;//摄像机看向的方向，看向Z轴的负方向【写死】
 		glm::vec3 cameraPos; //相机的世界坐标系位置

@@ -9,6 +9,7 @@ namespace GL {
 		uniform mat4 model;
 		uniform mat4 view;
 		uniform mat4 projection;
+		uniform mat3 normalMatrix;
 		out vec2 TexCoord;
 		out vec3 Normal;
 		out vec3 FragPos;
@@ -18,7 +19,7 @@ namespace GL {
 			FragPos = vec3(model * vec4(aPos, 1.0));
 			//gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
 			TexCoord = aTexCoord;
-			Normal = aNormal;
+			Normal = normalMatrix * aNormal;
 		}
 	)glsl";
 	std::string colorLightShader = R"glsl(	
@@ -36,8 +37,13 @@ namespace GL {
 	in vec3 Normal;
 	in vec3 FragPos;
 	uniform sampler2D ourTexture;
+    uniform float ambientStrength;	
+	uniform	float specularStrength;
 	uniform bool useTexture;
+	uniform bool useLight;
 	uniform vec3 lightPos;
+	uniform vec3 viewPos;
+	uniform float reflectivity; // 反射度因子，范围 0-256
 	void main()
 	{
 		vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
@@ -45,15 +51,25 @@ namespace GL {
 		if(useTexture) {
 		   objectColor = texture(ourTexture, TexCoord).rgb;
 		}
-		float ambientStrength = 0.8;
-		vec3 ambient = ambientStrength * lightColor;
-		vec3 evObjColor = ambient * objectColor;
-		vec3 lightDir = normalize(lightPos - FragPos);
-		vec3 norm = normalize(Normal);
-		float diff = max(dot(norm, lightDir), 0.0);
-		vec3 diffuse = diff * lightColor;
-		vec3 result = (ambient + diffuse) * objectColor;
-		FragColor = vec4(result, 1.0f);
+		if(useLight) {
+			//环境光
+			vec3 ambient = ambientStrength * lightColor;
+			
+			//漫反射光
+			vec3 lightDir = normalize(lightPos - FragPos); 
+			vec3 norm = normalize(Normal);
+			float diff = max(dot(norm, lightDir), 0.0);
+			vec3 diffuse = diff * lightColor;
+			
+			//镜面光
+			vec3 viewDir = normalize(viewPos - FragPos);
+			vec3 reflectDir = reflect(-lightDir, norm);
+
+			float spec = pow(max(dot(viewDir, reflectDir), 0.0),reflectivity);
+			vec3 specular = specularStrength * spec * lightColor;
+			objectColor = (ambient + diffuse + specular) * objectColor;
+		}
+		FragColor = vec4(objectColor, 1.0f);
 	} 
 	)glsl";
 }

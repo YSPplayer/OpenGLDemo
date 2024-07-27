@@ -49,6 +49,10 @@ namespace GL {
 		bool isYaw;
 		bool reset;//重置模型+相机位置
 		int drawMode;//绘制模式
+		float ambientStrength;//环境光照调节因子
+		float specularStrength;//镜面光照调节因子
+		float reflectivity;//反射度因子
+		bool useLight;//是否使用灯光
 	};
 	//UI组件存放的数据
 	struct UData {
@@ -60,5 +64,6 @@ namespace GL {
 		bool modelRandomZ;
 		char pathBuf[256];
 		int selectedRadio;
+
 	};
 }

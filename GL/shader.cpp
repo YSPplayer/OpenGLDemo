@@ -58,6 +58,21 @@ namespace GL {
 		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mat4));
 	}
 
+	void Shader::SetShaderMat3(const glm::mat3& mat3, const std::string& key) {
+		int loc = glGetUniformLocation(shaderProgram, key.c_str());
+		glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(mat3));
+	}
+
+	void Shader::SetShaderVec3(const glm::vec3& vec3, const std::string& key) {
+		int loc = glGetUniformLocation(shaderProgram, key.c_str());
+		glUniform3fv(loc, 1, glm::value_ptr(vec3));
+	}
+
+	void Shader::SetShaderFloat(float value, const std::string& key) {
+		int loc = glGetUniformLocation(shaderProgram, key.c_str());
+		glUniform1f(loc, value);
+	}
+
 	/// <summary>
 	/// 设置shader中的布尔变量
 	/// </summary>
