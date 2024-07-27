@@ -55,12 +55,14 @@ namespace GL {
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
 
-		void UiManager::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+		bool UiManager::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 			ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+			return ImGui::GetIO().WantCaptureMouse;
 		}
 
-		void UiManager::CursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
+		bool UiManager::CursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 			ImGui_ImplGlfw_CursorPosCallback(window, xpos, ypos);
+			return ImGui::GetIO().WantCaptureMouse;
 		}
 
 		void UiManager::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -171,6 +173,35 @@ namespace GL {
 						if (ImGui::Button(u8"加载贴图")) {
 							glmanager->CreateModelTexture(udata.pathBuf,glmanager->GetCurrentModel(),nullptr,0);
 						}
+						ImGui::TreePop();
+					}
+					ImGui::Text(u8"");
+					float (*colors)[4] = data.colors;
+					static float color[4] = { 255.0f, 255.0f, 255.0f, 255.0f };
+					if (ImGui::TreeNode(u8"颜色")) {
+						float maxWidth = ImGui::GetContentRegionAvail().x;
+						if (ImGui::ColorButton("##colorbutton0", ImVec4(colors[0][0], colors[0][1], colors[0][2], colors[0][3]), ImGuiColorEditFlags_NoTooltip, ImVec2(maxWidth / 8.0f, maxWidth / 12.0f))) {
+							colors[0][0] = color[0];
+							colors[0][1] = color[1];
+							colors[0][2] = color[2];
+						}
+						ImGui::SameLine();
+						ImGui::Text(u8"背景颜色");
+						if (ImGui::ColorButton("##colorbutton1", ImVec4(colors[1][0], colors[1][1], colors[1][2], colors[1][3]), ImGuiColorEditFlags_NoTooltip, ImVec2(maxWidth / 8.0f, maxWidth / 12.0f))) {
+							colors[1][0] = color[0];
+							colors[1][1] = color[1];
+							colors[1][2] = color[2];
+						}
+						ImGui::SameLine();
+						ImGui::Text(u8"模型颜色");
+						if (ImGui::ColorButton("##colorbutton2", ImVec4(colors[2][0], colors[2][1], colors[2][2], colors[2][3]), ImGuiColorEditFlags_NoTooltip, ImVec2(maxWidth / 8.0f, maxWidth / 12.0f))) {
+							colors[2][0] = color[0];
+							colors[2][1] = color[1];
+							colors[2][2] = color[2];
+						}
+						ImGui::SameLine();
+						ImGui::Text(u8"光照颜色");
+						ImGui::ColorPicker4("##picker", color);
 						ImGui::TreePop();
 					}
 					ImGui::Text(u8"");

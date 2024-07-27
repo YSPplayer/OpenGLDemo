@@ -44,6 +44,7 @@ namespace GL {
 		float sensitivity;//相机视角灵敏度[0.01-0.1]
 		float rotationZ;
 		float lastRotationZ;
+		float colors[3][4];//存放背景、模型、光照颜色
 		bool rotateZ;
 		float rotationX;
 		float lastRotationX;

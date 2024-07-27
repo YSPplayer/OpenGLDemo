@@ -33,6 +33,13 @@ namespace Window {
 		data.reflectivity = 3.0f;
 		data.aspect = DEFAULT_ASPECT;
 		data.drawMode = DRAW_MODE_SURFACE;
+		//初始化颜色
+		for (int i = 0; i < 3; ++i) {
+			data.colors[i][0] = 0.0f;
+			data.colors[i][1] = 0.0f;
+			data.colors[i][2] = 0.0f;
+			data.colors[i][3] = 1.0f;
+		}
 	}
 
 	/// <summary>
@@ -86,7 +93,7 @@ namespace Window {
 	CWindow::~CWindow() {}
 
 	void CWindow::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-		UiManager::MouseButtonCallback(window, button, action, mods);
+		if (UiManager::MouseButtonCallback(window, button, action, mods)) return;
 		CWindow* self = static_cast<CWindow*>(glfwGetWindowUserPointer(window));
 		if (button == GLFW_MOUSE_BUTTON_LEFT) {
 			if (action == GLFW_PRESS) {
@@ -140,7 +147,7 @@ namespace Window {
 	}
 
 	void CWindow::UpdatePoint(GLFWwindow* window, double xposIn, double yposIn) {
-		UiManager::CursorPosCallback(window, xposIn, yposIn);
+		if (UiManager::CursorPosCallback(window, xposIn, yposIn)) return;
 		CWindow* self = static_cast<CWindow*>(glfwGetWindowUserPointer(window));
 		//更换相机视角
 		float xpos = static_cast<float>(xposIn);
