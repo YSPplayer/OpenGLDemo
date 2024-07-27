@@ -133,8 +133,7 @@ namespace GL {
 						const char* point = u8"点云";
 						const char* grid = u8"网格";
 						const char* surface = u8"面";
-						for (int i = 0; i < 3; i++)
-						{
+						for (int i = 0; i < 3; i++) {
 							
 							if (ImGui::Selectable(i == 0 ? point : i == 1 ? grid : surface, udata.selectedRadio == i)) {
 								udata.selectedRadio = i;
@@ -174,6 +173,15 @@ namespace GL {
 						}
 						ImGui::TreePop();
 					}
+					ImGui::Text(u8"");
+					if (ImGui::TreeNode(u8"光照")) { 
+						ImGui::Checkbox(u8"启用光照", &data.useLight);
+						ImGui::SliderFloat(u8"环境光照", &data.ambientStrength, 0.0f, 1.0f);
+						ImGui::SliderFloat(u8"镜面光照", &data.specularStrength, 0.0f, 1.0f);
+						ImGui::SliderFloat(u8"反射度", &data.reflectivity, 0.0f, 256.0f);
+						ImGui::TreePop();
+					}
+					
 				}
 				ImGui::End();
 
