@@ -1,15 +1,21 @@
 #pragma once
+#include "../GL/data.h"
 #include <cmath>
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <random>
 #include <codecvt>
 #include <Windows.h>
 #include <chrono>
 #include <string>
+#include <vector>
 #include <glm/glm.hpp>
+#include <tinyxml2/tinyxml2.h>
 namespace GL {
 	namespace Tool {
+        using namespace tinyxml2;
+
 		class Util {
 		public:
             template<typename T>
@@ -39,6 +45,137 @@ namespace GL {
 			}
 
             /// <summary>
+            /// 加载配置文件
+            /// </summary>
+            /// <param name="data"></param>
+            /// <param name="udata"></param>
+            /// <returns></returns>
+            static bool LoadConfig(Data& data, UData& udata) {
+                tinyxml2::XMLDocument doc;
+                char* pathstr = Util::WStringToChar((Util::GetRootPath() + L"Config\\config.xml"));
+                XMLError eResult = doc.LoadFile(pathstr);
+                delete[] pathstr;
+                if (eResult != XML_SUCCESS) return false;
+                XMLElement* root = doc.RootElement();
+                XMLElement* model = root->FirstChildElement("Model");
+                udata.modelWidth = std::stoi(model->FirstChildElement("Width")->GetText());
+                udata.modelHeight = std::stoi(model->FirstChildElement("Height")->GetText());
+                udata.modelXOffset = std::stod(model->FirstChildElement("XOffset")->GetText());
+                udata.modelYOffset = std::stod(model->FirstChildElement("YOffset")->GetText());
+                udata.modelRandomZ = std::string(model->FirstChildElement("ZRandom")->GetText()) == "1" ? true : false;
+                udata.modelRandomRange = std::stod(model->FirstChildElement("ZRandomRange")->GetText());
+                udata.selectedRadio = std::stoi(model->FirstChildElement("ShowMode")->GetText());
+                data.drawMode = udata.selectedRadio;
+                XMLElement* texture = root->FirstChildElement("Texture");
+                auto text  = texture->FirstChildElement("Path")->GetText();
+                std::string selectedFilePath = std::string(text ? text : "");
+                strncpy_s(udata.pathBuf, selectedFilePath.c_str(), (sizeof(udata.pathBuf) / sizeof(udata.pathBuf)[0]) - 1);
+                udata.pathBuf[(sizeof(udata.pathBuf) / sizeof(udata.pathBuf)[0]) - 1] = '\0'; // 确保字符串以空字符结尾
+                XMLElement* color = root->FirstChildElement("Color");
+                std::vector<std::vector<float>> values;
+                for (int i = 0; i < 3; ++i) {
+                    values.push_back(std::vector<float>());
+                    std::string key = "";
+                    if (i == 0) key = "Background";
+                    else if (i == 1) key = "Model";
+                    else  key = "Light";
+                    std::istringstream ss(color->FirstChildElement(key.c_str())->GetText());
+                    std::string valuestr;
+                    while (std::getline(ss, valuestr, ',')) {
+                        float value = std::stof(valuestr);
+                        values[i].push_back(value);
+                    }
+                }
+               
+                float(*colors)[4] = data.colors;
+                for (int i = 0; i < 3; ++i) {
+                    colors[i][0] = values[i][0];
+                    colors[i][1] = values[i][1];
+                    colors[i][2] = values[i][2];
+                    colors[i][3] = values[i][3];
+                }
+                XMLElement* system = root->FirstChildElement("System");
+                data.cullBackFace = system->FirstChildElement("CullBack")->GetText() == "1" ? true : false;
+                data.moveSpeedUnit = std::stof(system->FirstChildElement("CameraSpeed")->GetText());
+                data.sensitivity = std::stof(system->FirstChildElement("CameraSensitivity")->GetText());
+                return true;
+            }
+
+
+            /// <summary>
+            /// 创建配置文件
+            /// </summary>
+            /// <param name="data"></param>
+            /// <returns></returns>
+            static bool CreateConfig(const Data& data,const UData& udata) {
+                tinyxml2::XMLDocument doc;
+                // 添加声明
+                XMLDeclaration* decl = doc.NewDeclaration();
+                doc.InsertFirstChild(decl);
+                XMLElement* root = doc.NewElement("Root");
+                doc.InsertEndChild(root);
+                //model
+                XMLElement* model = doc.NewElement("Model");
+                root->InsertEndChild(model);
+                XMLElement* width = doc.NewElement("Width");
+                model->InsertEndChild(width);
+                width->SetText(udata.modelWidth);
+                XMLElement* height = doc.NewElement("Height");
+                model->InsertEndChild(height);
+                height->SetText(udata.modelHeight);
+                XMLElement* xOffset = doc.NewElement("XOffset");
+                model->InsertEndChild(xOffset);
+                xOffset->SetText(udata.modelXOffset);
+                XMLElement* yOffset = doc.NewElement("YOffset");
+                model->InsertEndChild(yOffset);
+                yOffset->SetText(udata.modelYOffset);
+                XMLElement* zRandomRange = doc.NewElement("ZRandomRange");
+                model->InsertEndChild(zRandomRange);
+                zRandomRange->SetText(udata.modelRandomRange);
+                XMLElement* zRandom = doc.NewElement("ZRandom");
+                model->InsertEndChild(zRandom);
+                zRandom->SetText(udata.modelRandomZ ? "1" : "0");
+                XMLElement* showMode = doc.NewElement("ShowMode");
+                model->InsertEndChild(showMode);
+                showMode->SetText(udata.selectedRadio);
+                //Texture
+                XMLElement* texture = doc.NewElement("Texture");
+                root->InsertEndChild(texture);
+                XMLElement* path = doc.NewElement("Path");
+                texture->InsertEndChild(path);
+                path->SetText(udata.pathBuf);
+                //Color
+                const float(*colors)[4] = data.colors;
+                XMLElement* color = doc.NewElement("Color");
+                root->InsertEndChild(color);
+                XMLElement* background = doc.NewElement("Background");
+                color->InsertEndChild(background);
+                background->SetText(GetColorString(colors[0]).c_str());
+                XMLElement* cmodel = doc.NewElement("Model");
+                color->InsertEndChild(cmodel);
+                cmodel->SetText(GetColorString(colors[1]).c_str());
+                XMLElement* light = doc.NewElement("Light");
+                color->InsertEndChild(light);
+                light->SetText(GetColorString(colors[2]).c_str());
+                //System
+                XMLElement* system = doc.NewElement("System");
+                root->InsertEndChild(system);
+                XMLElement* cullBack = doc.NewElement("CullBack");
+                system->InsertEndChild(cullBack);
+                cullBack->SetText(data.cullBackFace ? "1" : "0");
+                XMLElement* cameraSpeed = doc.NewElement("CameraSpeed");
+                system->InsertEndChild(cameraSpeed);
+                cameraSpeed->SetText(data.moveSpeedUnit);
+                XMLElement* cameraSensitivity = doc.NewElement("CameraSensitivity");
+                system->InsertEndChild(cameraSensitivity);
+                cameraSensitivity->SetText(data.sensitivity);
+                char* pathstr = Util::WStringToChar((Util::GetRootPath() + L"Config\\config.xml"));
+                XMLError eResult = doc.SaveFile(pathstr);
+                delete[] pathstr;
+                return eResult == XML_SUCCESS;
+            }
+
+            /// <summary>
             /// 计算面法线
             /// </summary>
             /// <param name="v1"></param>
@@ -66,7 +203,7 @@ namespace GL {
                 std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
                 return converter.to_bytes(wstr);
             }
-            static const char* WStringToChar(const std::wstring& wstr) {
+            static char* WStringToChar(const std::wstring& wstr) {
                 const std::string& str = WStringToString(wstr);
                 char* charPtr = new char[str.length() + 1]; //char内存需要手动管理释放
                 strcpy_s(charPtr, str.length() + 1, str.c_str());
@@ -126,6 +263,11 @@ namespace GL {
                     *lastSlash = L'\0';
                 }
                 return  std::wstring(exePath) + L"\\";
+            }
+
+            static std::string GetColorString(const float * color) {
+                return std::to_string(color[0]) + "," + std::to_string(color[1]) + "," +
+                    std::to_string(color[2]) + "," + std::to_string(color[3]);
             }
         };
           

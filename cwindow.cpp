@@ -15,31 +15,35 @@ namespace Window {
 	CWindow::CWindow() {
 		window = nullptr;
 		glmanager = new GlManager;
-		uimanager = new UiManager(glmanager);
 		deltaTime = 0.0f;
 		lastFrame = 0.0f;
-		data.yaw = -90.0f;
-		data.pitch = 0.0f;
-		data.rotateZ = false;
-		data.rotateX = false;
-		data.useLight = true;
-		data.sensitivity = 0.1f;
-		data.moveSpeedUnit = 1.0f;
-		data.lastRotationZ = 0.0f;
-		data.lastRotationX = 0.0f;
+		data.aspect = DEFAULT_ASPECT;
 		data.ambientStrength = 0.5f;
 		data.specularStrength = 0.5f;
-		data.cullBackFace = false;
+		data.lastRotationZ = 0.0f;
+		data.lastRotationX = 0.0f;
 		data.reflectivity = 3.0f;
-		data.aspect = DEFAULT_ASPECT;
-		data.drawMode = DRAW_MODE_SURFACE;
-		//初始化颜色
-		for (int i = 0; i < 3; ++i) {
-			data.colors[i][0] = 0.0f;
-			data.colors[i][1] = 0.0f;
-			data.colors[i][2] = 0.0f;
-			data.colors[i][3] = 1.0f;
+		data.useLight = true;
+		data.rotateZ = false;
+		data.rotateX = false;
+		data.yaw = -90.0f;
+		data.pitch = 0.0f;
+		bool load = false;
+		if (!(load = Util::LoadConfig(data, UiManager::udata))) {
+			data.sensitivity = 0.1f;
+			data.moveSpeedUnit = 1.0f;
+			data.cullBackFace = false;
+			data.drawMode = DRAW_MODE_SURFACE;
+			//初始化颜色
+			for (int i = 0; i < 3; ++i) {
+				data.colors[i][0] = 0.0f;
+				data.colors[i][1] = 0.0f;
+				data.colors[i][2] = 0.0f;
+				data.colors[i][3] = 1.0f;
+			}
 		}
+		uimanager = new UiManager(glmanager,load);
+		
 	}
 
 	/// <summary>

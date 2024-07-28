@@ -8,14 +8,19 @@ namespace GL {
 	namespace UI {
 		using namespace GL::Tool;
 		UData UiManager::udata;
-		UiManager::UiManager(GlManager* glmanager):glmanager(glmanager) {
-			udata.modelWidth = 1224;
-			udata.modelHeight = 1026;
-			udata.modelXOffset = 1.38;
-			udata.modelYOffset = 1.38;
-			udata.modelRandomZ = true;
-			udata.modelRandomRange = 10;
-			udata.selectedRadio = DRAW_MODE_SURFACE;//选择模式
+		UiManager::UiManager(GlManager* glmanager,bool load) :glmanager(glmanager) {
+			if (!load) {
+				std::string selectedFilePath = " ";//初始化数据
+				strncpy_s(udata.pathBuf, selectedFilePath.c_str(), IM_ARRAYSIZE(udata.pathBuf) - 1);
+				udata.pathBuf[IM_ARRAYSIZE(udata.pathBuf) - 1] = '\0'; // 确保字符串以空字符结尾 
+				udata.modelWidth = 1224;
+				udata.modelHeight = 1026;
+				udata.modelXOffset = 1.38;
+				udata.modelYOffset = 1.38;
+				udata.modelRandomZ = true;
+				udata.modelRandomRange = 10;
+				udata.selectedRadio = DRAW_MODE_SURFACE;//选择模式
+			}
 		}
 		/// <summary>
 		/// 清理imggui
@@ -31,8 +36,8 @@ namespace GL {
 		void UiManager::Init(GLFWwindow* window) {
 			ImGui::CreateContext();
 			ImGuiIO& io = ImGui::GetIO();
-			//设置配置文件保存路径 
-		    io.IniFilename = Util::WStringToChar((Util::GetRootPath() + L"imgui.ini"));
+			//设置配置文件保存路径  Util::WStringToChar((Util::GetRootPath() + L"imgui.ini"))
+		    io.IniFilename = nullptr;
 			ImFontConfig fontCfg;//支持中文显示，获取字体路径
 			io.Fonts->AddFontFromFileTTF(Util::WStringToString((Util::GetRootPath() + L"Font/YoungRound_CN.TTF")).c_str(), 14.0f, &fontCfg, io.Fonts->GetGlyphRangesChineseFull());
 			ImGui::StyleColorsDark();
@@ -81,6 +86,12 @@ namespace GL {
 				{
 					if (ImGui::BeginMenu(u8"文件")) {
 						if (ImGui::MenuItem(u8"打开文件")) {}
+						ImGui::EndMenu();
+					}
+					if (ImGui::BeginMenu(u8"配置")) {
+						if (ImGui::MenuItem(u8"保存配置")) {
+							Util::CreateConfig(data,udata);
+						}
 						ImGui::EndMenu();
 					}
 				}

@@ -5,7 +5,8 @@ namespace GL {
 	namespace UI {
 		class UiManager {
 		public:
-			UiManager(GlManager* glmanager);
+			static UData udata;
+			UiManager(GlManager* glmanager,bool load);
 			~UiManager();
 			void Init(GLFWwindow* window);
 			void Render(Data& data);
@@ -16,7 +17,6 @@ namespace GL {
 			void Draw(Data& data);
 			void SetStyle();
 			GlManager* glmanager;//该对象的内存在主窗口中释放
-			static UData udata;
 		};
 	}
 }
