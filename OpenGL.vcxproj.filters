@@ -132,4 +132,8 @@
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Shader\model.vs" />
+    <None Include="Shader\model.fs" />
+  </ItemGroup>
 </Project>

@@ -209,6 +209,38 @@ namespace GL {
                 strcpy_s(charPtr, str.length() + 1, str.c_str());
                 return charPtr;
             }
+            
+
+            /// <summary>
+            /// 读取外部shader
+            /// </summary>
+            /// <param name="vertexPath"></param>
+            /// <param name="colorPath"></param>
+            /// <param name="vertexShader"></param>
+            /// <param name="colorShader"></param>
+            /// <returns></returns>
+            static bool LoadShader(const char* vertexPath, const char* colorPath,std::string& vertexShader,std::string& colorShader) {
+                std::ifstream vShaderFile;
+                std::ifstream fShaderFile;
+                vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+                fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+                try {
+                    vShaderFile.open(vertexPath);
+                    fShaderFile.open(colorPath);
+                    std::stringstream vShaderStream, fShaderStream;
+                    vShaderStream << vShaderFile.rdbuf();
+                    fShaderStream << fShaderFile.rdbuf();
+                    vShaderFile.close();
+                    fShaderFile.close();
+                    vertexShader = vShaderStream.str();
+                    colorShader = fShaderStream.str();
+                }
+                catch (std::ifstream::failure& e) {
+                    std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+                    return false;
+                }
+                return true;
+            }
 
             /// <summary>
             /// 获取当前的时间

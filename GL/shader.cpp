@@ -1,6 +1,7 @@
 #include "shader.h"
-#include "iostream"
+#include <iostream>
 #include <vector>
+
 #include <glm/gtc/type_ptr.hpp>
 namespace GL {
 	Shader::Shader() {
@@ -46,7 +47,6 @@ namespace GL {
 		}
 		return false;
 	}
-
 
 	/// <summary>
 	/// 设置shader全局变量

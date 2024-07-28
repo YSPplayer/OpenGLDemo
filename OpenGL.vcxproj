@@ -189,6 +189,10 @@
     <ClInclude Include="UI\uiManager.h" />
     <ClInclude Include="Util\util.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Shader\model.fs" />
+    <None Include="Shader\model.vs" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

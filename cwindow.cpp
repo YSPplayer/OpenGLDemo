@@ -72,6 +72,7 @@ namespace Window {
 		glDisable(GL_CULL_FACE); //默认禁用面剔除功能
 		glCullFace(GL_BACK); // 剔除背面
 		glFrontFace(GL_CCW); // 逆时针为正面
+		glEnable(GL_DEPTH_TEST);//启用深度测试，不然模型渲染不正确
 		//初始化imggui
 		uimanager->Init(window);
 		BindCallback();
@@ -245,7 +246,7 @@ namespace Window {
 	void CWindow::Render() {
 		//渲染指令
 		glClearColor(data.colors[0][0], data.colors[0][1], data.colors[0][2], data.colors[0][3]);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//启用深度测试需要GL_DEPTH_BUFFER_BIT
 		glfwGetWindowSize(window, &data.width, &data.height);//获取到当前窗口的宽高
 		glmanager->Render(data); 
 		uimanager->Render(data);//先绘制模型，后渲染ui，ui层级在模型之上

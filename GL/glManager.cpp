@@ -118,21 +118,30 @@ namespace GL {
 		//	3, 2, 6, 3, 6, 7// Top face
 		//};
 		unsigned int indices[] = {
-	 0,  1,  2,  // Front face
-	 3,  4,  5,
-	 6,  7,  8,  // Back face
-	 9, 10, 11,
-	12, 13, 14,  // Left face
-	15, 16, 17,
-	18, 19, 20,  // Right face
-	21, 22, 23,
-	24, 25, 26,  // Bottom face
-	27, 28, 29,
-	30, 31, 32,  // Top face
-	33, 34, 35
+			 0,  2,  1,  // Front face
+			 5,  4,  3,
+
+			 6,  7,  8,  // Back face
+			 9, 10, 11,
+				
+			12, 13, 14,  // Left face
+			15, 16, 17,
+
+			18, 20, 19,  // Right face
+			23, 22, 21,
+
+			24, 25, 26,  // Bottom face
+			27, 28, 29,
+
+			30, 32, 31,  // Top face
+			35, 34, 33
 		};
 		int isize = sizeof(indices) / sizeof(indices[0]);
-		bool success = model->CreateModel(vertexShader, colorShader, true, vertices, vsize, indices, isize);
+		std::string vShader;
+		std::string cShader;
+		Util::LoadShader("Shader/model.vs", "Shader/model.fs", vShader, cShader);
+		//vertexShader, colorShader
+		bool success = model->CreateModel(vShader, cShader, true, vertices, vsize, indices, isize);
 		model->CalculateVertexNormals();
 		models.push_back(model);
 		return true;
@@ -216,14 +225,14 @@ namespace GL {
 			const glm::mat4& mposition = data.reset ? model->ReSetPoisition() : model->UpdatePoisition(data);
 			shader->UseShader();
 			shader->SetShaderMat4(view, "view");
-			shader->SetShaderMat4(lightControl->lightModelPos,"lightPos");
 			shader->SetShaderMat4(mposition, "model");
 			//计算法线矩阵，兼容模型不规则变化时同步法线的位置
 			const glm::mat3& normalMatrix = glm::transpose(glm::inverse(glm::mat3(mposition)));
 			shader->SetShaderMat3(normalMatrix,"normalMatrix");
+			shader->SetShaderVec3(lightControl->lightPos, "lightPos");
 			shader->SetShaderVec3(cmaera->GetCameraPos(), "viewPos");
 			shader->SetShaderVec3(glm::vec3(data.colors[1][0], data.colors[1][1], data.colors[1][2]), "defaultObjectColor");
-			shader->SetShaderVec3(glm::vec3(data.colors[2][0], data.colors[2][1], data.colors[2][2]), "defaultRlightColor");
+			shader->SetShaderVec3(glm::vec3(data.colors[2][0], data.colors[2][1], data.colors[2][2]), "defaultLightColor");
 			shader->SetShaderMat4(projection, "projection");
 			shader->SetShaderBoolean(model->HasTexture(), "useTexture");
 			shader->SetShaderBoolean(data.useLight, "useLight");
