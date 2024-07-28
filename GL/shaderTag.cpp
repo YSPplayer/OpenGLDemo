@@ -43,11 +43,14 @@ namespace GL {
 	uniform bool useLight;
 	uniform vec3 lightPos;
 	uniform vec3 viewPos;
+	uniform vec3 defaultObjectColor;
+	uniform vec3 defaultRlightColor;
 	uniform float reflectivity; // 反射度因子，范围 0-256
 	void main()
 	{
-		vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
-		vec3 objectColor = vec3(1.0f, 0.5f, 0.2f);
+		vec3 objectColor = defaultObjectColor;
+		vec3 lightColor = defaultRlightColor;
+
 		if(useTexture) {
 		   objectColor = texture(ourTexture, TexCoord).rgb;
 		}

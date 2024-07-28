@@ -222,6 +222,8 @@ namespace GL {
 			const glm::mat3& normalMatrix = glm::transpose(glm::inverse(glm::mat3(mposition)));
 			shader->SetShaderMat3(normalMatrix,"normalMatrix");
 			shader->SetShaderVec3(cmaera->GetCameraPos(), "viewPos");
+			shader->SetShaderVec3(glm::vec3(data.colors[1][0], data.colors[1][1], data.colors[1][2]), "defaultObjectColor");
+			shader->SetShaderVec3(glm::vec3(data.colors[2][0], data.colors[2][1], data.colors[2][2]), "defaultRlightColor");
 			shader->SetShaderMat4(projection, "projection");
 			shader->SetShaderBoolean(model->HasTexture(), "useTexture");
 			shader->SetShaderBoolean(data.useLight, "useLight");

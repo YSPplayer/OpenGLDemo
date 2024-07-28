@@ -244,8 +244,7 @@ namespace Window {
 	/// </summary>
 	void CWindow::Render() {
 		//渲染指令
-		//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClearColor(data.colors[0][0], data.colors[0][1], data.colors[0][2], data.colors[0][3]);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glfwGetWindowSize(window, &data.width, &data.height);//获取到当前窗口的宽高
 		glmanager->Render(data); 
