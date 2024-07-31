@@ -1,4 +1,5 @@
 #pragma once
+#include <glm/glm.hpp>
 namespace GL {
 #define MOVE_FORWARD 0
 #define MOVE_BACK 1
@@ -73,4 +74,11 @@ namespace GL {
 		int selectedRadio;
 
 	};
+	struct Material {
+		glm::vec3 ambient; //环境光照色
+		glm::vec3 diffuse; //漫反射颜色
+		glm::vec3 specular; //镜面高光的颜色   
+		float shininess;//光的散射半径
+	};
+
 }

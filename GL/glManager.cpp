@@ -229,16 +229,25 @@ namespace GL {
 			//计算法线矩阵，兼容模型不规则变化时同步法线的位置
 			const glm::mat3& normalMatrix = glm::transpose(glm::inverse(glm::mat3(mposition)));
 			shader->SetShaderMat3(normalMatrix,"normalMatrix");
-			shader->SetShaderVec3(lightControl->lightPos, "lightPos");
+			glm::vec3 diffuseColor = glm::vec3(data.colors[2][0], data.colors[2][1], data.colors[2][2]) * glm::vec3(0.5f); 
+			glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); 
+			shader->SetShaderVec3(ambientColor,"light.ambient");
+			shader->SetShaderVec3(diffuseColor,"light.diffuse");
+			shader->SetShaderVec3(glm::vec3(1.0f, 1.0f, 1.0f),"light.specular"); //镜面反射
+			shader->SetShaderVec3(lightControl->lightPos, "light.position");
 			shader->SetShaderVec3(cmaera->GetCameraPos(), "viewPos");
-			shader->SetShaderVec3(glm::vec3(data.colors[1][0], data.colors[1][1], data.colors[1][2]), "defaultObjectColor");
-			shader->SetShaderVec3(glm::vec3(data.colors[2][0], data.colors[2][1], data.colors[2][2]), "defaultLightColor");
+			/*shader->SetShaderVec3(glm::vec3(data.colors[1][0], data.colors[1][1], data.colors[1][2]), "defaultObjectColor");*/
 			shader->SetShaderMat4(projection, "projection");
 			shader->SetShaderBoolean(model->HasTexture(), "useTexture");
 			shader->SetShaderBoolean(data.useLight, "useLight");
-			shader->SetShaderFloat(data.ambientStrength,"ambientStrength");//环境光照
-			shader->SetShaderFloat(data.specularStrength, "specularStrength");//镜面光照
-			shader->SetShaderFloat(data.reflectivity, "reflectivity"); //反射度
+
+			shader->SetShaderVec3(glm::vec3(0.19225, 0.19225, 0.19225), "material.ambient");
+			shader->SetShaderVec3(glm::vec3(0.50754, 0.50754, 0.50754),"material.diffuse");
+			shader->SetShaderVec3(glm::vec3(0.508273, 0.508273, 0.508273),"material.specular");
+			shader->SetShaderFloat(0.4 * 128,"material.shininess");
+			//shader->SetShaderFloat(data.ambientStrength,"ambientStrength");//环境光照
+			//shader->SetShaderFloat(data.specularStrength, "specularStrength");//镜面光照
+			//shader->SetShaderFloat(data.reflectivity, "reflectivity"); //反射度
 			model->Render(data);
 		}
 		//绘制灯光模型
@@ -249,7 +258,7 @@ namespace GL {
 		shader->SetShaderMat4(view, "view");
 		shader->SetShaderMat4(lightControl->lightModelPos, "model");//灯光模型固定一个位置
 		shader->SetShaderMat4(projection, "projection");
-		lightModel->Render(data);
+		lightModel->Render(data); 
 	}
 
 	/// <summary>

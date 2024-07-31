@@ -1,45 +1,55 @@
 #version 330 core
+struct Material {
+    vec3 ambient; //环境光照色
+    vec3 diffuse; //漫反射颜色，和模型本身的颜色有关
+    vec3 specular; //镜面高光的颜色   
+    float shininess;//光的散射半径
+}; 
+
+struct Light {
+    vec3 position;//光源位置
+    vec3 ambient;//环境光照分量
+    vec3 diffuse;//漫反射分量
+    vec3 specular;//镜面反射分量
+};
+
 out vec4 FragColor;
 in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
 uniform sampler2D ourTexture;
-uniform float ambientStrength;	
-uniform	float specularStrength;
 uniform bool useTexture;
 uniform bool useLight;
-uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 defaultObjectColor;
-uniform vec3 defaultLightColor;
-uniform float reflectivity; // 反射度因子，范围 0-256
+uniform Material material;
+uniform Light light;
 void main()
 {
 	vec3 objectColor = defaultObjectColor;
-	vec3 lightColor = defaultLightColor;
+	// vec3 lightColor = defaultLightColor;
 
 	if(useTexture) {
 	   objectColor = texture(ourTexture, TexCoord).rgb;
 	}
 	if(useLight) {
 		//环境光
-		vec3 ambient = ambientStrength * lightColor;
+		vec3 ambient = light.ambient * material.ambient;
 
 		//漫反射光
-		vec3 lightDir = normalize(lightPos - FragPos); 
+		vec3 lightDir = normalize(light.position - FragPos); 
 		vec3 norm = normalize(Normal);
 		float diff = max(dot(norm, lightDir), 0.0);
-		vec3 diffuse = diff * lightColor;       
+	    vec3 diffuse = light.diffuse * (diff * material.diffuse);     
 		
 		//镜面光
 		vec3 viewDir = normalize(viewPos - FragPos);
 		vec3 reflectDir = reflect(-lightDir, norm);
-//reflectivity
-		float spec = pow(max(dot(viewDir, reflectDir), 0.0),256);
-		vec3 specular = specularStrength * spec * lightColor;
-		objectColor = (ambient + diffuse + specular) * objectColor;
+	    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+	    vec3 specular = light.specular * (spec * material.specular);
+		objectColor = ambient + diffuse + specular;
 	}
-	FragColor = vec4(objectColor, 1.0f);
+	FragColor = vec4(objectColor, 1.0);
 } 
 
 
