@@ -100,6 +100,10 @@ namespace GL {
 								std::string selectedFilePath = outPath;
 								if (!selectedFilePath.empty()) {
 									Util::LoadMaterial(material, Util::StringToWString(selectedFilePath),true);
+									//存储模型颜色
+									data.colors[1][0] = material.diffuse[0];
+									data.colors[1][1] = material.diffuse[1];
+									data.colors[1][2] = material.diffuse[2];
 								}
 								free(outPath);
 							}
@@ -237,6 +241,9 @@ namespace GL {
 							colors[1][0] = color[0];
 							colors[1][1] = color[1];
 							colors[1][2] = color[2];
+							//更新材质
+							Material& material = glmanager->GetCurrentModel()->material;
+							material.diffuse = glm::vec3(colors[1][0], colors[1][1], colors[1][2]);
 						}
 						ImGui::SameLine();
 						ImGui::Text(u8"模型颜色");
@@ -252,50 +259,43 @@ namespace GL {
 					}
 					ImGui::Text(u8"");
 					if (ImGui::TreeNode(u8"光照属性")) {
+						ImGui::Checkbox(u8"启用光照", &data.useLight);
 						float maxWidth = ImGui::GetContentRegionAvail().x;
 						ImGui::Text(u8"1.模型材质");
 						ImGui::SetNextItemWidth(maxWidth / 6.0f);
 						Material& material = glmanager->GetCurrentModel()->material;
-						ImGui::InputFloat(u8"##环境光x", &material.ambient[0], 0.0, 1.0, "%.3f");
+						ImGui::InputFloat(u8"##环境光x", &material.ambient[0], 0.0, 1.0, "%.10f");
 						ImGui::SameLine();
 						ImGui::SetNextItemWidth(maxWidth / 6.0f);
-						ImGui::InputFloat(u8"##环境光y", &material.ambient[1], 0.0, 1.0, "%.3f");
+						ImGui::InputFloat(u8"##环境光y", &material.ambient[1], 0.0, 1.0, "%.10f");
 						ImGui::SameLine();
 						ImGui::SetNextItemWidth(maxWidth / 6.0f);
-						ImGui::InputFloat(u8"##环境光z", &material.ambient[2], 0.0, 1.0, "%.3f");
+						ImGui::InputFloat(u8"##环境光z", &material.ambient[2], 0.0, 1.0, "%.10f");
 						ImGui::SameLine();
 						ImGui::Text(u8"环境光");
 						ImGui::SetNextItemWidth(maxWidth / 6.0f);
-						ImGui::InputFloat(u8"##漫反射x", &material.diffuse[0], 0.0, 1.0, "%.3f");
+						ImGui::InputFloat(u8"##漫反射x", &material.diffuse[0], 0.0, 1.0, "%.10f");
 						ImGui::SameLine();
 						ImGui::SetNextItemWidth(maxWidth / 6.0f);
-						ImGui::InputFloat(u8"##漫反射y", &material.diffuse[1], 0.0, 1.0, "%.3f");
+						ImGui::InputFloat(u8"##漫反射y", &material.diffuse[1], 0.0, 1.0, "%.10f");
 						ImGui::SameLine();
 						ImGui::SetNextItemWidth(maxWidth / 6.0f);
-						ImGui::InputFloat(u8"##漫反射z", &material.diffuse[2], 0.0, 1.0, "%.3f");
+						ImGui::InputFloat(u8"##漫反射z", &material.diffuse[2], 0.0, 1.0, "%.10f");
 						ImGui::SameLine();
 						ImGui::Text(u8"漫反射");
 						ImGui::SetNextItemWidth(maxWidth / 6.0f);
-						ImGui::InputFloat(u8"##镜面反射x", &material.specular[0], 0.0, 1.0, "%.3f");
+						ImGui::InputFloat(u8"##镜面反射x", &material.specular[0], 0.0, 1.0, "%.10f");
 						ImGui::SameLine();
 						ImGui::SetNextItemWidth(maxWidth / 6.0f);
-						ImGui::InputFloat(u8"##镜面反射y", &material.specular[1], 0.0, 1.0, "%.3f");
+						ImGui::InputFloat(u8"##镜面反射y", &material.specular[1], 0.0, 1.0, "%.10f");
 						ImGui::SameLine();
 						ImGui::SetNextItemWidth(maxWidth / 6.0f);
-						ImGui::InputFloat(u8"##镜面反射z", &material.specular[2], 0.0, 1.0, "%.3f");
+						ImGui::InputFloat(u8"##镜面反射z", &material.specular[2], 0.0, 1.0, "%.10f");
 						ImGui::SameLine();
 						ImGui::Text(u8"镜面反射");
-						ImGui::SliderFloat(u8"光泽度", &material.shininess, 1.0f, 256.0f);
+						ImGui::SliderFloat(u8"光泽度", &material.shininess, 0.00001f, 256.0f);
 						ImGui::TreePop();
 					}
-					/*if (ImGui::TreeNode(u8"光照")) { 
-						ImGui::Checkbox(u8"启用光照", &data.useLight);
-						ImGui::SliderFloat(u8"环境光照", &data.ambientStrength, 0.0f, 1.0f);
-						ImGui::SliderFloat(u8"镜面光照", &data.specularStrength, 0.0f, 1.0f);
-						ImGui::SliderFloat(u8"反射度", &data.reflectivity, 0.0f, 256.0f);
-						ImGui::TreePop();
-					}
-					*/
 					ImGui::Text(u8"");
 					if (ImGui::TreeNode(u8"系统")) {
 						ImGui::Checkbox(u8"背面剔除", &data.cullBackFace);

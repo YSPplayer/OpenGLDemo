@@ -40,7 +40,10 @@ namespace GL {
 		float centerY = 0.0f;
 		CreateRandomData(udata.modelWidth, udata.modelHeight, udata.modelXOffset, udata.modelYOffset, udata.modelRandomZ, udata.modelRandomRange,&pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
 		Model* model = new Model;
-		bool success = model->CreateModel(vertexShader, colorShader, false, pvertices, vsize, pindices, isize);
+		std::string vShader;
+		std::string cShader;
+		Util::LoadShader("Shader/model.vs", "Shader/model.fs", vShader, cShader);
+		bool success = model->CreateModel(vShader, cShader, false, pvertices, vsize, pindices, isize);
 		CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
 		model->CalculateVertexNormals();//计算法线
 		model->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));

@@ -92,59 +92,14 @@ namespace GL {
                 cfile.close();
                 delete[] pathstr;
                 return true;
-                //std::ifstream file(pathstr);
-                //if (!file.is_open()) {
-                //    delete[] pathstr;
-                //    return false;
-                //} 
-                //std::vector<std::string> sections = { "Material" };
-                //std::vector<std::string> keys = { "Ambient", "Diffuse","Specular","Shininess"};
-                //std::vector<std::string> values = { GetValuesString(material.ambient),
-                //   GetValuesString(material.diffuse),GetValuesString(material.specular),
-                //std::to_string(material.shininess)};
-                //std::vector<std::string> lines;
-                //std::string line;
-                //while (std::getline(file, line)) {
-                //    lines.push_back(line);  
-                //}
-                //file.close(); // 关闭文件以重新打开进行写入
-                //std::set<std::string> updatedKeys; // 跟踪已更新的键
-                //std::string currentSection;
-                //for (size_t i = 0; i < lines.size(); ++i) {
-                //    line = lines[i];
-                //    // 忽略注释行
-                //    if (line.find('#') == 0) {
-                //        continue;
-                //    }
-                //    if (line.front() == '[' && line.back() == ']') {
-                //        currentSection = line.substr(1, line.length() - 2);
-                //        if (std::find(sections.begin(), sections.end(), currentSection) == sections.end())
-                //            continue; // 如果当前节不是目标节，跳过
-                //    }
-                //    for (size_t j = 0; j < keys.size(); ++j) {
-                //        const std::string& key = keys[j];
-                //        if (line.find(key + "=") == 0) {
-                //            lines[i] = key + "=" + values[j]; // 更新值
-                //            updatedKeys.insert(key);
-                //        }
-                //    }
-                //}
+            }
 
-                //// 检查是否所有的键都已更新
-                //if (updatedKeys.size() != keys.size()) {
-                //    delete[] pathstr;
-                //    return false;
-                //} 
-                //std::ofstream outfile(pathstr);
-                //delete[] pathstr;
-                //if (!outfile.is_open()) {
-                //    return false; // 无法打开文件进行写入
-                //}
-                //for (const auto& ln : lines) {
-                //    outfile << ln << "\n";
-                //}
-                //outfile.close();
-                //return true;
+            static glm::vec3 RGBToDiffuse(const glm::vec3& color) {
+                return glm::vec3(color[0] / 255.0f, color[1] / 255.0f, color[2] / 255.0f);
+            }
+            static glm::vec3 DiffuseToRGB(const glm::vec3& diffuse) {
+                return glm::vec3(static_cast<int>(round(diffuse[0] * 255)), static_cast<int>(round(diffuse[1] * 255))
+                , static_cast<int>(round(diffuse[2] * 255)));
             }
             static bool LoadMaterial(Material& material, const std::wstring& name, bool completePath = false) {
                 std::map<std::string, std::string> configDict; 
