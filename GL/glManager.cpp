@@ -222,6 +222,7 @@ namespace GL {
 			Model* model = models[i];
 			if(model->TEXTURE) glBindTexture(GL_TEXTURE_2D, model->TEXTURE);
 			Shader* shader = model->GetShader();
+			Material& material = model->material;
 			const glm::mat4& mposition = data.reset ? model->ReSetPoisition() : model->UpdatePoisition(data);
 			shader->UseShader();
 			shader->SetShaderMat4(view, "view");
@@ -236,18 +237,15 @@ namespace GL {
 			shader->SetShaderVec3(glm::vec3(1.0f, 1.0f, 1.0f),"light.specular"); //镜面反射
 			shader->SetShaderVec3(lightControl->lightPos, "light.position");
 			shader->SetShaderVec3(cmaera->GetCameraPos(), "viewPos");
-			/*shader->SetShaderVec3(glm::vec3(data.colors[1][0], data.colors[1][1], data.colors[1][2]), "defaultObjectColor");*/
+			shader->SetShaderVec3(glm::vec3(data.colors[1][0], data.colors[1][1], data.colors[1][2]), "defaultObjectColor");
 			shader->SetShaderMat4(projection, "projection");
 			shader->SetShaderBoolean(model->HasTexture(), "useTexture");
 			shader->SetShaderBoolean(data.useLight, "useLight");
 
-			shader->SetShaderVec3(glm::vec3(0.19225, 0.19225, 0.19225), "material.ambient");
-			shader->SetShaderVec3(glm::vec3(0.50754, 0.50754, 0.50754),"material.diffuse");
-			shader->SetShaderVec3(glm::vec3(0.508273, 0.508273, 0.508273),"material.specular");
-			shader->SetShaderFloat(0.4 * 128,"material.shininess");
-			//shader->SetShaderFloat(data.ambientStrength,"ambientStrength");//环境光照
-			//shader->SetShaderFloat(data.specularStrength, "specularStrength");//镜面光照
-			//shader->SetShaderFloat(data.reflectivity, "reflectivity"); //反射度
+			shader->SetShaderVec3(material.ambient, "material.ambient");
+			shader->SetShaderVec3(material.diffuse,"material.diffuse");
+			shader->SetShaderVec3(material.specular,"material.specular");
+			shader->SetShaderFloat(material.shininess,"material.shininess");
 			model->Render(data);
 		}
 		//绘制灯光模型

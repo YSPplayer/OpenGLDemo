@@ -13,6 +13,7 @@ namespace GL {
 		~Model();
 		bool CreateModel(const std::string& vertexShader, const std::string& colorShader, bool copy, float vertices[], int vsize, unsigned int indices[] = nullptr, int isize = 0);
 		bool SetTexture(unsigned char* texture,int width,int height,int nrChannels,float datas[], int size);
+		Material material;
 		Model* CopyModel(bool& success);
 		inline void SetModelCenterPoisition(const glm::vec3& centerPosition) {
 			this->centerPosition = centerPosition;

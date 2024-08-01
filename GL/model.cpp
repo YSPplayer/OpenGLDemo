@@ -20,6 +20,7 @@ namespace GL {
 		TEXTURE = NULL;
 		position = glm::mat4(1.0f);
 		centerPosition = glm::vec3(0.0f,0.0f,0.0f);//默认模型的中心位置为0,0
+		Util::LoadMaterial(material,L"gold.material");//加载材质
 	}
 
 	Model::~Model() {

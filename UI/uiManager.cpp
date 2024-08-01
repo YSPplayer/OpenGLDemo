@@ -92,6 +92,41 @@ namespace GL {
 						if (ImGui::MenuItem(u8"保存配置")) {
 							Util::CreateConfig(data,udata);
 						}
+						if (ImGui::MenuItem(u8"加载材质")) {
+							Material& material = glmanager->GetCurrentModel()->material;
+							nfdchar_t* outPath = NULL;
+							nfdresult_t result = NFD_OpenDialog(NULL, NULL, &outPath);
+							if (result == NFD_OKAY) {
+								std::string selectedFilePath = outPath;
+								if (!selectedFilePath.empty()) {
+									Util::LoadMaterial(material, Util::StringToWString(selectedFilePath),true);
+								}
+								free(outPath);
+							}
+							else if (result == NFD_CANCEL) {
+								std::cout << "[UiManager::Draw]User pressed cancel." << std::endl;
+							}
+							else {
+								std::cout << "[UiManager::Draw]Error: " << NFD_GetError() << std::endl;
+							}
+						}
+						if (ImGui::MenuItem(u8"保存材质")) {
+							Material& material = glmanager->GetCurrentModel()->material;
+							nfdchar_t* outPath = nullptr;
+							const nfdchar_t* filterList = "material"; // 设置文件类型过滤器
+							nfdresult_t result = NFD_SaveDialog(filterList, nullptr, &outPath);
+							if (result == NFD_OKAY) {
+								std::string selectedFilePath = outPath;
+								Util::SaveMaterial(material, Util::StringToWString(selectedFilePath), true);
+							}
+							else if (result == NFD_CANCEL) {
+								std::cout << "User pressed cancel." << std::endl;
+							}
+							else {
+								std::cout << "Error: " << NFD_GetError() << std::endl;
+							}
+				
+						}
 						ImGui::EndMenu();
 					}
 				}
@@ -216,13 +251,51 @@ namespace GL {
 						ImGui::TreePop();
 					}
 					ImGui::Text(u8"");
-					if (ImGui::TreeNode(u8"光照")) { 
+					if (ImGui::TreeNode(u8"光照属性")) {
+						float maxWidth = ImGui::GetContentRegionAvail().x;
+						ImGui::Text(u8"1.模型材质");
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						Material& material = glmanager->GetCurrentModel()->material;
+						ImGui::InputFloat(u8"##环境光x", &material.ambient[0], 0.0, 1.0, "%.3f");
+						ImGui::SameLine();
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						ImGui::InputFloat(u8"##环境光y", &material.ambient[1], 0.0, 1.0, "%.3f");
+						ImGui::SameLine();
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						ImGui::InputFloat(u8"##环境光z", &material.ambient[2], 0.0, 1.0, "%.3f");
+						ImGui::SameLine();
+						ImGui::Text(u8"环境光");
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						ImGui::InputFloat(u8"##漫反射x", &material.diffuse[0], 0.0, 1.0, "%.3f");
+						ImGui::SameLine();
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						ImGui::InputFloat(u8"##漫反射y", &material.diffuse[1], 0.0, 1.0, "%.3f");
+						ImGui::SameLine();
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						ImGui::InputFloat(u8"##漫反射z", &material.diffuse[2], 0.0, 1.0, "%.3f");
+						ImGui::SameLine();
+						ImGui::Text(u8"漫反射");
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						ImGui::InputFloat(u8"##镜面反射x", &material.specular[0], 0.0, 1.0, "%.3f");
+						ImGui::SameLine();
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						ImGui::InputFloat(u8"##镜面反射y", &material.specular[1], 0.0, 1.0, "%.3f");
+						ImGui::SameLine();
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						ImGui::InputFloat(u8"##镜面反射z", &material.specular[2], 0.0, 1.0, "%.3f");
+						ImGui::SameLine();
+						ImGui::Text(u8"镜面反射");
+						ImGui::SliderFloat(u8"光泽度", &material.shininess, 1.0f, 256.0f);
+						ImGui::TreePop();
+					}
+					/*if (ImGui::TreeNode(u8"光照")) { 
 						ImGui::Checkbox(u8"启用光照", &data.useLight);
 						ImGui::SliderFloat(u8"环境光照", &data.ambientStrength, 0.0f, 1.0f);
 						ImGui::SliderFloat(u8"镜面光照", &data.specularStrength, 0.0f, 1.0f);
 						ImGui::SliderFloat(u8"反射度", &data.reflectivity, 0.0f, 256.0f);
 						ImGui::TreePop();
 					}
+					*/
 					ImGui::Text(u8"");
 					if (ImGui::TreeNode(u8"系统")) {
 						ImGui::Checkbox(u8"背面剔除", &data.cullBackFace);
@@ -232,7 +305,6 @@ namespace GL {
 						ImGui::SliderFloat(u8"相机视角灵敏度", &data.sensitivity, 0.01f, 0.1f);
 						ImGui::TreePop();
 					}
-					
 				}
 				ImGui::End();
 

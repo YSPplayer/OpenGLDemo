@@ -75,65 +75,80 @@ namespace GL {
                 return ss.str(); // 返回构建的字符串
             }
 
-            static bool SaveMaterial(Material& material, const std::wstring& name) {
-                char* pathstr = Util::WStringToChar((Util::GetRootPath() + L"Material\\" + name));
-                std::ifstream file(pathstr);
-                if (!file.is_open()) {
-                    delete[] pathstr;
-                    return false; // 无法打开文件
-                }
-                std::vector<std::string> sections = { "Material" };
-                std::vector<std::string> keys = { "Ambient", "Diffuse","Specular","Shininess"};
-                std::vector<std::string> values = { GetValuesString(material.ambient),
-                   GetValuesString(material.diffuse),GetValuesString(material.specular),
-                std::to_string(material.shininess)};
-                std::vector<std::string> lines;
-                std::string line;
-                while (std::getline(file, line)) {
-                    lines.push_back(line);
-                }
-                file.close(); // 关闭文件以重新打开进行写入
-                std::set<std::string> updatedKeys; // 跟踪已更新的键
-                std::string currentSection;
-                for (size_t i = 0; i < lines.size(); ++i) {
-                    line = lines[i];
-                    // 忽略注释行
-                    if (line.find('#') == 0) {
-                        continue;
-                    }
-                    if (line.front() == '[' && line.back() == ']') {
-                        currentSection = line.substr(1, line.length() - 2);
-                        if (std::find(sections.begin(), sections.end(), currentSection) == sections.end())
-                            continue; // 如果当前节不是目标节，跳过
-                    }
-                    for (size_t j = 0; j < keys.size(); ++j) {
-                        const std::string& key = keys[j];
-                        if (line.find(key + "=") == 0) {
-                            lines[i] = key + "=" + values[j]; // 更新值
-                            updatedKeys.insert(key);
-                        }
-                    }
-                }
-
-                // 检查是否所有的键都已更新
-                if (updatedKeys.size() != keys.size()) {
+            static bool SaveMaterial(Material& material, const std::wstring& name, bool completePath = false) {
+                char* pathstr = Util::WStringToChar(completePath ? name : (Util::GetRootPath() + L"Material\\" + name));
+                std::ofstream cfile; 
+                cfile.open(pathstr, std::ios::out | std::ios::trunc);//替换方式写入文本，不存在则创建
+                if (!cfile.is_open()) {
                     delete[] pathstr;
                     return false;
-                } 
-                std::ofstream outfile(pathstr);
+                }
+                //写入默认的文本流
+                cfile << "[Material]\n";
+                cfile << "Ambient=" + GetValuesString(material.ambient) + "\n";
+                cfile << "Diffuse=" + GetValuesString(material.specular) + "\n";
+                cfile << "Specular=" + GetValuesString(material.diffuse) + "\n";
+                cfile << "Shininess=" + std::to_string(material.shininess) + "\n";
+                cfile.close();
                 delete[] pathstr;
-                if (!outfile.is_open()) {
-                    return false; // 无法打开文件进行写入
-                }
-                for (const auto& ln : lines) {
-                    outfile << ln << "\n";
-                }
-                outfile.close();
                 return true;
+                //std::ifstream file(pathstr);
+                //if (!file.is_open()) {
+                //    delete[] pathstr;
+                //    return false;
+                //} 
+                //std::vector<std::string> sections = { "Material" };
+                //std::vector<std::string> keys = { "Ambient", "Diffuse","Specular","Shininess"};
+                //std::vector<std::string> values = { GetValuesString(material.ambient),
+                //   GetValuesString(material.diffuse),GetValuesString(material.specular),
+                //std::to_string(material.shininess)};
+                //std::vector<std::string> lines;
+                //std::string line;
+                //while (std::getline(file, line)) {
+                //    lines.push_back(line);  
+                //}
+                //file.close(); // 关闭文件以重新打开进行写入
+                //std::set<std::string> updatedKeys; // 跟踪已更新的键
+                //std::string currentSection;
+                //for (size_t i = 0; i < lines.size(); ++i) {
+                //    line = lines[i];
+                //    // 忽略注释行
+                //    if (line.find('#') == 0) {
+                //        continue;
+                //    }
+                //    if (line.front() == '[' && line.back() == ']') {
+                //        currentSection = line.substr(1, line.length() - 2);
+                //        if (std::find(sections.begin(), sections.end(), currentSection) == sections.end())
+                //            continue; // 如果当前节不是目标节，跳过
+                //    }
+                //    for (size_t j = 0; j < keys.size(); ++j) {
+                //        const std::string& key = keys[j];
+                //        if (line.find(key + "=") == 0) {
+                //            lines[i] = key + "=" + values[j]; // 更新值
+                //            updatedKeys.insert(key);
+                //        }
+                //    }
+                //}
+
+                //// 检查是否所有的键都已更新
+                //if (updatedKeys.size() != keys.size()) {
+                //    delete[] pathstr;
+                //    return false;
+                //} 
+                //std::ofstream outfile(pathstr);
+                //delete[] pathstr;
+                //if (!outfile.is_open()) {
+                //    return false; // 无法打开文件进行写入
+                //}
+                //for (const auto& ln : lines) {
+                //    outfile << ln << "\n";
+                //}
+                //outfile.close();
+                //return true;
             }
-            static bool LoadMaterial(Material& material,const std::wstring& name) {
+            static bool LoadMaterial(Material& material, const std::wstring& name, bool completePath = false) {
                 std::map<std::string, std::string> configDict; 
-                char* pathstr = Util::WStringToChar((Util::GetRootPath() + L"Material\\" + name));
+                char* pathstr = Util::WStringToChar(completePath ? name : (Util::GetRootPath() + L"Material\\" + name));
                 std::ifstream file(pathstr);
                 delete[] pathstr;
                 if (!file.is_open()) {
@@ -321,6 +336,11 @@ namespace GL {
             inline static std::wstring GetRootPath() {
                 return rootPath;
             }
+            static std::wstring StringToWString(const std::string& str) {
+                std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+                return converter.from_bytes(str);
+            }
+
             static std::string WStringToString(const std::wstring& wstr) {
                 std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
                 return converter.to_bytes(wstr);
