@@ -4,9 +4,11 @@
 #include "imgui/imgui_impl_opengl3.h"
 #include "../Util/util.h"
 #include <nfd/nfd.h>
+#include <x3pFormat.h>
 namespace GL {
 	namespace UI {
 		using namespace GL::Tool;
+		using namespace CPlusSDK::X3pFormatDll;
 		UData UiManager::udata;
 		UiManager::UiManager(GlManager* glmanager,bool load) :glmanager(glmanager) {
 			if (!load) {
@@ -85,7 +87,25 @@ namespace GL {
 				ImGui::BeginMainMenuBar();
 				{
 					if (ImGui::BeginMenu(u8"文件")) {
-						if (ImGui::MenuItem(u8"打开文件")) {}
+						if (ImGui::MenuItem(u8"打开文件")) {
+							nfdchar_t* outPath = NULL;
+							const nfdchar_t* filterList = "x3p;*.*";
+							nfdresult_t result = NFD_OpenDialog(NULL, NULL, &outPath);
+							if (result == NFD_OKAY) {
+								std::string selectedFilePath = outPath;
+								X3pData data;
+								//加载x3p模型
+								bool success = LoadX3p(selectedFilePath.c_str(),&data,false,nullptr);
+								glmanager->ClearModels();
+								glmanager->CreateX3pModel(data.sizeX,data.sizeY, data.axes[0].increment, data.axes[1].increment,data.pointData,data.minZ,data.maxZ);
+							}
+							else if (result == NFD_CANCEL) {
+								std::cout << "User pressed cancel." << std::endl;
+							}
+							else {
+								std::cout << "Error: " << NFD_GetError() << std::endl;
+							}
+						}
 						ImGui::EndMenu();
 					}
 					if (ImGui::BeginMenu(u8"配置")) {

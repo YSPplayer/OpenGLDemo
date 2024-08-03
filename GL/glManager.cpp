@@ -26,6 +26,40 @@ namespace GL {
 	}
 
 	/// <summary>
+	/// 通过x3p数据生成模型
+	/// </summary>
+	/// <param name="width"></param>
+	/// <param name="height"></param>
+	/// <param name="xoffset"></param>
+	/// <param name="yoffset"></param>
+	/// <param name="zpointData"></param>
+	/// <returns></returns>
+	bool GlManager::CreateX3pModel(unsigned int width, unsigned int height, float xoffset, float yoffset, float* zpointData, float minZ, float maxZ) {
+		float* pvertices = nullptr;
+		unsigned int* pindices = nullptr;
+		float* ptextures = nullptr;
+		int vsize = 0;
+		int isize = 0;
+		int tsize = 0;
+		float centerX = 0.0f;
+		float centerY = 0.0f;
+		CreateX3pData(width - 1, height - 1, xoffset, yoffset, minZ,maxZ, zpointData,&pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
+		Model* model = new Model;
+		std::string vShader;
+		std::string cShader;
+		Util::LoadShader("Shader/model.vs", "Shader/model.fs", vShader, cShader);
+		bool success = model->CreateModel(vShader, cShader, false, pvertices, vsize, pindices, isize);
+		//CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
+		model->CalculateVertexNormals();//计算法线
+		model->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
+		cmaera->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
+		cmaera->ReSetPoisition();
+		if (!success) return false;
+		models.push_back(model);
+		return true;
+	}
+
+	/// <summary>
 	/// 创建一个标准化随机模型
 	/// </summary>
 	/// <param name="udata"></param>
@@ -38,7 +72,7 @@ namespace GL {
 		int tsize = 0;
 		float centerX = 0.0f;
 		float centerY = 0.0f;
-		CreateRandomData(udata.modelWidth, udata.modelHeight, udata.modelXOffset, udata.modelYOffset, udata.modelRandomZ, udata.modelRandomRange,&pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
+		CreateRandomData(udata.modelWidth, udata.modelHeight, udata.modelXOffset, udata.modelYOffset,0.0f,0.0f,nullptr, udata.modelRandomZ, udata.modelRandomRange,&pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
 		Model* model = new Model;
 		std::string vShader;
 		std::string cShader;
@@ -269,10 +303,12 @@ namespace GL {
 	/// <param name="height"></param>
 	/// <param name="vertices"></param>
 	/// <param name="indices"></param>
-	void GlManager::CreateRandomData(unsigned int width, unsigned int height, float xoffset, float yoffset, bool random, float randomRange, float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize,
+	void GlManager::CreateRandomData(unsigned int width, unsigned int height, float xoffset, float yoffset, float minZ, float maxZ, float* pointsZ,bool random, float randomRange, float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize,
 		int* tsize, float* centerX, float* centerY) {
-		if (xoffset > MAX_X_OFFSET) xoffset = MAX_X_OFFSET;
-		if (yoffset > MAX_Y_OFFSET) yoffset = MAX_Y_OFFSET;
+#undef min
+#undef max
+		//if (xoffset > MAX_X_OFFSET) xoffset = MAX_X_OFFSET;
+		//if (yoffset > MAX_Y_OFFSET) yoffset = MAX_Y_OFFSET;
 		int max = width > height ? width : height;
 		aspectUnit = Util::DivideByTenCount(max);
 		int count = width * height;
@@ -285,19 +321,34 @@ namespace GL {
 		int tindex = 0;
 		float x = 0;
 		float y = 0;
+		int pindex = 0;
+		int zindex = 0;
+		float minX = std::numeric_limits<float>::max();
+		float maxX = std::numeric_limits<float>::lowest();
+		float minY = std::numeric_limits<float>::max();
+		float maxY = std::numeric_limits<float>::lowest();
 		for (unsigned int j = 0; j < height + 1; ++j) {//先赋值横向的宽度，再赋值纵向的高度
 			for (unsigned int i = 0; i < width + 1; ++i) {
-				Point point;//10.0f
-				point.z = random ? (Util::GetRandomFloat(-randomRange, randomRange) / 1000.0f) : 0.0f;;//归一化
+				Point point;
+				if (pointsZ) {
+					point.z = pointsZ[zindex++];
+				}
+				else {
+					point.z = random ? (Util::GetRandomFloat(-randomRange, randomRange) / 1000.0f) : 0.0f;;//归一化
+				}
 				//实际点云长度 = (索引 * (偏移量 / 最大偏移量)) /归一化值
-				x = static_cast<float>(i) * (xoffset / MAX_X_OFFSET);
-				y = static_cast<float>(j) * (yoffset / MAX_Y_OFFSET);
-				point.x = x / static_cast<float>(max);//归一化
-				point.y = y / static_cast<float>(max);//归一化
+			/*	x = static_cast<float>(i) * (xoffset / MAX_X_OFFSET);
+				y = static_cast<float>(j) * (yoffset / MAX_Y_OFFSET);*/
+				//point.x = x / static_cast<float>(max);//归一化
+				//point.y = y / static_cast<float>(max);//归一化
+				point.x = static_cast<float>(i) * xoffset;
+				point.y = static_cast<float>(j) * yoffset;
+				minX = std::min(minX, point.x);
+				maxX = std::max(maxX, point.x);
+				minY = std::min(minY, point.y);
+				maxY = std::max(maxY, point.y);
 				(*textures)[tindex++] = static_cast<float>(i) / static_cast<float>(width);
 				(*textures)[tindex++] = static_cast<float>(j) / static_cast<float>(height);
-				xSum += point.x;
-				ySum += point.y;
 				points.push_back(point);
 				if (i < width && j < height) {
 					/*
@@ -310,19 +361,30 @@ namespace GL {
 				}
 			}
 		}
+		*vsize = points.size() * 3;
+		*vertices = new float[*vsize];
+		int absMax = maxX - minX > maxY - minY ? maxX - minX : maxY - minY;
+		for (int i = 0; i < points.size(); ++i) {
+			Point& point = points[i];
+			float pointX = (point.x - minX) / absMax;
+			float pointY = (point.y - minY) / absMax;
+			(*vertices)[i * 3 + 0] = pointX;
+			(*vertices)[i * 3 + 1] = pointY;
+			float pointZ = 0.0f;
+			if (pointsZ) {
+				pointZ = (point.z - minZ) / (maxZ - minZ) / 5.0f;
+			}
+			else {
+				pointZ = point.z;
+			}
+			(*vertices)[i * 3 + 2] = pointZ;
+			xSum += pointX;
+			ySum += pointY;
+			//std::cout << " point.x:" << point.x << " " << " point.y:" << point.y << " " << " point.z:" << point.z << std::endl;
+		}
 		//获取到模型的中心坐标位置
 		*centerX = xSum / points.size();
 		*centerY = ySum / points.size();
-
-		*vsize = points.size() * 3;
-		*vertices = new float[*vsize];
-		for (int i = 0; i < points.size(); ++i) {
-			Point& point = points[i];
-			(*vertices)[i * 3 + 0] = point.x;
-			(*vertices)[i * 3 + 1] = point.y;
-			(*vertices)[i * 3 + 2] = point.z;
-			//std::cout << " point.x:" << point.x << " " << " point.y:" << point.y << " " << " point.z:" << point.z << std::endl;
-		}
 		/*for (int i = 0; i < *tsize; ++i) {
 			std::cout << "textures:" << (*textures)[i] << std::endl;
 		}*/
@@ -334,6 +396,73 @@ namespace GL {
 			(*indices)[i * 3 + 1] = indice.index2;
 			(*indices)[i * 3 + 2] = indice.index3;
 		}
+	}
+
+	void GlManager::CreateX3pData(unsigned int _width, unsigned int _height, float xoffset, float yoffset, float minZ, float maxZ, 
+		float* pointsZ,float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize, int* tsize, float* centerX, float* centerY) {
+		CreateRandomData(_width,_height, xoffset,yoffset,minZ,maxZ, pointsZ,false,0.0f,  vertices, indices, textures, vsize,
+			isize, tsize, centerX, centerY);
+		return;
+//		#undef min
+//#undef max
+//		//先生成点云数据
+//		std::vector<Point> points;
+//		std::vector<Indice> vindices;
+//		points.resize(_width * _height);//2442 2042 4986564
+//		int index = 0;
+//		// 初始化最大最小值变量
+//		float minX = std::numeric_limits<float>::max();
+//		float maxX = std::numeric_limits<float>::lowest();
+//		float minY = std::numeric_limits<float>::max();
+//		float maxY = std::numeric_limits<float>::lowest();
+//		float minZ = std::numeric_limits<float>::max();
+//		float maxZ = std::numeric_limits<float>::lowest();
+//		unsigned int oheight = _height - 1;
+//		unsigned int owidth = _width - 1;
+//		for (int j = 0; j < _height; ++j) {
+//			float realY = static_cast<float>(j) * yoffset;
+//			for (int i = 0; i < _width; ++i) {
+//				float realX = static_cast<float>(i) * xoffset;
+//				points.at(index) = { realX,realY, pointsZ[index] };	
+//				minX = std::min(minX, realX);
+//				maxX = std::max(maxX, realX);
+//				minY = std::min(minY, realY);
+//				maxY = std::max(maxY, realY);
+//				minZ = std::min(minZ, pointsZ[index]);
+//				maxZ = std::max(maxZ, pointsZ[index]);
+//				++index;
+//				if (i < owidth - 1 && j < owidth - 1) {
+//					vindices.push_back({ i + (owidth + 1) * j, i + 1 + (owidth + 1) * j, i + (owidth + 1) * (j + 1) });
+//					vindices.push_back({ (i + 1) + (owidth + 1) * j,  i + 1 + (owidth + 1) * (j + 1),i + (owidth + 1) * (j + 1) });
+//				}
+//			}
+//		}
+//		*vsize = points.size() * 3;
+//		*vertices = new float[*vsize];
+//		Point center = { 0.0f, 0.0f, 0.0f };
+//		for (int i = 0; i < points.size(); ++i) {
+//			Point& point = points[i];
+//			float pointX = (point.x - minX) / (maxX - minX);
+//			float pointY = (point.y - minY) / (maxY - minY);
+//			float pointZ = (point.z - minZ) / (maxZ - minZ);
+//			(*vertices)[i * 3 + 0] = pointX; //归一化
+//			(*vertices)[i * 3 + 1] = pointY;
+//			(*vertices)[i * 3 + 2] = pointZ;
+//			center.x += pointX;
+//			center.y += pointY;
+//			center.z += pointZ;
+//		}
+//
+//		*centerX = center.x / points.size();
+//		*centerY = center.y / points.size();
+//		*isize = vindices.size() * 3;
+//		*indices = new unsigned int[vindices.size() * 3];
+//		for (int i = 0; i < vindices.size(); ++i) {
+//			Indice& indice = vindices[i];
+//			(*indices)[i * 3 + 0] = indice.index1;
+//			(*indices)[i * 3 + 1] = indice.index2;
+//			(*indices)[i * 3 + 2] = indice.index3;
+//		}
 	}
 
 	/// <summary>
