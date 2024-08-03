@@ -274,9 +274,9 @@ namespace GL {
 			shader->SetShaderVec3(glm::vec3(1.0f, 1.0f, 1.0f),"light.specular"); //镜面反射
 			shader->SetShaderVec3(lightControl->lightPos, "light.position");
 			shader->SetShaderVec3(cmaera->GetCameraPos(), "viewPos");
-	/*		shader->SetShaderVec3(glm::vec3(data.colors[1][0], data.colors[1][1], data.colors[1][2]), "defaultObjectColor");*/
+			shader->SetShaderVec3(glm::vec3(data.colors[1][0], data.colors[1][1], data.colors[1][2]), "defaultObjectColor");
 			shader->SetShaderMat4(projection, "projection");
-			shader->SetShaderBoolean(model->HasTexture(), "useTexture");
+			shader->SetShaderBoolean(data.useTexture && model->HasTexture(), "useTexture");
 			shader->SetShaderBoolean(data.useLight, "useLight");
 
 			shader->SetShaderVec3(material.ambient, "material.ambient");
@@ -402,67 +402,6 @@ namespace GL {
 		float* pointsZ,float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize, int* tsize, float* centerX, float* centerY) {
 		CreateRandomData(_width,_height, xoffset,yoffset,minZ,maxZ, pointsZ,false,0.0f,  vertices, indices, textures, vsize,
 			isize, tsize, centerX, centerY);
-		return;
-//		#undef min
-//#undef max
-//		//先生成点云数据
-//		std::vector<Point> points;
-//		std::vector<Indice> vindices;
-//		points.resize(_width * _height);//2442 2042 4986564
-//		int index = 0;
-//		// 初始化最大最小值变量
-//		float minX = std::numeric_limits<float>::max();
-//		float maxX = std::numeric_limits<float>::lowest();
-//		float minY = std::numeric_limits<float>::max();
-//		float maxY = std::numeric_limits<float>::lowest();
-//		float minZ = std::numeric_limits<float>::max();
-//		float maxZ = std::numeric_limits<float>::lowest();
-//		unsigned int oheight = _height - 1;
-//		unsigned int owidth = _width - 1;
-//		for (int j = 0; j < _height; ++j) {
-//			float realY = static_cast<float>(j) * yoffset;
-//			for (int i = 0; i < _width; ++i) {
-//				float realX = static_cast<float>(i) * xoffset;
-//				points.at(index) = { realX,realY, pointsZ[index] };	
-//				minX = std::min(minX, realX);
-//				maxX = std::max(maxX, realX);
-//				minY = std::min(minY, realY);
-//				maxY = std::max(maxY, realY);
-//				minZ = std::min(minZ, pointsZ[index]);
-//				maxZ = std::max(maxZ, pointsZ[index]);
-//				++index;
-//				if (i < owidth - 1 && j < owidth - 1) {
-//					vindices.push_back({ i + (owidth + 1) * j, i + 1 + (owidth + 1) * j, i + (owidth + 1) * (j + 1) });
-//					vindices.push_back({ (i + 1) + (owidth + 1) * j,  i + 1 + (owidth + 1) * (j + 1),i + (owidth + 1) * (j + 1) });
-//				}
-//			}
-//		}
-//		*vsize = points.size() * 3;
-//		*vertices = new float[*vsize];
-//		Point center = { 0.0f, 0.0f, 0.0f };
-//		for (int i = 0; i < points.size(); ++i) {
-//			Point& point = points[i];
-//			float pointX = (point.x - minX) / (maxX - minX);
-//			float pointY = (point.y - minY) / (maxY - minY);
-//			float pointZ = (point.z - minZ) / (maxZ - minZ);
-//			(*vertices)[i * 3 + 0] = pointX; //归一化
-//			(*vertices)[i * 3 + 1] = pointY;
-//			(*vertices)[i * 3 + 2] = pointZ;
-//			center.x += pointX;
-//			center.y += pointY;
-//			center.z += pointZ;
-//		}
-//
-//		*centerX = center.x / points.size();
-//		*centerY = center.y / points.size();
-//		*isize = vindices.size() * 3;
-//		*indices = new unsigned int[vindices.size() * 3];
-//		for (int i = 0; i < vindices.size(); ++i) {
-//			Indice& indice = vindices[i];
-//			(*indices)[i * 3 + 0] = indice.index1;
-//			(*indices)[i * 3 + 1] = indice.index2;
-//			(*indices)[i * 3 + 2] = indice.index3;
-//		}
 	}
 
 	/// <summary>

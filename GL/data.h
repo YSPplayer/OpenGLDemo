@@ -61,6 +61,7 @@ namespace GL {
 		float specularStrength;//镜面光照调节因子
 		float reflectivity;//反射度因子
 		bool useLight;//是否使用灯光
+		bool useTexture;//是否启用贴图
 	};
 	//UI组件存放的数据
 	struct UData {

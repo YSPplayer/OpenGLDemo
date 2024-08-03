@@ -103,7 +103,7 @@ namespace GL {
             static bool LoadMaterial(Material& material, const std::wstring& name, bool completePath = false) {
                 std::map<std::string, std::string> configDict; 
                 const std::wstring& path = completePath ? name : Util::GetRootPath() + L"Material\\" + name;
-                std::ifstream file(name);
+                std::ifstream file(path);
                 if (!file.is_open()) {
                     return false; 
                 }
@@ -140,24 +140,29 @@ namespace GL {
             /// <param name="path"></param>
             /// <returns></returns>
             static bool CvLoadImage(const std::string& path, unsigned char*& data,int& width, int& height, int& nrChannels) {
+                if (path == "") return false;
                 // 读取图像
-                cv::Mat img = cv::imread(path, cv::IMREAD_UNCHANGED);
+                cv::Mat img = cv::imread(path,cv::ImreadModes::IMREAD_UNCHANGED);
                 // 检查图像是否成功加载
                 if (img.empty()) {
                     std::cerr << "Failed to load image." << std::endl;
                     return false;
                 }
-                // 更新宽度、高度和通道数
-                width = img.cols;
-                height = img.rows;
-                nrChannels = img.channels();
-                // 检查图像通道数，决定是否需要转换
+                if (!img.isContinuous()) img = img.clone(); //不加这段转换图片类型会阻塞
+                //cv::Mat resultImg;
                 if (img.channels() == 1) {
-                    // 是灰度图，转换为RGB
-                    cv::Mat convertedImg;
-                    cv::cvtColor(img, convertedImg, cv::COLOR_GRAY2RGB);
-                    img = convertedImg; // 更新 img 引用为转换后的图像
-                    nrChannels = 3;
+                    ////是灰度图，转换为RGB的灰度图
+                    //resultImg = cv::Mat(img.rows, img.cols, CV_8UC3);
+                    //// 遍历单通道图像的每个像素，并将值复制到三个RGB通道
+                    //for (int y = 0; y < img.rows; y++) {
+                    //    for (int x = 0; x < img.cols; x++) {
+                    //        // 获取单通道的像素值
+                    //        uchar value = img.at<uchar>(y, x);
+                    //        // 设置RGB图像的相应像素值
+                    //        resultImg.at<cv::Vec3b>(y, x) = cv::Vec3b(value, value, value);
+                    //    }
+                    //}
+                    cv::cvtColor(img, img, cv::COLOR_GRAY2RGB);
                 }
                 else if (img.channels() == 3) {
                     // 将BGR转换为RGB
@@ -166,12 +171,14 @@ namespace GL {
                 // 将图像垂直翻转
                 cv::flip(img, img, 0);
                 // 确保图像是连续的，这对 OpenGL 处理很重要
-                if (!img.isContinuous()) {
-                    img = img.clone();
-                }
+                if (!img.isContinuous())img = img.clone();
                 // 分配内存用于存储图像数据（需要在适当时候释放这块内存）
                 data = new unsigned char[img.total() * img.elemSize()];
                 std::memcpy(data, img.data, img.total() * img.elemSize());
+                // 更新宽度、高度和通道数
+                width = img.cols;
+                height = img.rows;
+                nrChannels = img.channels();
                 return true;
             }
             /// <summary>

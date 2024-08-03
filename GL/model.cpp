@@ -24,6 +24,7 @@ namespace GL {
 		material.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
 		material.specular = glm::vec3(0.0f, 0.0f, 0.0f);
 		material.shininess = 0.0f;
+		Util::LoadMaterial(material,L"default.material");//加载模型的默认材质
 	}
 
 	Model::~Model() {
@@ -154,8 +155,10 @@ namespace GL {
 		//给当前的vbo纹理对象绑定纹理图象
 		if (texture) {
 			hasTexture = true;
+			//GPU要求图片宽度的大小一定是4的倍数，需要前置缩放，或者转为RGBA，因为RGBA图片一定是4的倍数
+			//使用内存对齐的方式来上传图片数据到gpu，这会损失一定的效率
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
-
 			glGenerateMipmap(GL_TEXTURE_2D);
 		}
 		return true;

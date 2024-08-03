@@ -89,8 +89,8 @@ namespace GL {
 					if (ImGui::BeginMenu(u8"文件")) {
 						if (ImGui::MenuItem(u8"打开文件")) {
 							nfdchar_t* outPath = NULL;
-							const nfdchar_t* filterList = "x3p;*.*";
-							nfdresult_t result = NFD_OpenDialog(NULL, NULL, &outPath);
+							const nfdchar_t* filterList = "x3p";
+							nfdresult_t result = NFD_OpenDialog(filterList, NULL, &outPath);
 							if (result == NFD_OKAY) {
 								std::string selectedFilePath = outPath;
 								X3pData data;
@@ -115,7 +115,8 @@ namespace GL {
 						if (ImGui::MenuItem(u8"加载材质")) {
 							Material& material = glmanager->GetCurrentModel()->material;
 							nfdchar_t* outPath = NULL;
-							nfdresult_t result = NFD_OpenDialog(NULL, NULL, &outPath);
+							const nfdchar_t* filterList = "material";
+							nfdresult_t result = NFD_OpenDialog(filterList, NULL, &outPath);
 							if (result == NFD_OKAY) {
 								std::string selectedFilePath = outPath;
 								if (!selectedFilePath.empty()) {
@@ -216,6 +217,8 @@ namespace GL {
 					}
 					ImGui::Text(u8"");
 					if (ImGui::TreeNode(u8"贴图")) {
+						ImGui::Checkbox(u8"启用贴图", &data.useTexture);
+						ImGui::Text(u8"");
 						float maxWidth = ImGui::GetContentRegionAvail().x;
 						ImGui::SetNextItemWidth(maxWidth / 1.2f);
 						ImGui::InputText("##贴图路径", udata.pathBuf, IM_ARRAYSIZE(udata.pathBuf));
@@ -224,7 +227,8 @@ namespace GL {
 						if (ImGui::Button(u8"...")) {
 							//打开外部文件窗口
 							nfdchar_t* outPath = NULL;
-							nfdresult_t result = NFD_OpenDialog(NULL, NULL, &outPath);
+							const nfdchar_t* filterList = "jpg;png;bmp";
+							nfdresult_t result = NFD_OpenDialog(filterList, NULL, &outPath);
 							if (result == NFD_OKAY) {
 								std::string selectedFilePath = outPath;
 								if (!selectedFilePath.empty()) {

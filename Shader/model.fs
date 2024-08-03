@@ -21,7 +21,7 @@ uniform sampler2D ourTexture;
 uniform bool useTexture;
 uniform bool useLight;
 uniform vec3 viewPos;
-// uniform vec3 defaultObjectColor;
+uniform vec3 defaultObjectColor;
 uniform Material material;
 uniform Light light;
 void main()
@@ -33,6 +33,8 @@ void main()
 	vec3 diffuse = vec3(0.0, 0.0, 0.0);
 	if(useTexture) {
 	   objectColor = texture(ourTexture, TexCoord).rgb;
+	} else {
+		objectColor = defaultObjectColor;
 	}
 	if(useLight) {
 		//环境光
