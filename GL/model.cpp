@@ -155,6 +155,7 @@ namespace GL {
 		if (texture) {
 			hasTexture = true;
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
+
 			glGenerateMipmap(GL_TEXTURE_2D);
 		}
 		return true;

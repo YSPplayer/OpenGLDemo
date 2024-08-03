@@ -218,7 +218,7 @@ namespace GL {
 					if (ImGui::TreeNode(u8"ÌùÍ¼")) {
 						float maxWidth = ImGui::GetContentRegionAvail().x;
 						ImGui::SetNextItemWidth(maxWidth / 1.2f);
-						ImGui::InputText("", udata.pathBuf, IM_ARRAYSIZE(udata.pathBuf));
+						ImGui::InputText("##ÌùÍ¼Â·¾¶", udata.pathBuf, IM_ARRAYSIZE(udata.pathBuf));
 						ImGui::SameLine();
 						//Ñ¡ÔñÂ·¾¶
 						if (ImGui::Button(u8"...")) {

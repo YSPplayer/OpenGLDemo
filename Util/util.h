@@ -14,6 +14,7 @@
 #include <set>
 #include <glm/glm.hpp>
 #include <tinyxml2/tinyxml2.h>
+#include <opencv2/opencv.hpp>
 namespace GL {
 	namespace Tool {
         using namespace tinyxml2;
@@ -132,7 +133,47 @@ namespace GL {
                 material.shininess = std::stof(GetValueFromConfig(configDict, section, "Shininess"));
                 return true;
             }
-           
+
+            /// <summary>
+            /// 加载图片
+            /// </summary>
+            /// <param name="path"></param>
+            /// <returns></returns>
+            static bool CvLoadImage(const std::string& path, unsigned char*& data,int& width, int& height, int& nrChannels) {
+                // 读取图像
+                cv::Mat img = cv::imread(path, cv::IMREAD_UNCHANGED);
+                // 检查图像是否成功加载
+                if (img.empty()) {
+                    std::cerr << "Failed to load image." << std::endl;
+                    return false;
+                }
+                // 更新宽度、高度和通道数
+                width = img.cols;
+                height = img.rows;
+                nrChannels = img.channels();
+                // 检查图像通道数，决定是否需要转换
+                if (img.channels() == 1) {
+                    // 是灰度图，转换为RGB
+                    cv::Mat convertedImg;
+                    cv::cvtColor(img, convertedImg, cv::COLOR_GRAY2RGB);
+                    img = convertedImg; // 更新 img 引用为转换后的图像
+                    nrChannels = 3;
+                }
+                else if (img.channels() == 3) {
+                    // 将BGR转换为RGB
+                    cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
+                }
+                // 将图像垂直翻转
+                cv::flip(img, img, 0);
+                // 确保图像是连续的，这对 OpenGL 处理很重要
+                if (!img.isContinuous()) {
+                    img = img.clone();
+                }
+                // 分配内存用于存储图像数据（需要在适当时候释放这块内存）
+                data = new unsigned char[img.total() * img.elemSize()];
+                std::memcpy(data, img.data, img.total() * img.elemSize());
+                return true;
+            }
             /// <summary>
             /// 加载配置文件
             /// </summary>

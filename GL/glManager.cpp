@@ -49,7 +49,7 @@ namespace GL {
 		std::string cShader;
 		Util::LoadShader("Shader/model.vs", "Shader/model.fs", vShader, cShader);
 		bool success = model->CreateModel(vShader, cShader, false, pvertices, vsize, pindices, isize);
-		//CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
+		CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
 		model->CalculateVertexNormals();//计算法线
 		model->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
 		cmaera->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
@@ -274,7 +274,7 @@ namespace GL {
 			shader->SetShaderVec3(glm::vec3(1.0f, 1.0f, 1.0f),"light.specular"); //镜面反射
 			shader->SetShaderVec3(lightControl->lightPos, "light.position");
 			shader->SetShaderVec3(cmaera->GetCameraPos(), "viewPos");
-			shader->SetShaderVec3(glm::vec3(data.colors[1][0], data.colors[1][1], data.colors[1][2]), "defaultObjectColor");
+	/*		shader->SetShaderVec3(glm::vec3(data.colors[1][0], data.colors[1][1], data.colors[1][2]), "defaultObjectColor");*/
 			shader->SetShaderMat4(projection, "projection");
 			shader->SetShaderBoolean(model->HasTexture(), "useTexture");
 			shader->SetShaderBoolean(data.useLight, "useLight");
@@ -475,8 +475,10 @@ namespace GL {
 			return;
 		} 
 		int width, height, nrChannels;
-		stbi_set_flip_vertically_on_load(true);//如果图片读取颠倒，修改这个参数
-		unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
+		unsigned char* data = nullptr;
+		//stbi_set_flip_vertically_on_load(true);//如果图片读取颠倒，修改这个参数
+		// = stbi_load(path, &width, &height, &nrChannels, 0);
+		bool success = Util::CvLoadImage(std::string(path),data, width, height, nrChannels);
 		//float textures[] = {
 			// 1.0f, 1.0f,
 			// 1.0f, 0.0f,

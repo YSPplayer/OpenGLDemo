@@ -21,27 +21,35 @@ uniform sampler2D ourTexture;
 uniform bool useTexture;
 uniform bool useLight;
 uniform vec3 viewPos;
-uniform vec3 defaultObjectColor;
+// uniform vec3 defaultObjectColor;
 uniform Material material;
 uniform Light light;
 void main()
 {
-	vec3 objectColor = defaultObjectColor;
+	// vec3 objectColor = defaultObjectColor;
 	// vec3 lightColor = defaultLightColor;
-
+	vec3 objectColor = vec3(0.0, 0.0, 0.0);
+	vec3 ambient =  vec3(0.0, 0.0, 0.0);
+	vec3 diffuse = vec3(0.0, 0.0, 0.0);
 	if(useTexture) {
 	   objectColor = texture(ourTexture, TexCoord).rgb;
 	}
 	if(useLight) {
 		//环境光
-		vec3 ambient = light.ambient * material.ambient;
-
+		if(useTexture) {
+		    ambient = light.ambient * objectColor;
+		} else {
+			ambient = light.ambient * material.ambient;
+		}
 		//漫反射光
 		vec3 lightDir = normalize(light.position - FragPos); 
 		vec3 norm = normalize(Normal);
 		float diff = max(dot(norm, lightDir), 0.0);
-	    vec3 diffuse = light.diffuse * (diff * material.diffuse);     
-		
+		if(useTexture) {
+			diffuse = light.diffuse * (diff * objectColor); 
+		} else {
+	    	diffuse = light.diffuse * (diff * material.diffuse);     
+		}
 		//镜面光
 		vec3 viewDir = normalize(viewPos - FragPos);
 		vec3 reflectDir = reflect(-lightDir, norm);
