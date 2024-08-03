@@ -314,6 +314,8 @@ namespace GL {
 						ImGui::SameLine();
 						ImGui::Text(u8"镜面反射");
 						ImGui::SliderFloat(u8"光泽度", &material.shininess, 0.00001f, 256.0f);
+						ImGui::SetNextItemWidth(maxWidth / 3.0f);
+						ImGui::InputFloat(u8"##光泽度", &material.shininess, 0.00001f, 256.0f, "%.10f");
 						ImGui::TreePop();
 					}
 					ImGui::Text(u8"");

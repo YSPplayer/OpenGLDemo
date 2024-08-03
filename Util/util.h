@@ -76,11 +76,10 @@ namespace GL {
             }
 
             static bool SaveMaterial(Material& material, const std::wstring& name, bool completePath = false) {
-                char* pathstr = Util::WStringToChar(completePath ? name : (Util::GetRootPath() + L"Material\\" + name));
+                const std::wstring& path = completePath ? name : (Util::GetRootPath() + L"Material\\" + name);
                 std::ofstream cfile; 
-                cfile.open(pathstr, std::ios::out | std::ios::trunc);//替换方式写入文本，不存在则创建
+                cfile.open(path, std::ios::out | std::ios::trunc);//替换方式写入文本，不存在则创建
                 if (!cfile.is_open()) {
-                    delete[] pathstr;
                     return false;
                 }
                 //写入默认的文本流
@@ -90,7 +89,6 @@ namespace GL {
                 cfile << "Specular=" + GetValuesString(material.diffuse) + "\n";
                 cfile << "Shininess=" + std::to_string(material.shininess) + "\n";
                 cfile.close();
-                delete[] pathstr;
                 return true;
             }
 
@@ -103,9 +101,8 @@ namespace GL {
             }
             static bool LoadMaterial(Material& material, const std::wstring& name, bool completePath = false) {
                 std::map<std::string, std::string> configDict; 
-                char* pathstr = Util::WStringToChar(completePath ? name : (Util::GetRootPath() + L"Material\\" + name));
-                std::ifstream file(pathstr);
-                delete[] pathstr;
+                const std::wstring& path = completePath ? name : Util::GetRootPath() + L"Material\\" + name;
+                std::ifstream file(name);
                 if (!file.is_open()) {
                     return false; 
                 }
