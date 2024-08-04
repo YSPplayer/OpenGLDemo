@@ -331,10 +331,9 @@ namespace GL {
 		float y = 0;
 		int pindex = 0;
 		int zindex = 0;
-		float minX = std::numeric_limits<float>::max();
-		float maxX = std::numeric_limits<float>::lowest();
-		float minY = std::numeric_limits<float>::max();
-		float maxY = std::numeric_limits<float>::lowest();
+		float maxX = width * xoffset; 
+		float maxY = height * yoffset;
+		float absMax = maxX > maxY ? maxX : maxY;
 		for (unsigned int j = 0; j < height + 1; ++j) {//先赋值横向的宽度，再赋值纵向的高度
 			for (unsigned int i = 0; i < width + 1; ++i) {
 				Point point;
@@ -349,12 +348,8 @@ namespace GL {
 				y = static_cast<float>(j) * (yoffset / MAX_Y_OFFSET);*/
 				//point.x = x / static_cast<float>(max);//归一化
 				//point.y = y / static_cast<float>(max);//归一化
-				point.x = static_cast<float>(i) * xoffset;
-				point.y = static_cast<float>(j) * yoffset;
-				minX = std::min(minX, point.x);
-				maxX = std::max(maxX, point.x);
-				minY = std::min(minY, point.y);
-				maxY = std::max(maxY, point.y);
+				point.x = (static_cast<float>(i) * xoffset) / absMax;
+				point.y = (static_cast<float>(j) * yoffset) / absMax;
 				(*textures)[tindex++] = static_cast<float>(i) / static_cast<float>(width);
 				(*textures)[tindex++] = static_cast<float>(j) / static_cast<float>(height);
 				points.push_back(point);
@@ -371,13 +366,10 @@ namespace GL {
 		}
 		*vsize = points.size() * 3;
 		*vertices = new float[*vsize];
-		int absMax = maxX - minX > maxY - minY ? maxX - minX : maxY - minY;
 		for (int i = 0; i < points.size(); ++i) {
 			Point& point = points[i];
-			float pointX = (point.x - minX) / absMax;
-			float pointY = (point.y - minY) / absMax;
-			(*vertices)[i * 3 + 0] = pointX;
-			(*vertices)[i * 3 + 1] = pointY;
+			(*vertices)[i * 3 + 0] = point.x;
+			(*vertices)[i * 3 + 1] = point.y;
 			float pointZ = 0.0f;
 			if (pointsZ) {
 				pointZ = (point.z - minZ) / (maxZ - minZ) / 5.0f;
@@ -386,8 +378,8 @@ namespace GL {
 				pointZ = point.z;
 			}
 			(*vertices)[i * 3 + 2] = pointZ;
-			xSum += pointX;
-			ySum += pointY;
+			xSum += point.x;
+			ySum += point.y;
 			//std::cout << " point.x:" << point.x << " " << " point.y:" << point.y << " " << " point.z:" << point.z << std::endl;
 		}
 		//获取到模型的中心坐标位置
