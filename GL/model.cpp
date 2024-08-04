@@ -11,6 +11,7 @@ namespace GL {
 		normals = nullptr;
 		eboMode = false;
 		hasTexture = false;
+		hasSpecularTexture = false;
 		verticesSize = 0;
 		indicesSize = 0;
 		normalSize = 0;
@@ -121,7 +122,7 @@ namespace GL {
 	/// 设置模型的贴图
 	/// </summary>
 	/// <returns></returns>
-	bool Model::SetTexture(unsigned char* texture, int width, int height, int nrChannels, float datas[], int size) {
+	bool Model::SetTexture(unsigned char* texture, unsigned char* specularTexture,int width, int height, int nrChannels, float datas[], int size) {
 		if (datas != nullptr) {
 			glBindVertexArray(VAO);
 			glGenBuffers(1, &PVBOS->at(VBO_TEXTURE));
@@ -134,32 +135,44 @@ namespace GL {
 			//因为纹理对象的单位长度是2.所以指定2
 			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 			glEnableVertexAttribArray(1);
-			//作用纹理
-			glGenTextures(1, &TEXTURE);
-			glBindTexture(GL_TEXTURE_2D, TEXTURE);
-			//当纹理坐标的范围超出0-1，超出范围用弥补
-			float borderColor[] = { 255.0f, 255.0f, 255.0f, 1.0f };
-			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-			/*
-				设置纹理过滤方式，当模型放大或缩小时纹理的变化方式，这里使用远近差值法
-			*/
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			for (int i = 0; i < 2; ++i) {
+				//作用纹理
+				glGenTextures(1, i == 0 ? &TEXTURE : &SPECULAR_TEXTURE);
+				i == 0 ? glActiveTexture(GL_TEXTURE0) : glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, i == 0 ? TEXTURE : SPECULAR_TEXTURE);
+				//当纹理坐标的范围超出0-1，超出范围用弥补
+				float borderColor[] = { 255.0f, 255.0f, 255.0f, 1.0f };
+				glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+				/*
+					设置纹理过滤方式，当模型放大或缩小时纹理的变化方式，这里使用远近差值法
+				*/
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			}
 		}
 		else {
-			/*如果是2次设置贴图，opengl会覆盖掉旧贴图的数据，但是不会释放内存，如果第一次的
-			作用的贴图内存比第二次大，实际的纹理对象内存还是和第一次的一样，只是新部分的对象内存被
-			覆盖掉了*/
-			glBindTexture(GL_TEXTURE_2D, TEXTURE);
-		}
-		//给当前的vbo纹理对象绑定纹理图象
-		if (texture) {
-			hasTexture = true;
-			//GPU要求图片宽度的大小一定是4的倍数，需要前置缩放，或者转为RGBA，因为RGBA图片一定是4的倍数
-			//使用内存对齐的方式来上传图片数据到gpu，这会损失一定的效率
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
-			glGenerateMipmap(GL_TEXTURE_2D);
+			//给当前的vbo纹理对象绑定纹理图象
+			if (texture) {
+				hasTexture = true;
+				/*如果是2次设置贴图，opengl会覆盖掉旧贴图的数据，但是不会释放内存，如果第一次的
+				作用的贴图内存比第二次大，实际的纹理对象内存还是和第一次的一样，只是新部分的对象内存被
+				覆盖掉了*/
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, TEXTURE);
+				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+				//GPU要求图片宽度的大小一定是4的倍数，需要前置缩放，或者转为RGBA，因为RGBA图片一定是4的倍数
+				//使用内存对齐的方式来上传图片数据到gpu，这会损失一定的效率
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
+				glGenerateMipmap(GL_TEXTURE_2D);
+			}
+			if (specularTexture) {
+				hasSpecularTexture = true;
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, SPECULAR_TEXTURE);
+				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, specularTexture);
+				glGenerateMipmap(GL_TEXTURE_2D);
+			}
 		}
 		return true;
 	}
@@ -313,10 +326,8 @@ namespace GL {
 		normals = new float[normalSize];
 		int normalsv3Size = normalSize / 3;
 		glm::vec3* normalsv3 = new glm::vec3[normalsv3Size];
-		//int* adjacentFaceCount = new int[normalsv3Size]; // 存储每个顶点相邻的三角形数量，并初始化为0
 		for (int i = 0; i < normalsv3Size; ++i) {
 			normalsv3[i] = glm::vec3(0.0f, 0.0f, 0.0f); //初始化值
-			//adjacentFaceCount[i] = 0;//初始化为0
 		}
 		for (int i = 0; i < indicesSize; i += 3) {
 			//三个点组成一个面，一个点需要三个坐标，所以需要9个坐标数据
@@ -330,16 +341,9 @@ namespace GL {
 			normalsv3[indices[i]] += normal;
 			normalsv3[indices[i + 1]] += normal;
 			normalsv3[indices[i + 2]] += normal;
-			// 更新每个顶点相邻的三角形数量
-		/*	adjacentFaceCount[indices[i]]++;
-			adjacentFaceCount[indices[i + 1]]++;
-			adjacentFaceCount[indices[i + 2]]++;*/
 		}
 		//存储法线的实际数据
 		for (int i = 0; i < normalsv3Size; ++i) {
-			//if (adjacentFaceCount[i] > 0) {
-			//	normalsv3[i] /= static_cast<float>(adjacentFaceCount[i]); // 将法线除以相邻三角形的数量
-			//}
 			const glm::vec3& normal = glm::normalize(normalsv3[i]);
 			normals[i * 3 + 0] = normal.x;
 			normals[i * 3 + 1] = normal.y;
@@ -347,7 +351,6 @@ namespace GL {
 		/*	Util::WriteLog(L"========");
 			Util::WriteLog(L"vec3_normal"+ std::to_wstring(i) + L":" + std::to_wstring(normal.x) + L"," + std::to_wstring(normal.y) + L"," + std::to_wstring(normal.z));*/
 		}
-		/*delete[] adjacentFaceCount;*/
 		delete[] normalsv3;
 		//绑定法线VBO
 		glBindVertexArray(VAO);

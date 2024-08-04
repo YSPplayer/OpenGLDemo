@@ -133,35 +133,35 @@ namespace GL {
                 material.shininess = std::stof(GetValueFromConfig(configDict, section, "Shininess"));
                 return true;
             }
+            static bool CvImageToSpecularImage(unsigned char*& specular_data, double alpha, int beta, int& width, int& height, int& nrChannels) {
+                cv::Mat adjustedImg; //创建镜面反射贴图
+                img.convertTo(adjustedImg, -1, alpha, beta);
+                specular_data = new unsigned char[adjustedImg.total() * adjustedImg.elemSize()];
+                std::memcpy(specular_data, adjustedImg.data, adjustedImg.total() * adjustedImg.elemSize());
+                // 更新宽度、高度和通道数
+                width = img.cols;
+                height = img.rows;
+                nrChannels = img.channels();
+                return true;
+            }
 
             /// <summary>
             /// 加载图片
             /// </summary>
             /// <param name="path"></param>
             /// <returns></returns>
-            static bool CvLoadImage(const std::string& path, unsigned char*& data,int& width, int& height, int& nrChannels) {
+            static bool CvLoadImage(const std::string& path, unsigned char*& data, unsigned char*& specular_data, double alpha, int beta,int& width, int& height, int& nrChannels) {
                 if (path == "") return false;
                 // 读取图像
-                cv::Mat img = cv::imread(path,cv::ImreadModes::IMREAD_UNCHANGED);
+                img = cv::imread(path,cv::ImreadModes::IMREAD_UNCHANGED);
                 // 检查图像是否成功加载
                 if (img.empty()) {
                     std::cerr << "Failed to load image." << std::endl;
                     return false;
                 }
                 if (!img.isContinuous()) img = img.clone(); //不加这段转换图片类型会阻塞
-                //cv::Mat resultImg;
                 if (img.channels() == 1) {
-                    ////是灰度图，转换为RGB的灰度图
-                    //resultImg = cv::Mat(img.rows, img.cols, CV_8UC3);
-                    //// 遍历单通道图像的每个像素，并将值复制到三个RGB通道
-                    //for (int y = 0; y < img.rows; y++) {
-                    //    for (int x = 0; x < img.cols; x++) {
-                    //        // 获取单通道的像素值
-                    //        uchar value = img.at<uchar>(y, x);
-                    //        // 设置RGB图像的相应像素值
-                    //        resultImg.at<cv::Vec3b>(y, x) = cv::Vec3b(value, value, value);
-                    //    }
-                    //}
+                    //是灰度图，转换为RGB的灰度图
                     cv::cvtColor(img, img, cv::COLOR_GRAY2RGB);
                 }
                 else if (img.channels() == 3) {
@@ -175,11 +175,7 @@ namespace GL {
                 // 分配内存用于存储图像数据（需要在适当时候释放这块内存）
                 data = new unsigned char[img.total() * img.elemSize()];
                 std::memcpy(data, img.data, img.total() * img.elemSize());
-                // 更新宽度、高度和通道数
-                width = img.cols;
-                height = img.rows;
-                nrChannels = img.channels();
-                return true;
+                return CvImageToSpecularImage(specular_data,alpha,beta, width, height, nrChannels);
             }
             /// <summary>
             /// 加载配置文件
@@ -424,6 +420,7 @@ namespace GL {
             static std::random_device rd;
             static std::mt19937 gen;
             static std::wstring rootPath;
+            static cv::Mat img;//存储贴图模型，方便转镜面贴图
             /// <summary>
             /// 初始化当前程序运行的主目录
             /// </summary>

@@ -23,12 +23,15 @@ namespace Window {
 		data.lastRotationZ = 0.0f;
 		data.lastRotationX = 0.0f;
 		data.reflectivity = 3.0f;
+		data.alpha = 2.0;
+		data.beta = 50;
 		data.useLight = true;
 		data.useTexture = false;
 		data.rotateZ = false;
 		data.rotateX = false;
 		data.yaw = -90.0f;
 		data.pitch = 0.0f;
+		data.transparentBg = true;
 		bool load = false;
 		if (!(load = Util::LoadConfig(data, UiManager::udata))) {
 			data.sensitivity = 0.1f;

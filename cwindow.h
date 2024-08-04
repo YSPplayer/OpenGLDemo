@@ -12,6 +12,7 @@ namespace Window {
 	using namespace GL::UI;
 #define DEFAULT_WINDOW_NAME "OpenGL"
 	class CWindow {
+		friend GlManager;
 		public:
 			CWindow();
 			bool CreateCWindow(int width,int height, Param* args = nullptr,const std::string& name = DEFAULT_WINDOW_NAME);

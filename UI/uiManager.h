@@ -15,7 +15,7 @@ namespace GL {
 			static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 		private:
 			void Draw(Data& data);
-			void SetStyle();
+			void SetStyle(Data& data);
 			GlManager* glmanager;//该对象的内存在主窗口中释放
 		};
 	}

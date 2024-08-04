@@ -12,7 +12,7 @@ namespace GL {
 		Model();
 		~Model();
 		bool CreateModel(const std::string& vertexShader, const std::string& colorShader, bool copy, float vertices[], int vsize, unsigned int indices[] = nullptr, int isize = 0);
-		bool SetTexture(unsigned char* texture,int width,int height,int nrChannels,float datas[], int size);
+		bool SetTexture(unsigned char* texture, unsigned char* specularTexture, int width,int height,int nrChannels,float datas[], int size);
 		Material material;
 		Model* CopyModel(bool& success);
 		inline void SetModelCenterPoisition(const glm::vec3& centerPosition) {
@@ -25,11 +25,13 @@ namespace GL {
 		}
 		glm::mat4 ReSetPoisition();
 		GLuint TEXTURE;//贴图管理对象，不是贴图数据的顶点对象，顶点对象放在VBO管理
+		GLuint SPECULAR_TEXTURE;//镜面反射贴图
 		inline bool HasTexture() {
-			return hasTexture;
+			return hasTexture && hasSpecularTexture;
 		};
 		bool CalculateVertexNormals();
 	private:
+		bool hasSpecularTexture;//是否有镜面贴图
 		bool hasTexture;//检查 当前模型是否有贴图
 		bool copy;//检测当前模型是否是拷贝出来的
 		float* vertices;//存放绘制图像的顶点数据

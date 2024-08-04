@@ -1,12 +1,11 @@
-#define STB_IMAGE_IMPLEMENTATION //让stb_image.h变为源文件
 #include "glManager.h"
 #include "shaderTag.h"
 #include <iostream>
-#include <stb_image.h>
 #include "../Util/util.h"
-
+#include "../cwindow.h"
 namespace GL {
 	using namespace Tool;
+	using namespace Window;
 	float GlManager::aspectUnit = 0.0f;
 	GlManager::GlManager() {
 		cmaera = new Camera;
@@ -257,11 +256,20 @@ namespace GL {
 		const glm::mat4& projection = cmaera->UpdateProjection(data);
 		for (int i = 0; i < models.size(); ++i) {
 			Model* model = models[i];
-			if(model->TEXTURE) glBindTexture(GL_TEXTURE_2D, model->TEXTURE);
+			if (model->TEXTURE) {
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, model->TEXTURE);
+			} 
+			if (model->SPECULAR_TEXTURE) {
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, model->SPECULAR_TEXTURE);
+			}
 			Shader* shader = model->GetShader();
 			Material& material = model->material;
 			const glm::mat4& mposition = data.reset ? model->ReSetPoisition() : model->UpdatePoisition(data);
 			shader->UseShader();
+			shader->SetShaderInt(0,"defaultTexture");
+			shader->SetShaderInt(1, "specularTexture");
 			shader->SetShaderMat4(view, "view");
 			shader->SetShaderMat4(mposition, "model");
 			//计算法线矩阵，兼容模型不规则变化时同步法线的位置
@@ -415,19 +423,27 @@ namespace GL {
 		} 
 		int width, height, nrChannels;
 		unsigned char* data = nullptr;
-		//stbi_set_flip_vertically_on_load(true);//如果图片读取颠倒，修改这个参数
-		// = stbi_load(path, &width, &height, &nrChannels, 0);
-		bool success = Util::CvLoadImage(std::string(path),data, width, height, nrChannels);
-		//float textures[] = {
-			// 1.0f, 1.0f,
-			// 1.0f, 0.0f,
-			// 0.0f, 0.0f,
-			// 0.0f, 1.0f
-			//};
-			//tsize = sizeof(textures) / sizeof(textures[0]);
+		unsigned char* specular_data = nullptr;
+		bool success = Util::CvLoadImage(std::string(path),data, specular_data, CWindow::data.alpha,CWindow::data.beta,
+			width, height, nrChannels);
 		//如果没有图片，我们不会存在贴图，如果没有纹理数组，我们不创建纹理对象
-		model->SetTexture(data, width, height, nrChannels, ptextures, tsize);
-		stbi_image_free(data);
+		model->SetTexture(data, specular_data, width, height, nrChannels, ptextures, tsize);
+		Util::ReleasePointer(data, true);
+		Util::ReleasePointer(specular_data, true);
+	}
+
+	/// <summary>
+	/// 修改镜面贴图
+	/// </summary>
+	/// <param name="alpha"></param>
+	/// <param name="beta"></param>
+	void GlManager::ChangeModelSpecularImage(Model* model,double alpha, int beta) {
+		int width, height, nrChannels;
+		unsigned char* specular_data = nullptr;
+		bool success = Util::CvImageToSpecularImage(specular_data, alpha, beta, width,
+			height, nrChannels);
+		model->SetTexture(nullptr, specular_data, width, height, nrChannels, nullptr, 0);
+		Util::ReleasePointer(specular_data, true);
 	}
 
 }

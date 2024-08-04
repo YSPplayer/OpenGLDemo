@@ -73,6 +73,11 @@ namespace GL {
 		glUniform1f(loc, value);
 	}
 
+	void Shader::SetShaderInt(int value, const std::string& key) {
+		int loc = glGetUniformLocation(shaderProgram, key.c_str());
+		glUniform1i(loc, value);
+	}
+
 	/// <summary>
 	/// 设置shader中的布尔变量
 	/// </summary>

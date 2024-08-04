@@ -81,7 +81,7 @@ namespace GL {
 		/// 绘制UI组件
 		/// </summary>
 		void UiManager::Draw(Data& data) {
-			SetStyle();
+			SetStyle(data);
 			//菜单栏//
 			{
 				ImGui::BeginMainMenuBar();
@@ -110,7 +110,13 @@ namespace GL {
 					}
 					if (ImGui::BeginMenu(u8"配置")) {
 						if (ImGui::MenuItem(u8"保存配置")) {
-							Util::CreateConfig(data,udata);
+							bool success = Util::CreateConfig(data,udata);
+							if (success) {
+								std::cout << "Create config success!" << std::endl;
+							}
+							else {
+								std::cout << "Create config fail!" << std::endl;
+							}
 						}
 						if (ImGui::MenuItem(u8"加载材质")) {
 							Material& material = glmanager->GetCurrentModel()->material;
@@ -142,7 +148,13 @@ namespace GL {
 							nfdresult_t result = NFD_SaveDialog(filterList, nullptr, &outPath);
 							if (result == NFD_OKAY) {
 								std::string selectedFilePath = outPath;
-								Util::SaveMaterial(material, Util::StringToWString(selectedFilePath), true);
+								bool success = Util::SaveMaterial(material, Util::StringToWString(selectedFilePath), true);
+								if (success) {
+									std::cout << "Save material success!" << std::endl;
+								}
+								else {
+									std::cout << "Save material fail!" << std::endl;
+								}
 							}
 							else if (result == NFD_CANCEL) {
 								std::cout << "User pressed cancel." << std::endl;
@@ -162,9 +174,9 @@ namespace GL {
 			{
 				// 获取菜单栏的高度
 				float menuBarHeight = ImGui::GetFrameHeight();
-				ImGui::SetNextWindowPos(ImVec2(float(0), float(menuBarHeight + 10)));
-				ImGui::SetNextWindowSize(ImVec2(float(static_cast<float>(data.width) / 5.0f), float(data.height)));//设置ui渲染区域
-				ImGui::Begin(u8"设置菜单", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize);
+				ImGui::SetNextWindowPos(ImVec2(float(0), float(menuBarHeight)));
+				ImGui::SetNextWindowSize(ImVec2(float(static_cast<float>(data.width) / 5.0f), float(data.height - menuBarHeight)));//设置ui渲染区域
+				ImGui::Begin(u8"设置菜单", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 				{
 					//模型
 					if (ImGui::TreeNode(u8"模型")) {
@@ -317,6 +329,16 @@ namespace GL {
 						ImGui::InputFloat(u8"##镜面反射z", &material.specular[2], 0.0, 1.0, "%.10f");
 						ImGui::SameLine();
 						ImGui::Text(u8"镜面反射");
+						ImGui::Text(u8"");
+						ImGui::Text(u8"2.贴图材质");
+						ImGui::SetNextItemWidth(maxWidth / 3.0f);
+						ImGui::InputDouble(u8"对比度", &data.alpha, 1.0, 10.0, "%.5f");
+						ImGui::SetNextItemWidth(maxWidth / 3.0f);
+						ImGui::InputInt(u8"亮度", &data.beta, 0, 100);
+						if (ImGui::Button(u8"重置镜面贴图")) {
+							glmanager->ChangeModelSpecularImage(glmanager->GetCurrentModel(),data.alpha,data.beta);
+						}
+						ImGui::Text(u8"");
 						ImGui::SliderFloat(u8"光泽度", &material.shininess, 0.00001f, 256.0f);
 						ImGui::SetNextItemWidth(maxWidth / 3.0f);
 						ImGui::InputFloat(u8"##光泽度", &material.shininess, 0.00001f, 256.0f, "%.10f");
@@ -324,6 +346,8 @@ namespace GL {
 					}
 					ImGui::Text(u8"");
 					if (ImGui::TreeNode(u8"系统")) {
+						ImGui::Checkbox(u8"背景透明", &data.transparentBg);
+						ImGui::SameLine();
 						ImGui::Checkbox(u8"背面剔除", &data.cullBackFace);
 						ImGui::Text(u8"");
 						ImGui::SliderFloat(u8"相机移动速度", &data.moveSpeedUnit, 1.0f, 10.0f);
@@ -339,7 +363,7 @@ namespace GL {
 		/// <summary>
 		/// 设置组件的颜色样式
 		/// </summary>
-		void UiManager::SetStyle() {
+		void UiManager::SetStyle(Data& data) {
 			//设置组件颜色
 			ImGuiStyle& style = ImGui::GetStyle();
 			style.Colors[ImGuiCol_MenuBarBg] = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
@@ -347,6 +371,10 @@ namespace GL {
 			style.Colors[ImGuiCol_Border] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f); // 设置边框颜色为透明
 			style.Colors[ImGuiCol_BorderShadow] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f); // 设置阴影颜色为透明
 			style.FrameBorderSize = 0.0f; // 设置边框宽度为0
+			float transparent = data.transparentBg ? 0.0f : 0.94f;
+			//设置背景是否透明
+			style.Colors[ImGuiCol_WindowBg].w = transparent;
+			style.Colors[ImGuiCol_PopupBg].w = transparent;
 			
 		}
 	}

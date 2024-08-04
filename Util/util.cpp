@@ -4,5 +4,6 @@ namespace GL {
 		std::random_device Util::rd;
 		std::mt19937 Util::gen(rd());
 		std::wstring Util::rootPath = Util::InitPath();
+		cv::Mat Util::img;
 	}
 }
