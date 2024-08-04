@@ -111,12 +111,12 @@ namespace GL {
 					if (ImGui::BeginMenu(u8"≈‰÷√")) {
 						if (ImGui::MenuItem(u8"±£¥Ê≈‰÷√")) {
 							bool success = Util::CreateConfig(data,udata);
-							if (success) {
+					/*		if (success) {
 								std::cout << "Create config success!" << std::endl;
 							}
 							else {
 								std::cout << "Create config fail!" << std::endl;
-							}
+							}*/
 						}
 						if (ImGui::MenuItem(u8"º”‘ÿ≤ƒ÷ ")) {
 							Material& material = glmanager->GetCurrentModel()->material;
@@ -149,12 +149,12 @@ namespace GL {
 							if (result == NFD_OKAY) {
 								std::string selectedFilePath = outPath;
 								bool success = Util::SaveMaterial(material, Util::StringToWString(selectedFilePath), true);
-								if (success) {
+								/*if (success) {
 									std::cout << "Save material success!" << std::endl;
 								}
 								else {
 									std::cout << "Save material fail!" << std::endl;
-								}
+								}*/
 							}
 							else if (result == NFD_CANCEL) {
 								std::cout << "User pressed cancel." << std::endl;
