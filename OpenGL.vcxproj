@@ -144,7 +144,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>E:\open3d\lib;E:\open3d\lib\Release;E:\open3d\OpenGLDemo\x64\Release</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;nfd.lib;tinyxml2.lib;X3pFormat.lib;opencv_core490d.lib;opencv_imgcodecs490d.lib;opencv_imgproc490d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;opengl32.lib;nfd.lib;tinyxml2.lib;X3pFormat.lib;opencv_core490.lib;opencv_imgcodecs490.lib;opencv_imgproc490.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
