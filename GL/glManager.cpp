@@ -270,6 +270,7 @@ namespace GL {
 			shader->UseShader();
 			shader->SetShaderInt(0,"defaultTexture");
 			shader->SetShaderInt(1, "specularTexture");
+			shader->SetShaderInt(data.lightType, "lightType");
 			shader->SetShaderMat4(view, "view");
 			shader->SetShaderMat4(mposition, "model");
 			//计算法线矩阵，兼容模型不规则变化时同步法线的位置
@@ -279,6 +280,7 @@ namespace GL {
 			glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); 
 			shader->SetShaderVec3(ambientColor,"light.ambient");
 			shader->SetShaderVec3(diffuseColor,"light.diffuse");
+			shader->SetShaderVec3(glm::vec3(-0.2f, -1.0f, -0.3f), "light.direction");
 			shader->SetShaderVec3(glm::vec3(1.0f, 1.0f, 1.0f),"light.specular"); //镜面反射
 			shader->SetShaderVec3(lightControl->lightPos, "light.position");
 			shader->SetShaderVec3(cmaera->GetCameraPos(), "viewPos");
@@ -286,7 +288,9 @@ namespace GL {
 			shader->SetShaderMat4(projection, "projection");
 			shader->SetShaderBoolean(data.useTexture && model->HasTexture(), "useTexture");
 			shader->SetShaderBoolean(data.useLight, "useLight");
-
+			shader->SetShaderFloat(1.0f, "light.constant");
+			shader->SetShaderFloat(0.09f, "light.linear");
+			shader->SetShaderFloat(0.032f, "light.quadratic");
 			shader->SetShaderVec3(material.ambient, "material.ambient");
 			shader->SetShaderVec3(material.diffuse,"material.diffuse");
 			shader->SetShaderVec3(material.specular,"material.specular");

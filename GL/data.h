@@ -11,6 +11,11 @@ namespace GL {
 #define DRAW_MODE_GRID 1
 #define DRAW_MODE_SURFACE 2
 
+#define LIGHT_PARALLEL 0 //平行光
+#define LIGHT_LINEAR_POINT 1 //线性点光源
+#define NON_LINEAR_POINT_LIGHT 2 //非线性点光源
+#define SPOT_LIGHT 3 //聚光
+
 //最大偏移量
 #define MAX_X_OFFSET 10.0f
 #define MAX_Y_OFFSET 10.0f
@@ -65,6 +70,7 @@ namespace GL {
 		double alpha;//镜面贴图对比度[1.0-10]
 		int beta;//镜面贴图亮度[0-100]
 		bool transparentBg;//imgui背景是否设置透明
+		int lightType;//光的类型（平行光 点光源 聚光）
 	};
 	//UI组件存放的数据
 	struct UData {

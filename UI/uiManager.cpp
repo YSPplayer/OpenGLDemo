@@ -342,6 +342,16 @@ namespace GL {
 						ImGui::SliderFloat(u8"光泽度", &material.shininess, 0.00001f, 256.0f);
 						ImGui::SetNextItemWidth(maxWidth / 3.0f);
 						ImGui::InputFloat(u8"##光泽度", &material.shininess, 0.00001f, 256.0f, "%.10f");
+						const char* parallelLight = u8"平行光";
+						const char* linearPointLight = u8"线性点光源";
+						const char* nonlinearPointLight = u8"非线性点光源";
+						const char* spotlight = u8"聚光";
+						for (int i = 0; i < 4; i++) {
+							if (ImGui::Selectable(i == 0 ? parallelLight : i == 1 ? linearPointLight :
+								i == 2 ? nonlinearPointLight : spotlight, data.lightType == i)) {
+								data.lightType = i;
+							}
+						}
 						ImGui::TreePop();
 					}
 					ImGui::Text(u8"");

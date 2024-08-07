@@ -8,9 +8,14 @@ struct Material {
 
 struct Light {
     vec3 position;//光源位置
+	vec3 direction;//平行光位置
     vec3 ambient;//环境光照分量
     vec3 diffuse;//漫反射分量
     vec3 specular;//镜面反射分量
+
+	float constant;//非线性光源常数项1
+    float linear;//非线性光源常数项2
+    float quadratic;//非线性光源常数项3
 };
 
 out vec4 FragColor;
@@ -25,6 +30,7 @@ uniform vec3 viewPos;
 uniform vec3 defaultObjectColor;
 uniform Material material;
 uniform Light light;
+uniform int lightType;
 void main() {
 	vec3 objectColor = vec3(0.0, 0.0, 0.0);
 	vec3 ambient =  vec3(0.0, 0.0, 0.0);
@@ -36,9 +42,20 @@ void main() {
 		objectColor = defaultObjectColor;
 	}
 	if(useLight) {
+		vec3 lightDir = vec3(0.0, 0.0, 0.0);
 		vec3 norm = normalize(Normal);
-		vec3 lightDir = normalize(light.position - FragPos); 
-		float diff = max(dot(norm, lightDir), 0.0);
+		float attenuation = 0.0;
+		if(lightType == 0) { //平行光
+			lightDir = normalize(-light.direction);
+		} else if(lightType == 1) { //线性点光源
+			lightDir = normalize(light.position - FragPos); 
+		} else if(lightType == 2) { //非线性光源
+			lightDir = normalize(light.position - FragPos);
+			float distance = length(light.position - FragPos);
+			attenuation = 1.0 / (light.constant + light.linear * distance + 
+                light.quadratic * (distance * distance));   
+		}
+ 		float diff = max(dot(norm, lightDir), 0.0);
 
 		vec3 viewDir = normalize(viewPos - FragPos);
 		vec3 reflectDir = reflect(-lightDir, norm);
@@ -53,6 +70,11 @@ void main() {
 			ambient = light.ambient * material.ambient;//环境光
 			diffuse = light.diffuse * (diff * material.diffuse);//漫反射光     
 			specular = light.specular * (spec * material.specular);//镜面光   
+		}
+		if(lightType == 2) { //非线性光源调节光线
+			ambient *= attenuation;  
+			diffuse *= attenuation;
+			specular *= attenuation;   
 		}
 		objectColor = ambient + diffuse + specular;
 	}

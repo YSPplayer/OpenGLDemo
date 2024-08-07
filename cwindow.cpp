@@ -24,6 +24,7 @@ namespace Window {
 		data.lastRotationX = 0.0f;
 		data.reflectivity = 3.0f;
 		data.alpha = 2.0;
+		data.lightType = 1;
 		data.beta = 50;
 		data.useLight = true;
 		data.useTexture = false;
