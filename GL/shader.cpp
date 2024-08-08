@@ -1,5 +1,7 @@
 #include "shader.h"
-#include "iostream"
+#include <iostream>
+#include <vector>
+
 #include <glm/gtc/type_ptr.hpp>
 namespace GL {
 	Shader::Shader() {
@@ -46,7 +48,6 @@ namespace GL {
 		return false;
 	}
 
-
 	/// <summary>
 	/// 设置shader全局变量
 	/// </summary>
@@ -55,6 +56,36 @@ namespace GL {
 	void Shader::SetShaderMat4(const glm::mat4& mat4, const std::string& key) {
 		int loc = glGetUniformLocation(shaderProgram, key.c_str());
 		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mat4));
+	}
+
+	void Shader::SetShaderMat3(const glm::mat3& mat3, const std::string& key) {
+		int loc = glGetUniformLocation(shaderProgram, key.c_str());
+		glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(mat3));
+	}
+
+	void Shader::SetShaderVec3(const glm::vec3& vec3, const std::string& key) {
+		int loc = glGetUniformLocation(shaderProgram, key.c_str());
+		glUniform3fv(loc, 1, glm::value_ptr(vec3));
+	}
+
+	void Shader::SetShaderFloat(float value, const std::string& key) {
+		int loc = glGetUniformLocation(shaderProgram, key.c_str());
+		glUniform1f(loc, value);
+	}
+
+	void Shader::SetShaderInt(int value, const std::string& key) {
+		int loc = glGetUniformLocation(shaderProgram, key.c_str());
+		glUniform1i(loc, value);
+	}
+
+	/// <summary>
+	/// 设置shader中的布尔变量
+	/// </summary>
+	/// <param name="value"></param>
+	/// <param name="key"></param>
+	void Shader::SetShaderBoolean(bool value, const std::string& key) {
+		int loc = glGetUniformLocation(shaderProgram, key.c_str());
+		glUniform1i(loc, value ? GL_TRUE : GL_FALSE);
 	}
 
 	/// <summary>
@@ -73,8 +104,11 @@ namespace GL {
 		std::string infoLog;
 		glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 		if (!success) {//编译失败
-			glGetShaderInfoLog(shader, 512, NULL, &infoLog[0]); //获取编译的错误消息
-			std::cout << "[Error]{Shader::CreateShader}" << infoLog << std::endl;
+			GLint infoLogLength;
+			glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
+			std::vector<char> infoLog(infoLogLength);
+			glGetShaderInfoLog(shader, infoLogLength, NULL, infoLog.data());
+			std::cerr << "[Error]{Shader::CreateShader} " << infoLog.data() << std::endl;
 			return NULL;//编译失败返回空指针 
 		}
 		return shader;

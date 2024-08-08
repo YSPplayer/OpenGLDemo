@@ -2,17 +2,20 @@
 #include "GL/glManager.h"
 #include "GL/data.h"
 #include <GLFW/glfw3.h> //glfw3要后于glad包含，glad要优先加载Opengl的函数
+#include "UI/uiManager.h"
 #include <string>
 /// <summary>
 /// 自定义glfw窗口类
 /// </summary>
 namespace GL {
 namespace Window {
+	using namespace GL::UI;
 #define DEFAULT_WINDOW_NAME "OpenGL"
 	class CWindow {
+		friend GlManager;
 		public:
 			CWindow();
-			bool CreateWindow(int width,int height, Param* args = nullptr,const std::string& name = DEFAULT_WINDOW_NAME);
+			bool CreateCWindow(int width,int height, Param* args = nullptr,const std::string& name = DEFAULT_WINDOW_NAME);
 			bool Exe();
 		private:
 			static bool shiftPressed;
@@ -23,14 +26,12 @@ namespace Window {
 			static float lastY;
 			static float lastX2;
 			static float lastY2;
-			static float yaw;
-			static float pitch;
 			static Data data;//传输的参数data类
 			static bool mousePressed;
 		/*	static bool rightButtonPressed;*/
 			~CWindow(); 
 			static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
-			static void UpdatePoint(GLFWwindow* window, double xpos, double ypos);
+			static void UpdatePoint(GLFWwindow* window, double xposIn, double yposIn);
 			void UpdateDeltaTime();
 			void ProcessInput();
 			void Render();
@@ -40,6 +41,7 @@ namespace Window {
 			static void UpdateScroll(GLFWwindow* window, double xoffset, double yoffset);
 			GLFWwindow* window;//主窗口
 			GlManager* glmanager;//GL管理对象
+			UiManager* uimanager;//imggui对象
 	};
 }
 }

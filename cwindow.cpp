@@ -1,7 +1,9 @@
+#include "Util/util.h"
 #include "cwindow.h"
 #include <iostream>
 namespace GL {
 namespace Window {
+	using namespace Tool;
 	float CWindow::lastX = 400.0f;
 	float CWindow::lastY = 300.0f;
 	float CWindow::lastX2 = 400.0f;
@@ -9,20 +11,44 @@ namespace Window {
 	bool CWindow::mousePressed = false;
 	bool CWindow::shiftPressed = false;
 	bool CWindow::firstMouse = false;
-	float CWindow::yaw = -90.0f;
-	float CWindow::pitch = 0.0f;
 	Data CWindow::data;
 	CWindow::CWindow() {
 		window = nullptr;
 		glmanager = new GlManager;
 		deltaTime = 0.0f;
 		lastFrame = 0.0f;
-		data.rotateZ = false;
-		data.rotateX = false;
+		data.aspect = DEFAULT_ASPECT;
+		data.ambientStrength = 0.5f;
+		data.specularStrength = 0.5f;
 		data.lastRotationZ = 0.0f;
 		data.lastRotationX = 0.0f;
-		data.aspect = 0.3f;
-		data.drawLine = false;
+		data.reflectivity = 3.0f;
+		data.alpha = 2.0;
+		data.lightType = 1;
+		data.beta = 50;
+		data.useLight = true;
+		data.useTexture = false;
+		data.rotateZ = false;
+		data.rotateX = false;
+		data.yaw = -90.0f;
+		data.pitch = 0.0f;
+		data.transparentBg = true;
+		bool load = false;
+		if (!(load = Util::LoadConfig(data, UiManager::udata))) {
+			data.sensitivity = 0.1f;
+			data.moveSpeedUnit = 1.0f;
+			data.cullBackFace = false;
+			data.drawMode = DRAW_MODE_SURFACE;
+			//初始化颜色
+			for (int i = 0; i < 3; ++i) {
+				data.colors[i][0] = 0.0f;
+				data.colors[i][1] = 0.0f;
+				data.colors[i][2] = 0.0f;
+				data.colors[i][3] = 1.0f;
+			}
+		}
+		uimanager = new UiManager(glmanager,load);
+		
 	}
 
 	/// <summary>
@@ -32,7 +58,7 @@ namespace Window {
 	/// <param name="height"></param>
 	/// <param name="name"></param>
 	/// <returns></returns>
-	bool CWindow::CreateWindow(int width, int height, Param* args,const std::string& name) {
+	bool CWindow::CreateCWindow(int width, int height, Param* args,const std::string& name){
 		OpenGLInit();
 		window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
 		if(window == nullptr) {
@@ -40,6 +66,7 @@ namespace Window {
 			return false;
 		}
 		glfwMakeContextCurrent(window); //设置glfw窗口当前的上下文 
+		glfwSwapInterval(1); // Enable vsync
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 			glfwTerminate(); 
 			return false;//加载opengl的函数指针
@@ -47,6 +74,12 @@ namespace Window {
 		//初始化管理器
 		if(!glmanager->Init(args)) return false;
 		glViewport(0, 0, width, height); //设置opengl的窗口大小，这里设置为和主窗口大小一样
+		glDisable(GL_CULL_FACE); //默认禁用面剔除功能
+		glCullFace(GL_BACK); // 剔除背面
+		glFrontFace(GL_CCW); // 逆时针为正面
+		glEnable(GL_DEPTH_TEST);//启用深度测试，不然模型渲染不正确
+		//初始化imggui
+		uimanager->Init(window);
 		BindCallback();
 		return true;
 	}
@@ -57,6 +90,7 @@ namespace Window {
 	/// <returns></returns>
 	bool CWindow::Exe() {
 		while(!glfwWindowShouldClose(window)) {
+			UpdateDeltaTime();//更新帧率速度
 			ProcessInput();//监听按键事件
 			glfwPollEvents(); //接收事件，用于事件的触发
 			Render();
@@ -69,6 +103,7 @@ namespace Window {
 	CWindow::~CWindow() {}
 
 	void CWindow::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+		if (UiManager::MouseButtonCallback(window, button, action, mods)) return;
 		CWindow* self = static_cast<CWindow*>(glfwGetWindowUserPointer(window));
 		if (button == GLFW_MOUSE_BUTTON_LEFT) {
 			if (action == GLFW_PRESS) {
@@ -81,8 +116,8 @@ namespace Window {
 		else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
 		/*	if (action == GLFW_PRESS) {
 				self->rightButtonPressed = true;
-			}
-			else if (action == GLFW_RELEASE) {
+			} 
+			else if (action == GLFW_RELEASE) {  
 				self->rightButtonPressed = false;
 			}*/
 		}
@@ -92,8 +127,7 @@ namespace Window {
 	/// 鼠标事件的监听
 	/// </summary>
 	void CWindow::ProcessInput() {
-		UpdateDeltaTime();
-		data.moveSpeed =  1.0f * deltaTime;
+		data.moveSpeed = data.moveSpeedUnit * deltaTime;
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 			data.moveType = MOVE_FORWARD;
 		else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -104,8 +138,6 @@ namespace Window {
 			data.moveType = MOVE_RIGHT;
 		else if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) //重置模型位置
 			data.reset = true;
-		else if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-			data.drawLine = !data.drawLine;
 		else 
 			data.moveType = MOVE_NONE;
 	}
@@ -124,37 +156,35 @@ namespace Window {
 		glfwSetKeyCallback(window, KeyCallback);
 	}
 
-	void CWindow::UpdatePoint(GLFWwindow* window, double xpos, double ypos) {
+	void CWindow::UpdatePoint(GLFWwindow* window, double xposIn, double yposIn) {
+		if (UiManager::CursorPosCallback(window, xposIn, yposIn)) return;
 		CWindow* self = static_cast<CWindow*>(glfwGetWindowUserPointer(window));
+		//更换相机视角
+		float xpos = static_cast<float>(xposIn);
+		float ypos = static_cast<float>(yposIn);
 		if (shiftPressed) {
-			if (self->mousePressed) {
-				if (firstMouse) {
-					lastX2 = xpos;
-					lastY2 = ypos;
-					firstMouse = false;
-				}
-				double xoffset = xpos - lastX2;
-				double yoffset = lastY2 - ypos;
+			if (firstMouse)
+			{
 				lastX2 = xpos;
 				lastY2 = ypos;
-				GLfloat sensitivity = 0.05;
-				xoffset *= sensitivity;
-				yoffset *= sensitivity;
-				yaw += xoffset;
-				pitch += yoffset;
-				if (pitch > 89.0f)
-					pitch = 89.0f;
-				if (pitch < -89.0f)
-					pitch = -89.0f;
-				data.yaw = yaw;
-				data.pitch = pitch;
-				data.isYaw = true;
+				firstMouse = false;
 			}
-			else {
-			
-			}
+			float xoffset = xpos - lastX2;
+			float yoffset = lastY2 - ypos;
+			lastX2 = xpos;
+			lastY2 = ypos;
+			xoffset *= data.sensitivity;
+			yoffset *= data.sensitivity;
+			data.yaw += xoffset;
+			data.pitch += yoffset;
+			if (data.pitch > 89.0f)
+				data.pitch = 89.0f;
+			if (data.pitch < -89.0f)
+				data.pitch = -89.0f;
+			data.isYaw = true;
 		}	
 		else {
+			firstMouse = true;//重置相机视角的移动变量
 			if (self->mousePressed) {
 				if (self->lastX == 0.0 && self->lastY == 0.0) {
 					self->lastX = xpos;
@@ -164,14 +194,15 @@ namespace Window {
 				double xoffset = xpos - self->lastX;
 				double yoffset = ypos - self->lastY;
 				// 使用更小的缩放因子以平滑旋转
-				const double scaleFactor = 0.3;  // 减小这个值可以减小旋转的灵敏度
-				if (fabs(xoffset) > 3.0) {  // 只有当鼠标移动超过2像素时才更新
+				const double zscaleFactor = 0.3;  // 减小这个值可以减小旋转的灵敏度
+				const double xscaleFactor = 0.08;
+				if (fabs(xoffset) > 8.0) {  // 只有当鼠标移动超过2像素时才更新
 					data.rotateZ = true;
-					data.rotationZ += xoffset * scaleFactor;
+					data.rotationZ += xoffset * zscaleFactor;
 				}
-				if (fabs(yoffset) > 3.0) {  // 同样的阈值适用于Y轴
+				if (fabs(yoffset) > 8.0) {  // 同样的阈值适用于Y轴
 					data.rotateX = true;
-					data.rotationX += yoffset * scaleFactor;
+					data.rotationX += yoffset * xscaleFactor;
 				}
 				self->lastX = xpos;
 				self->lastY = ypos;
@@ -189,7 +220,7 @@ namespace Window {
 	}
 
 	void CWindow::UpdateDeltaTime() {
-		double currentFrameTime = glfwGetTime();
+		float currentFrameTime = static_cast<float>(glfwGetTime());
 		deltaTime = currentFrameTime - lastFrame;
 		lastFrame = currentFrameTime;
 	}
@@ -207,8 +238,7 @@ namespace Window {
 	}
 	
 	void CWindow::UpdateScroll(GLFWwindow* window, double xoffset, double yoffset) {
-		if (data.aspect >= 0.0f && data.aspect <= 3.0f)
-			data.aspect = data.aspect - (yoffset / 10.0f);
+		if (data.aspect >= 0.0f && data.aspect <= 3.0f) data.aspect = data.aspect - (yoffset / ((20 - GlManager::aspectUnit) * 10.0f)); 
 		if (data.aspect <= 0.0f)
 			data.aspect = 0.0f;
 		if (data.aspect >= 3.0f)
@@ -220,11 +250,11 @@ namespace Window {
 	/// </summary>
 	void CWindow::Render() {
 		//渲染指令
-		//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClearColor(data.colors[0][0], data.colors[0][1], data.colors[0][2], data.colors[0][3]);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//启用深度测试需要GL_DEPTH_BUFFER_BIT
 		glfwGetWindowSize(window, &data.width, &data.height);//获取到当前窗口的宽高
-		glmanager->Render(data);
+		glmanager->Render(data); 
+		uimanager->Render(data);//先绘制模型，后渲染ui，ui层级在模型之上
 		data.rotateZ = false;
 		data.rotateX = false;
 		data.isYaw = false;
@@ -235,12 +265,14 @@ namespace Window {
 		if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT) {
 			if (action == GLFW_PRESS) {
 				shiftPressed = true;
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);//按下shift时候隐藏鼠标
 			}
 			else if (action == GLFW_RELEASE) {
 				shiftPressed = false;
-				//mouseDragging = false; // 停止拖拽
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); //正常模式下显示鼠标
 			}
 		}
+		UiManager::KeyCallback(window, key, scancode, action, mods);
 	}
 }
 }
