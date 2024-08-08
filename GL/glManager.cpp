@@ -40,9 +40,8 @@ namespace GL {
 		int vsize = 0;
 		int isize = 0;
 		int tsize = 0;
-		float centerX = 0.0f;
-		float centerY = 0.0f;
-		CreateX3pData(width - 1, height - 1, xoffset, yoffset, minZ,maxZ, zpointData,&pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
+		glm::vec3 centerPos;
+		CreateX3pData(width - 1, height - 1, xoffset, yoffset, minZ,maxZ, zpointData,&pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, centerPos);
 		Model* model = new Model;
 		std::string vShader;
 		std::string cShader;
@@ -50,9 +49,12 @@ namespace GL {
 		bool success = model->CreateModel(vShader, cShader, false, pvertices, vsize, pindices, isize);
 		CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
 		model->CalculateVertexNormals();//计算法线
-		model->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
-		cmaera->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
+		model->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
+		cmaera->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->ReSetPoisition();
+		int max = width > height ? width : height;
+		max--;
+		lightControl->lightPos = glm::vec3(centerPos.x, centerPos.y + (max / 2.0f) + 2.0f, centerPos.z);
 		if (!success) return false;
 		models.push_back(model);
 		return true;
@@ -69,9 +71,8 @@ namespace GL {
 		int vsize = 0;
 		int isize = 0;
 		int tsize = 0;
-		float centerX = 0.0f;
-		float centerY = 0.0f;
-		CreateRandomData(udata.modelWidth, udata.modelHeight, udata.modelXOffset, udata.modelYOffset,0.0f,0.0f,nullptr, udata.modelRandomZ, udata.modelRandomRange,&pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, &centerX, &centerY);
+		glm::vec3 centerPos;
+		CreateRandomData(udata.modelWidth, udata.modelHeight, udata.modelXOffset, udata.modelYOffset,0.0f,0.0f,nullptr, udata.modelRandomZ, udata.modelRandomRange,&pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, centerPos);
 		Model* model = new Model;
 		std::string vShader;
 		std::string cShader;
@@ -79,9 +80,11 @@ namespace GL {
 		bool success = model->CreateModel(vShader, cShader, false, pvertices, vsize, pindices, isize);
 		CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
 		model->CalculateVertexNormals();//计算法线
-		model->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
-		cmaera->SetModelCenterPoisition(glm::vec3(centerX, centerY, 0.0f));
+		model->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
+		cmaera->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->ReSetPoisition();
+		int max = udata.modelWidth > udata.modelHeight ? udata.modelWidth : udata.modelHeight;
+		lightControl->lightPos = glm::vec3(centerPos.x, centerPos.y + (max / 2.0f) + 2.0f, centerPos.z);
 		if (!success) return false;
 		models.push_back(model);
 		return true;
@@ -299,6 +302,7 @@ namespace GL {
 		}
 		//绘制灯光模型
 		Model* lightModel = lightControl->lightModel;
+		lightControl->lightModelPos = glm::translate(glm::mat4(1.0f), lightControl->lightPos);//更新光源位置
 		Shader* shader = lightModel->GetShader();
 		const glm::mat4& mposition = data.reset ? lightModel->ReSetPoisition() : lightModel->UpdatePoisition(data);
 		shader->UseShader();
@@ -316,7 +320,7 @@ namespace GL {
 	/// <param name="vertices"></param>
 	/// <param name="indices"></param>
 	void GlManager::CreateRandomData(unsigned int width, unsigned int height, float xoffset, float yoffset, float minZ, float maxZ, float* pointsZ,bool random, float randomRange, float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize,
-		int* tsize, float* centerX, float* centerY) {
+		int* tsize, glm::vec3& centerPos) {
 #undef min
 #undef max
 		//if (xoffset > MAX_X_OFFSET) xoffset = MAX_X_OFFSET;
@@ -330,6 +334,7 @@ namespace GL {
 		*textures = new float[*tsize];
 		float xSum = 0.0f;
 		float ySum = 0.0f;
+		float zSum = 0.0f;
 		int tindex = 0;
 		float x = 0;
 		float y = 0;
@@ -384,11 +389,13 @@ namespace GL {
 			(*vertices)[i * 3 + 2] = pointZ;
 			xSum += point.x;
 			ySum += point.y;
+			zSum += pointZ;
 			//std::cout << " point.x:" << point.x << " " << " point.y:" << point.y << " " << " point.z:" << point.z << std::endl;
 		}
 		//获取到模型的中心坐标位置
-		*centerX = xSum / points.size();
-		*centerY = ySum / points.size();
+		centerPos.x = xSum / points.size();
+		centerPos.y = ySum / points.size();
+		centerPos.z = zSum / points.size();
 		/*for (int i = 0; i < *tsize; ++i) {
 			std::cout << "textures:" << (*textures)[i] << std::endl;
 		}*/
@@ -403,9 +410,9 @@ namespace GL {
 	}
 
 	void GlManager::CreateX3pData(unsigned int _width, unsigned int _height, float xoffset, float yoffset, float minZ, float maxZ, 
-		float* pointsZ,float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize, int* tsize, float* centerX, float* centerY) {
+		float* pointsZ,float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize, int* tsize, glm::vec3& centerPos) {
 		CreateRandomData(_width,_height, xoffset,yoffset,minZ,maxZ, pointsZ,false,0.0f,  vertices, indices, textures, vsize,
-			isize, tsize, centerX, centerY);
+			isize, tsize, centerPos);
 	}
 
 	/// <summary>

@@ -342,6 +342,8 @@ namespace GL {
 						ImGui::SliderFloat(u8"光泽度", &material.shininess, 0.00001f, 256.0f);
 						ImGui::SetNextItemWidth(maxWidth / 3.0f);
 						ImGui::InputFloat(u8"##光泽度", &material.shininess, 0.00001f, 256.0f, "%.10f");
+						ImGui::Text(u8"");
+						ImGui::Text(u8"3.光照类别");
 						const char* parallelLight = u8"平行光";
 						const char* linearPointLight = u8"线性点光源";
 						const char* nonlinearPointLight = u8"非线性点光源";
@@ -352,11 +354,22 @@ namespace GL {
 								data.lightType = i;
 							}
 						}
+						ImGui::Text(u8"");
+						ImGui::Text(u8"4.光源位置");
+						LightControl* lightControl = glmanager->GetLightControl();
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						ImGui::InputFloat(u8"##光照位置X", &lightControl->lightPos.x, 0.0, 1.0, "%.5f");
+						ImGui::SameLine();
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						ImGui::InputFloat(u8"##光照位置Y", &lightControl->lightPos.y, 0.0, 1.0, "%.5f");
+						ImGui::SameLine();
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						ImGui::InputFloat(u8"##光照位置Z", &lightControl->lightPos.z, 0.0, 1.0, "%.5f");
 						ImGui::TreePop();
 					}
 					ImGui::Text(u8"");
 					if (ImGui::TreeNode(u8"系统")) {
-						ImGui::Checkbox(u8"背景透明", &data.transparentBg);
+						ImGui::Checkbox(u8"背景透明", &data.transparentBg); 
 						ImGui::SameLine();
 						ImGui::Checkbox(u8"背面剔除", &data.cullBackFace);
 						ImGui::Text(u8"");

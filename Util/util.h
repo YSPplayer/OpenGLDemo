@@ -76,6 +76,21 @@ namespace GL {
                 return ss.str(); // 返回构建的字符串
             }
 
+            /// <summary>
+            /// 获取球面坐标
+            /// </summary>
+            /// <param name="radius"></param>
+            /// <param name="theta"></param>
+            /// <param name="phi"></param>
+            /// <returns></returns>
+            static glm::vec3 CalculateLightPosition(float radius, float theta, float phi) {
+                return glm::vec3(
+                    radius * sin(phi) * sin(theta),  // X
+                    radius * cos(phi),               // Y
+                    radius * sin(phi) * cos(theta)   // Z
+                );
+            }
+
             static bool SaveMaterial(Material& material, const std::wstring& name, bool completePath = false) {
                 const std::wstring& path = completePath ? name : (Util::GetRootPath() + L"Material\\" + name);
                 std::ofstream cfile; 
