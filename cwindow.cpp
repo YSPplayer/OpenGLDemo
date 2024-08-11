@@ -25,6 +25,8 @@ namespace Window {
 		data.reflectivity = 3.0f;
 		data.alpha = 2.0;
 		data.lightType = 1;
+		data.theta = 0.0f;
+		data.phi = 0.0f;
 		data.beta = 50;
 		data.useLight = true;
 		data.useTexture = false;

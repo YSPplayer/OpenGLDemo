@@ -15,6 +15,7 @@
 #include <glm/glm.hpp>
 #include <tinyxml2/tinyxml2.h>
 #include <opencv2/opencv.hpp>
+#include <glm/gtc/constants.hpp>
 namespace GL {
 	namespace Tool {
         using namespace tinyxml2;
@@ -75,22 +76,81 @@ namespace GL {
                 }
                 return ss.str(); // 返回构建的字符串
             }
+            
+            /*
+            球面坐标系由三个参数定义：
+            半径 radius(x)、方位角 theta(y)（绕 Z 轴的角度，从 X 轴正方向开始计算）
+            ，以及极角 phi(z)（从 Z 轴正方向到点的角度）。
+            */
 
             /// <summary>
-            /// 获取球面坐标
+            /// 球面坐标转笛卡尔坐标
             /// </summary>
-            /// <param name="radius"></param>
-            /// <param name="theta"></param>
-            /// <param name="phi"></param>
+            /// <param name="center"></param>
+            /// <param name="spherical"></param>
             /// <returns></returns>
-            static glm::vec3 CalculateLightPosition(float radius, float theta, float phi) {
-                return glm::vec3(
-                    radius * sin(phi) * sin(theta),  // X
-                    radius * cos(phi),               // Y
-                    radius * sin(phi) * cos(theta)   // Z
-                );
+            static glm::vec3 SphericalToCartesian(const glm::vec3& center, const glm::vec3& spherical) {
+                float x = center.x + spherical.x * sin(spherical.z) * cos(spherical.y);
+                float y = center.y + spherical.x * sin(spherical.z) * sin(spherical.y);
+                float z = center.z + spherical.x * cos(spherical.z);
+                return { x, y, z };
             }
 
+            /// <summary>
+            /// 笛卡尔坐标转球面坐标
+            /// </summary>
+            /// <param name="center"></param>
+            /// <param name="point"></param>
+            /// <returns></returns>
+            static glm::vec3 CartesianToSpherical(const glm::vec3& center, const glm::vec3& point) {
+                float dx = point.x - center.x;
+                float dy = point.y - center.y;
+                float dz = point.z - center.z;
+                float radius = sqrt(dx * dx + dy * dy + dz * dz);
+                float phi = acos(dz / radius);
+                float theta = atan2(dy, dx);
+                return { radius, theta, phi };
+            }
+
+            /// <summary>
+            /// 设置当前球面坐标
+            /// </summary>
+            /// <param name="center"></param>
+            /// <param name="point"></param>
+            /// <returns></returns>
+            static glm::vec3 CalculateNewSphericalCoordinates(const glm::vec3& center, const glm::vec3& point, float theta, float phi) {
+                const glm::vec3& spherical = CartesianToSpherical(center, point);
+                // 根据给定的极角和方位角计算新的XYZ坐标
+                float x = spherical.x * sin(phi) * cos(theta);
+                float y = spherical.x * sin(phi) * sin(theta);
+                float z = spherical.x * cos(phi);
+                // 将结果转换为基于中心点的全局坐标
+                glm::vec3 newPoint = center + glm::vec3(x, y, z);
+                return newPoint;
+            }
+
+
+
+            /// <summary>
+            /// 移动度数
+            /// </summary>
+            /// <param name="phiChange"></param>
+            /// <param name="thetaChange"></param>
+            /// <param name="currentSpherical"></param>
+            /// <returns></returns>
+            static glm::vec3 SetSpherical(float newPhi, float newTheta, const glm::vec3& currentSpherical) {
+                // 限制 phi 在 0 到 π 之间
+                newPhi = std::max(0.0f, std::min(glm::pi<float>(), newPhi));
+                // 将 theta 规范到 -π 到 π 的范围
+                if (newTheta > glm::pi<float>()) {
+                    newTheta -= 2 * glm::pi<float>();
+                }
+                else if (newTheta < -glm::pi<float>()) {
+                    newTheta += 2 * glm::pi<float>();
+                }
+                return { currentSpherical.x, newTheta, newPhi }; // radius 不变，新的 theta 和 phi
+
+            }
             static bool SaveMaterial(Material& material, const std::wstring& name, bool completePath = false) {
                 const std::wstring& path = completePath ? name : (Util::GetRootPath() + L"Material\\" + name);
                 std::ofstream cfile; 

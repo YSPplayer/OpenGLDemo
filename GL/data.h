@@ -71,6 +71,8 @@ namespace GL {
 		int beta;//镜面贴图亮度[0-100]
 		bool transparentBg;//imgui背景是否设置透明
 		int lightType;//光的类型（平行光 点光源 聚光）
+		float phi;//球体方位角[0 - π] 垂直
+		float theta;//球体极角[-π - π] 水平旋转
 	};
 	//UI组件存放的数据
 	struct UData {
