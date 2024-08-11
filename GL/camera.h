@@ -17,6 +17,9 @@ namespace GL {
 		inline glm::vec3 GetCameraPos() {
 			return cameraPos;
 		}
+		inline glm::vec3 GetCameraFront() {
+			return cameraFront;
+		}
 	private:
 		glm::vec3 cameraFront;//摄像机看向的方向，看向Z轴的负方向【写死】
 		glm::vec3 cameraPos; //相机的世界坐标系位置

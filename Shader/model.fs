@@ -16,6 +16,9 @@ struct Light {
 	float constant;//非线性光源常数项1
     float linear;//非线性光源常数项2
     float quadratic;//非线性光源常数项3
+
+	float cutOff;//聚光角
+	float outerCutOff;//聚光边缘角平缓
 };
 
 out vec4 FragColor;
@@ -45,25 +48,23 @@ void main() {
 		vec3 lightDir = vec3(0.0, 0.0, 0.0);
 		vec3 norm = normalize(Normal);
 		float attenuation = 0.0;
+		float distance = 0.0;
 		if(lightType == 0) { //平行光
 			lightDir = normalize(-light.direction);
 		} else if(lightType == 1) { //线性点光源
 			lightDir = normalize(light.position - FragPos); 
-		} else if(lightType == 2) { //非线性光源
+		} else if(lightType == 2 || lightType == 3) { //非线性光源 非线性聚光
 			lightDir = normalize(light.position - FragPos);
-			float distance = length(light.position - FragPos);
+			distance = length(light.position - FragPos);
 			attenuation = 1.0 / (light.constant + light.linear * distance + 
-                light.quadratic * (distance * distance));   
-		}
- 		float diff = max(dot(norm, lightDir), 0.0);
-
+				light.quadratic * (distance * distance));   
+		} 
+		float diff = max(dot(norm, lightDir), 0.0);
 		vec3 viewDir = normalize(viewPos - FragPos);
 		vec3 reflectDir = reflect(-lightDir, norm);
-	    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-		
-		
+		float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
 		if(useTexture) {
-		    ambient = light.ambient * objectColor;//环境光
+			ambient = light.ambient * objectColor;//环境光
 			diffuse = light.diffuse * (diff * objectColor);//漫反射光 
 			specular = light.specular * (spec * texture(specularTexture, TexCoord).rgb);//镜面光  
 		} else {
@@ -71,11 +72,18 @@ void main() {
 			diffuse = light.diffuse * (diff * material.diffuse);//漫反射光     
 			specular = light.specular * (spec * material.specular);//镜面光   
 		}
-		if(lightType == 2) { //非线性光源调节光线
+		if(lightType == 3) {//聚光调节,为了让聚光的边缘看起来变化的更平缓
+			float theta = dot(lightDir, normalize(-light.direction)); 
+			float epsilon = (light.cutOff - light.outerCutOff);
+			float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+			diffuse  *= intensity;
+    		specular *= intensity;
+		}
+		if(lightType == 2 || lightType == 3) { //非线性光源调节光线和聚光调节光线
 			ambient *= attenuation;  
 			diffuse *= attenuation;
 			specular *= attenuation;   
-		}
+		} 
 		objectColor = ambient + diffuse + specular;
 	}
 	FragColor = vec4(objectColor, 1.0);

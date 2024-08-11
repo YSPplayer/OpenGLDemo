@@ -27,6 +27,7 @@ namespace Window {
 		data.lightType = 1;
 		data.theta = 0.0f;
 		data.phi = 0.0f;
+		data.showLightMode = false;
 		data.beta = 50;
 		data.useLight = true;
 		data.useTexture = false;

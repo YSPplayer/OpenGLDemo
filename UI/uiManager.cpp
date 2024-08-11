@@ -182,31 +182,37 @@ namespace GL {
 				/*
 				   方位角theta(y) 极角phi(z)
 				*/
-				++data.phi;
-				if (data.phi >= 180.0f) data.phi = -180.0f;
-				static float ff = 2.7f; //1.49459887f
-				glm::vec3 spherical = Util::CartesianToSpherical(model->GetModelCenterPoisition(), lcontrol->lightPos);
-				ImGui::Text(u8"方位角:");
-				ImGui::InputFloat(u8"##方位角", &data.phi, 0.0f, 180.0f, "%.8f"); //[0 - π]
+			/*	++data.phi;
+				if (data.phi >= 180.0f) data.phi = -180.0f;*/
+			/*	data.phi = 10.0f;
+				++data.theta;
+				if (data.theta >= 180.0f) data.theta = -180.0f;*/
+				float maxWidth = ImGui::GetContentRegionAvail().x;
+				//因为opengl的坐标系和标准坐标系不一样
+				ImGui::Checkbox(u8"启用光照模型", &data.showLightMode);
 				ImGui::Text(u8"极角:");
-				ImGui::InputFloat(u8"##极角", &data.theta,-180.0f, 180.0f, "%.8f");//[-π - π]
-				if (ImGui::Button(u8"上")) {
-					ff -= 0.1F;
-					std::cout << ff << std::endl;
-					spherical = Util::SetSpherical(glm::pi<float>(),0.0f ,spherical); // std::max(0.0f, spherical.z - 0.1f);
-				}
-				ImGui::SameLine();
-				if (ImGui::Button(u8"下")) {
-					spherical.z = std::min(glm::pi<float>() / 2.0f, spherical.z + 0.1f);
-				}
-				ImGui::Text(u8"");
-				if (ImGui::Button(u8"左")) {
-					spherical.y = std::max(-glm::pi<float>() / 2.0f, spherical.y - 0.1f);
-				}
-				ImGui::SameLine();
-				if (ImGui::Button(u8"右")) {
-					spherical.y = std::min(glm::pi<float>() / 2.0f, spherical.y + 0.1f);
-				}
+				ImGui::SetNextItemWidth(maxWidth / 2.0f);
+				ImGui::SliderFloat(u8"##方位角", &data.phi, -180.0f, 180.0f, "%.8f"); //[0 - π]
+				ImGui::Text(u8"方位角:");
+				ImGui::SetNextItemWidth(maxWidth / 2.0f);
+				ImGui::SliderFloat(u8"##极角", &data.theta,0.0f, 180.0f, "%.8f");//[-π - π]
+				//if (ImGui::Button(u8"上")) {
+				//	ff -= 0.1F;
+				//	std::cout << ff << std::endl;
+				//	spherical = Util::SetSpherical(glm::pi<float>(),0.0f ,spherical); // std::max(0.0f, spherical.z - 0.1f);
+				//}
+				//ImGui::SameLine();
+				//if (ImGui::Button(u8"下")) {
+				//	spherical.z = std::min(glm::pi<float>() / 2.0f, spherical.z + 0.1f);
+				//}
+				//ImGui::Text(u8"");
+				//if (ImGui::Button(u8"左")) {
+				//	spherical.y = std::max(-glm::pi<float>() / 2.0f, spherical.y - 0.1f);
+				//}
+				//ImGui::SameLine();
+				//if (ImGui::Button(u8"右")) {
+				//	spherical.y = std::min(glm::pi<float>() / 2.0f, spherical.y + 0.1f);
+				//}
 				//球面坐标转回笛卡尔坐标 Util::SphericalToCartesian(model->GetModelCenterPoisition(), spherical);
 				lcontrol->lightPos = Util::CalculateNewSphericalCoordinates(model->GetModelCenterPoisition(), lcontrol->lightPos, glm::radians(data.theta), glm::radians(data.phi));
 
