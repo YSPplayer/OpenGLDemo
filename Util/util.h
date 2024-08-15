@@ -423,7 +423,16 @@ namespace GL {
                 return charPtr;
             }
             
-
+            static int GetSparseSize(int n, int step, bool& border) {
+                border = false;
+                int sparseWidth = (n + step - 1) / step;
+                if ((n - 1) % step != 0) {
+                    sparseWidth++;
+                    border = true;//有边界
+                }
+                return sparseWidth;
+            }
+            
             /// <summary>
             /// 读取外部shader
             /// </summary>

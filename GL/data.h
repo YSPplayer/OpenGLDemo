@@ -74,6 +74,8 @@ namespace GL {
 		float phi;//球体方位角[0 - π] 垂直
 		float theta;//球体极角[-π - π] 水平旋转
 		bool showLightMode;
+		bool blinn;//是否启用Blinn-Phong光照
+		bool sparsePoint;//是否进行点云稀疏
 	};
 	//UI组件存放的数据
 	struct UData {

@@ -28,6 +28,8 @@ namespace Window {
 		data.theta = 0.0f;
 		data.phi = 0.0f;
 		data.showLightMode = false;
+		data.blinn = false;
+		data.sparsePoint = true;
 		data.beta = 50;
 		data.useLight = true;
 		data.useTexture = false;

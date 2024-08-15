@@ -295,6 +295,7 @@ namespace GL {
 			//光照
 			glm::vec3 diffuseColor = glm::vec3(data.colors[2][0], data.colors[2][1], data.colors[2][2]) * glm::vec3(0.5f);
 			glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+			shader->SetShaderBoolean(data.blinn,"blinn");//光照类别
 			shader->SetShaderBoolean(data.useLight, "useLight");
 			shader->SetShaderInt(data.lightType, "lightType");//光照类别
 			shader->SetShaderVec3(ambientColor, "light.ambient");//环境光照分量
@@ -352,11 +353,9 @@ namespace GL {
 		//if (yoffset > MAX_Y_OFFSET) yoffset = MAX_Y_OFFSET;
 		int max = width > height ? width : height;
 		aspectUnit = Util::DivideByTenCount(max);
-		int count = width * height;
+		int count = (height + 1) * (width + 1); //点云数量 = (模型长度 + 1) * (模型宽度 + 1)
 		std::vector<Point> points;
 		std::vector<Indice> vindices;
-		*tsize = (height + 1) * (width + 1) * 2;
-		*textures = new float[*tsize];
 		float xSum = 0.0f;
 		float ySum = 0.0f;
 		float zSum = 0.0f;
@@ -365,36 +364,109 @@ namespace GL {
 		float y = 0;
 		int pindex = 0;
 		int zindex = 0;
-		float maxX = width * xoffset; 
+		float maxX = width * xoffset; //不管是否运用稀疏算法，模型的最终长宽保持不变，点云稀疏时我们需要变更的是模型的单位增量
 		float maxY = height * yoffset;
 		float absMax = maxX > maxY ? maxX : maxY;
-		for (unsigned int j = 0; j < height + 1; ++j) {//先赋值横向的宽度，再赋值纵向的高度
-			for (unsigned int i = 0; i < width + 1; ++i) {
-				Point point;
-				if (pointsZ) {
-					point.z = pointsZ[zindex++];
+		int step = (count > 2000000) ? 2 : 1;  // 使用稀疏化算法
+		if (!CWindow::data.sparsePoint) step = 1;//未启用点云稀疏
+		int pointWidth = width + 1;
+		int pointHeight = height + 1;
+		if (step == 2) {
+			//获取到使用稀释化算法之后的点云长宽数量
+			bool xborder = false;
+			bool yborder = false;
+			pointWidth = Util::GetSparseSize(pointWidth, step, xborder);
+			pointHeight = Util::GetSparseSize(pointHeight, step, yborder);
+			*tsize = pointWidth * pointHeight * 2;
+			*textures = new float[*tsize];
+			for (unsigned int j = 0; j < pointHeight; j++) {//先赋值横向的宽度，再赋值纵向的高度
+				for (unsigned int i = 0; i < pointWidth; i++) {
+					Point point;
+					if (pointsZ) {
+
+						zindex = (j * step) * (width + 1) + (i * step);
+						if (yborder && j == pointHeight - 1) {
+							zindex = height * (width + 1) + (i * step);  // 保留最后一行
+						}
+						if (xborder && i == pointWidth - 1) {
+							zindex = (j * step) * (width + 1) + width;  // 保留最后一列
+						}
+						point.z = pointsZ[zindex];
+
+						/*zindex = (zindex + step) > count ? (count - 1) : (zindex + step);*/
+					}
+					else {
+						point.z = random ? (Util::GetRandomFloat(-randomRange, randomRange) / 1000.0f) : 0.0f;//归一化
+					}
+					//实际点云长度 = (索引 * (偏移量 / 最大偏移量)) /归一化值
+				/*	x = static_cast<float>(i) * (xoffset / MAX_X_OFFSET);
+					y = static_cast<float>(j) * (yoffset / MAX_Y_OFFSET);*/
+					//point.x = x / static_cast<float>(max);//归一化
+					//point.y = y / static_cast<float>(max);//归一化
+					if (xborder && i == pointWidth - 1) {
+						point.x = (static_cast<float>(width) * xoffset) / absMax; //带边界最后一个长度不再增值
+						(*textures)[tindex++] = static_cast<float>(width) / static_cast<float>(width);
+					}
+					else {
+						point.x = (static_cast<float>(i * step) * xoffset) / absMax;
+						(*textures)[tindex++] = static_cast<float>(i * step) / static_cast<float>(width);
+					}
+					if (yborder && j == pointHeight - 1) {
+						point.y = (static_cast<float>(height) * yoffset) / absMax;
+						(*textures)[tindex++] = static_cast<float>(height) / static_cast<float>(height);
+					}
+					else {
+						point.y = (static_cast<float>(j * step) * yoffset) / absMax;
+						(*textures)[tindex++] = static_cast<float>(j * step) / static_cast<float>(height);
+					}
+
+
+					points.push_back(point);
+					if (i < pointWidth - 1 && j < pointHeight - 1) {
+						/*
+						注意如下2次的三角形的顶点组成面的环绕顺序要保持一致，要么都是顺时针，
+						要么都是逆时针，否则计算法线会出现零向量抵消的情况
+						OpenGL的要求是逆时针右手法则，所以我们要使用逆时针，方便后续的光照等其他模式的计算
+						*/
+						//vindices.push_back({ i + (pointWidth - 1 + 1) * j, i + 1 + (pointWidth - 1 + 1) * j, i + (pointWidth - 1 + 1) * (j + 1) });
+						//vindices.push_back({ (i + 1) + (pointWidth - 1 + 1) * j,  i + 1 + (pointWidth - 1 + 1) * (j + 1),i + (pointWidth - 1 + 1) * (j + 1) });
+						vindices.push_back({ i + pointWidth * j, i + 1 + pointWidth * j, i + pointWidth * (j + 1) });
+						vindices.push_back({ i + 1 + pointWidth * j, i + 1 + pointWidth * (j + 1), i + pointWidth * (j + 1) });
+					}
 				}
-				else {
-					point.z = random ? (Util::GetRandomFloat(-randomRange, randomRange) / 1000.0f) : 0.0f;;//归一化
-				}
-				//实际点云长度 = (索引 * (偏移量 / 最大偏移量)) /归一化值
-			/*	x = static_cast<float>(i) * (xoffset / MAX_X_OFFSET);
-				y = static_cast<float>(j) * (yoffset / MAX_Y_OFFSET);*/
-				//point.x = x / static_cast<float>(max);//归一化
-				//point.y = y / static_cast<float>(max);//归一化
-				point.x = (static_cast<float>(i) * xoffset) / absMax;
-				point.y = (static_cast<float>(j) * yoffset) / absMax;
-				(*textures)[tindex++] = static_cast<float>(i) / static_cast<float>(width);
-				(*textures)[tindex++] = static_cast<float>(j) / static_cast<float>(height);
-				points.push_back(point);
-				if (i < width && j < height) {
-					/*
-					注意如下2次的三角形的顶点组成面的环绕顺序要保持一致，要么都是顺时针，
-					要么都是逆时针，否则计算法线会出现零向量抵消的情况
-					OpenGL的要求是逆时针右手法则，所以我们要使用逆时针，方便后续的光照等其他模式的计算
-					*/
-					vindices.push_back({ i + (width + 1) * j, i + 1 + (width + 1) * j, i + (width + 1) * (j + 1) });
-					vindices.push_back({ (i + 1) + (width + 1) * j,  i + 1 + (width + 1) * (j + 1),i + (width + 1) * (j + 1) });
+			}
+		}
+		else {
+			*tsize = count * 2;
+			*textures = new float[*tsize];
+			for (unsigned int j = 0; j < pointHeight; j++) {//先赋值横向的宽度，再赋值纵向的高度
+				for (unsigned int i = 0; i < pointWidth; i++) {
+					Point point;
+					if (pointsZ) {
+						point.z = pointsZ[zindex++];
+					}
+					else {
+						point.z = random ? (Util::GetRandomFloat(-randomRange, randomRange) / 1000.0f) : 0.0f;//归一化
+					}
+					//实际点云长度 = (索引 * (偏移量 / 最大偏移量)) /归一化值
+					/*	x = static_cast<float>(i) * (xoffset / MAX_X_OFFSET);
+					y = static_cast<float>(j) * (yoffset / MAX_Y_OFFSET);*/
+					//point.x = x / static_cast<float>(max);//归一化
+					//point.y = y / static_cast<float>(max);//归一化
+					point.x = (static_cast<float>(i) * xoffset) / absMax;
+					point.y = (static_cast<float>(j) * yoffset) / absMax;
+					(*textures)[tindex++] = static_cast<float>(i) / static_cast<float>(width);
+					(*textures)[tindex++] = static_cast<float>(j) / static_cast<float>(height);
+					points.push_back(point);
+					if (i < width && j < height) {
+						/*
+						注意如下2次的三角形的顶点组成面的环绕顺序要保持一致，要么都是顺时针，
+						要么都是逆时针，否则计算法线会出现零向量抵消的情况
+						OpenGL的要求是逆时针右手法则，所以我们要使用逆时针，方便后续的光照等其他模式的计算
+						*/
+						vindices.push_back({ i + (width + 1) * j, i + 1 + (width + 1) * j, i + (width + 1) * (j + 1) });
+						vindices.push_back({ (i + 1) + (width + 1) * j,  i + 1 + (width + 1) * (j + 1),i + (width + 1) * (j + 1) });
+					}
 				}
 			}
 		}
@@ -418,7 +490,7 @@ namespace GL {
 			zSum += pointZ;
 			if (lightMax < point.x)lightMax = point.x;
 			if (lightMax < point.y) lightMax = point.y;
-			if(lightMax < pointZ)lightMax = pointZ;
+			if (lightMax < pointZ)lightMax = pointZ;
 			//std::cout << " point.x:" << point.x << " " << " point.y:" << point.y << " " << " point.z:" << point.z << std::endl;
 		}
 		//获取到模型的中心坐标位置

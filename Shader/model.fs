@@ -34,6 +34,7 @@ uniform vec3 defaultObjectColor;
 uniform Material material;
 uniform Light light;
 uniform int lightType;
+uniform bool blinn;
 void main() {
 	vec3 objectColor = vec3(0.0, 0.0, 0.0);
 	vec3 ambient =  vec3(0.0, 0.0, 0.0);
@@ -61,8 +62,15 @@ void main() {
 		} 
 		float diff = max(dot(norm, lightDir), 0.0);
 		vec3 viewDir = normalize(viewPos - FragPos);
-		vec3 reflectDir = reflect(-lightDir, norm);
-		float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+		
+		float spec = 0.0;
+		if(blinn) {//Blinn-Phong光照
+			vec3 halfwayDir = normalize(lightDir + viewDir);  
+			spec = pow(max(dot(norm, halfwayDir), 0.0), material.shininess);
+		} else { //常规风氏光照
+			vec3 reflectDir = reflect(-lightDir, norm);
+			spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+		}
 		if(useTexture) {
 			ambient = light.ambient * objectColor;//环境光
 			diffuse = light.diffuse * (diff * objectColor);//漫反射光 

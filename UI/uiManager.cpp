@@ -232,6 +232,8 @@ namespace GL {
 						if (ImGui::Button(u8"重置场景")) {
 							glmanager->ClearModels();
 						}
+						ImGui::Checkbox(u8"点云稀疏", &data.sparsePoint);
+						ImGui::SetNextItemWidth(maxWidth / 2.0f);
 						//标准化模型
 						ImGui::Text(u8"");
 						ImGui::Text(u8"标准化模型");
@@ -344,6 +346,7 @@ namespace GL {
 					ImGui::Text(u8"");
 					if (ImGui::TreeNode(u8"光照属性")) {
 						ImGui::Checkbox(u8"启用光照", &data.useLight);
+						ImGui::Checkbox(u8"Blinn着色", &data.blinn);
 						float maxWidth = ImGui::GetContentRegionAvail().x;
 						ImGui::Text(u8"1.模型材质");
 						ImGui::SetNextItemWidth(maxWidth / 6.0f);
