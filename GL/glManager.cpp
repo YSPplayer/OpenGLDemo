@@ -383,17 +383,16 @@ namespace GL {
 				for (unsigned int i = 0; i < pointWidth; i++) {
 					Point point;
 					if (pointsZ) {
-
-						zindex = (j * step) * (width + 1) + (i * step);
+						int original_j = j * step;
+						int original_i = i * step;
 						if (yborder && j == pointHeight - 1) {
-							zindex = height * (width + 1) + (i * step);  // 保留最后一行
+							original_j = height;  // 保留最后一行
 						}
 						if (xborder && i == pointWidth - 1) {
-							zindex = (j * step) * (width + 1) + width;  // 保留最后一列
+							original_i = width;  // 保留最后一列
 						}
+						zindex = original_j * (width + 1) + original_i;
 						point.z = pointsZ[zindex];
-
-						/*zindex = (zindex + step) > count ? (count - 1) : (zindex + step);*/
 					}
 					else {
 						point.z = random ? (Util::GetRandomFloat(-randomRange, randomRange) / 1000.0f) : 0.0f;//归一化
