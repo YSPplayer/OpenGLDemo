@@ -40,13 +40,16 @@ namespace GL {
 		int vsize = 0;
 		int isize = 0;
 		int tsize = 0;
+		unsigned int outWidth;
+		unsigned int outHeight;
 		glm::vec3 centerPos;
-		float lightMax = CreateX3pData(width - 1, height - 1, xoffset, yoffset, minZ, maxZ, zpointData, &pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, centerPos);
+		float lightMax = CreateX3pData(width - 1, height - 1, xoffset, yoffset, minZ, maxZ, zpointData, &pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, centerPos,
+			outWidth, outHeight);
 		Model* model = new Model;
 		std::string vShader;
 		std::string cShader;
 		Util::LoadShader("Shader/model.vs", "Shader/model.fs", vShader, cShader);
-		bool success = model->CreateModel(vShader, cShader, false, pvertices, vsize, pindices, isize);
+		bool success = model->CreateModel(vShader, cShader, false, pvertices, vsize, pindices, isize, outWidth, outHeight);
 		CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
 		model->CalculateVertexNormals();//计算法线
 		model->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
@@ -74,12 +77,15 @@ namespace GL {
 		int isize = 0;
 		int tsize = 0;
 		glm::vec3 centerPos;
-		CreateRandomData(udata.modelWidth, udata.modelHeight, udata.modelXOffset, udata.modelYOffset, 0.0f, 0.0f, nullptr, udata.modelRandomZ, udata.modelRandomRange, &pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, centerPos);
+		unsigned int outWidth;
+		unsigned int outHeight;
+		CreateRandomData(udata.modelWidth, udata.modelHeight, udata.modelXOffset, udata.modelYOffset, 0.0f, 0.0f, nullptr, udata.modelRandomZ, udata.modelRandomRange,
+			&pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, centerPos, outWidth, outHeight);
 		Model* model = new Model;
 		std::string vShader;
 		std::string cShader;
 		Util::LoadShader("Shader/model.vs", "Shader/model.fs", vShader, cShader);
-		bool success = model->CreateModel(vShader, cShader, false, pvertices, vsize, pindices, isize);
+		bool success = model->CreateModel(vShader, cShader, false, pvertices, vsize, pindices, isize, outWidth, outHeight);
 		CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
 		model->CalculateVertexNormals();//计算法线
 		model->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
@@ -351,7 +357,7 @@ namespace GL {
 	/// <param name="vertices"></param>
 	/// <param name="indices"></param>
 	float GlManager::CreateRandomData(unsigned int width, unsigned int height, float xoffset, float yoffset, float minZ, float maxZ, float* pointsZ, bool random, float randomRange, float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize,
-		int* tsize, glm::vec3& centerPos) {
+		int* tsize, glm::vec3& centerPos, unsigned int& outWidth, unsigned int& outHeight) {
 #undef min
 #undef max
 		//if (xoffset > MAX_X_OFFSET) xoffset = MAX_X_OFFSET;
@@ -382,7 +388,7 @@ namespace GL {
 			bool yborder = false;
 			pointWidth = Util::GetSparseSize(pointWidth, step, xborder);
 			pointHeight = Util::GetSparseSize(pointHeight, step, yborder);
-			*tsize = pointWidth * pointHeight * 2;
+			*tsize = pointWidth * pointHeight * 2;  
 			*textures = new float[*tsize];
 			for (unsigned int j = 0; j < pointHeight; j++) {//先赋值横向的宽度，再赋值纵向的高度
 				for (unsigned int i = 0; i < pointWidth; i++) {
@@ -474,6 +480,8 @@ namespace GL {
 				}
 			}
 		}
+		outWidth = pointWidth;
+		outHeight = pointHeight;
 		*vsize = points.size() * 3;
 		*vertices = new float[*vsize];
 		float lightMax = 0.0f;//因为归一化的原因，所以值的范围在0-1之间
@@ -516,9 +524,10 @@ namespace GL {
 	}
 
 	float GlManager::CreateX3pData(unsigned int _width, unsigned int _height, float xoffset, float yoffset, float minZ, float maxZ,
-		float* pointsZ, float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize, int* tsize, glm::vec3& centerPos) {
+		float* pointsZ, float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize, int* tsize, glm::vec3& centerPos
+		,unsigned int& outWidth, unsigned int& outHeight) {
 		return CreateRandomData(_width, _height, xoffset, yoffset, minZ, maxZ, pointsZ, false, 0.0f, vertices, indices, textures, vsize,
-			isize, tsize, centerPos);
+			isize, tsize, centerPos, outWidth, outHeight);
 	}
 
 	/// <summary>

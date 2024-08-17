@@ -25,8 +25,8 @@ out vec4 FragColor;
 in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
-uniform sampler2D defaultTexture;
-uniform sampler2D specularTexture;
+uniform sampler2D defaultTexture;//通常贴图(漫反射贴图)
+uniform sampler2D specularTexture;//镜面反射贴图
 uniform bool useTexture;
 uniform bool useLight;
 uniform vec3 viewPos;

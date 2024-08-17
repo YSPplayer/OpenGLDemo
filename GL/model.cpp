@@ -51,8 +51,10 @@ namespace GL {
 	/// <param name="indices"></param>
 	/// <param name="isize"></param>
 	/// <returns></returns>
-	bool Model::CreateModel(const std::string& vertexShader, const std::string& colorShader,bool copy, float vertices[], int vsize, unsigned int indices[], int isize) {
+	bool Model::CreateModel(const std::string& vertexShader, const std::string& colorShader,bool copy, float vertices[], int vsize, unsigned int indices[], int isize, unsigned int width, unsigned int height){
 	/*	eboMode = (indices != nullptr);*/
+		this->width = width;
+		this->height = height;
 		eboMode = true;
 		verticesSize = vsize;
 		if (copy) { //如果在栈区创建，需要拷贝内存
@@ -352,17 +354,24 @@ namespace GL {
 			Util::WriteLog(L"vec3_normal"+ std::to_wstring(i) + L":" + std::to_wstring(normal.x) + L"," + std::to_wstring(normal.y) + L"," + std::to_wstring(normal.z));*/
 		}
 		delete[] normalsv3;
-		//绑定法线VBO
-		glBindVertexArray(VAO);
-		glGenBuffers(1, &PVBOS->at(VBO_NORMAL));
-		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_NORMAL));
-		glBufferData(GL_ARRAY_BUFFER, normalSize * sizeof(float), nullptr, GL_STATIC_DRAW);
-		float* normalBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, normalSize * sizeof(float), GL_MAP_WRITE_BIT );//| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
-		if (!normalBuffer) return false;
-		std::memcpy(normalBuffer, this->normals, sizeof(float) * normalSize);
-		glUnmapBuffer(GL_ARRAY_BUFFER);
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(2);
+		if (width != 0 && height != 0) { //更新法线贴图
+			auto normalMap = Util::ConvertNormalsToNormalMap(normals, width - 1, height - 1);
+			glGenTextures(1, &NORMALS_TEXTURE);
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, NORMALS_TEXTURE);
+			float borderColor[] = { 255.0f, 255.0f, 255.0f, 1.0f };
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			//法线贴图需要原始数据值，不需要用伽马校正
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, normalMap.data);
+			glGenerateMipmap(GL_TEXTURE_2D);
+			// 将法线贴图转换为8位图像并保存
+			//normalMap.convertTo(normalMap, CV_8UC3, 255.0);
+			//cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
+			//cv::imwrite("E:\\open3d\\OpenGLDemo\\Shader\\a.png", normalMap);
+		}
 		return true;
 	}
 

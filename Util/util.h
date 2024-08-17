@@ -221,6 +221,26 @@ namespace GL {
             }
 
             /// <summary>
+            /// 将法线数组转换为法线贴图的函数
+            /// </summary>
+            /// <param name="normals"></param>
+            /// <param name="width"></param>
+            /// <param name="height"></param>
+            /// <returns></returns>
+            static cv::Mat ConvertNormalsToNormalMap(float* normals, int width, int height) {
+                cv::Mat normalMap(height, width, CV_32FC3);
+                for (int y = 0; y < height; ++y) {
+                    for (int x = 0; x < width; ++x) {
+                        int index = (y * width + x) * 3; // 计算法线数组的索引
+                        cv::Vec3f normal(normals[index], normals[index + 1], normals[index + 2]);
+                        // 将法线映射到[0, 1]范围
+                        normal = (normal + cv::Vec3f(1.0f, 1.0f, 1.0f)) * 0.5f;
+                        normalMap.at<cv::Vec3f>(y, x) = normal;
+                    }
+                } 
+                return normalMap; 
+            }
+            /// <summary>
             /// 加载图片
             /// </summary>
             /// <param name="path"></param>

@@ -11,7 +11,7 @@ namespace GL {
 	public:
 		Model();
 		~Model();
-		bool CreateModel(const std::string& vertexShader, const std::string& colorShader, bool copy, float vertices[], int vsize, unsigned int indices[] = nullptr, int isize = 0);
+		bool CreateModel(const std::string& vertexShader, const std::string& colorShader, bool copy, float vertices[], int vsize, unsigned int indices[] = nullptr, int isize = 0, unsigned int width = 0, unsigned int height = 0);
 		bool SetTexture(unsigned char* texture, unsigned char* specularTexture, int width,int height,int nrChannels,float datas[], int size,bool gammaCorrection);
 		Material material;
 		Model* CopyModel(bool& success);
@@ -29,6 +29,7 @@ namespace GL {
 		glm::mat4 ReSetPoisition();
 		GLuint TEXTURE;//贴图管理对象，不是贴图数据的顶点对象，顶点对象放在VBO管理
 		GLuint SPECULAR_TEXTURE;//镜面反射贴图
+		GLuint NORMALS_TEXTURE;//模型法线贴图
 		inline bool HasTexture() {
 			return hasTexture && hasSpecularTexture;
 		};
@@ -42,6 +43,8 @@ namespace GL {
 		int verticesSize;//顶点数据的大小
 		int indicesSize;//索引数据的大小
 		int normalSize;//顶点法线数据大小
+		unsigned int width;//模型的点云宽度数量
+		unsigned int height;//模型的点云长度数量
 		float* normals;//顶点法线数据
 		bool eboMode;
 		std::vector<GLuint>* PVBOS; //【顶点缓冲对象，主要存储顶点数据，然后发送给gpu渲染】
