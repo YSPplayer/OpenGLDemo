@@ -87,7 +87,7 @@ namespace GL {
 		
 		glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);//先绑定空指针，直接绑定存在显存溢出的问题
 		// gpu数据指针持久映射cpu缓冲区
-		float* verticesBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesSize * sizeof(float), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+		float* verticesBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesSize * sizeof(float), GL_MAP_WRITE_BIT);//| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
 		if (!verticesBuffer) return false;
 		std::memcpy(verticesBuffer, this->vertices, sizeof(float) * verticesSize);//拷贝内存到gpu
 		glUnmapBuffer(GL_ARRAY_BUFFER);//必须取消映射
@@ -106,8 +106,8 @@ namespace GL {
 			glGenBuffers(1, &EBO);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize * sizeof(unsigned int), nullptr, GL_STATIC_DRAW);
-			// gpu数据指针持久映射cpu缓冲区
-			unsigned int* indicesBuffer = (unsigned int*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, indicesSize * sizeof(unsigned int), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+			// gpu数据指针持久映射cpu缓冲区| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+			unsigned int* indicesBuffer = (unsigned int*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, indicesSize * sizeof(unsigned int), GL_MAP_WRITE_BIT );
 			if (!indicesBuffer) return false;
 			std::memcpy(indicesBuffer, this->indices, sizeof(unsigned int) * indicesSize);//拷贝内存到gpu
 			glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);//如果不再需要cpu上的gpu指针，就取消映射
@@ -122,13 +122,13 @@ namespace GL {
 	/// 设置模型的贴图
 	/// </summary>
 	/// <returns></returns>
-	bool Model::SetTexture(unsigned char* texture, unsigned char* specularTexture,int width, int height, int nrChannels, float datas[], int size) {
+	bool Model::SetTexture(unsigned char* texture, unsigned char* specularTexture,int width, int height, int nrChannels, float datas[], int size, bool gammaCorrection) {
 		if (datas != nullptr) {
 			glBindVertexArray(VAO);
 			glGenBuffers(1, &PVBOS->at(VBO_TEXTURE));
 			glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_TEXTURE));
-			glBufferData(GL_ARRAY_BUFFER, size * sizeof(float), nullptr, GL_STATIC_DRAW);//绑定空指针
-			float* textureBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, size * sizeof(float), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+			glBufferData(GL_ARRAY_BUFFER, size * sizeof(float), nullptr, GL_STATIC_DRAW);//绑定空指针| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+			float* textureBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, size * sizeof(float), GL_MAP_WRITE_BIT );
 			if (!textureBuffer) return false;
 			std::memcpy(textureBuffer, datas, sizeof(float) * size);//拷贝内存到gpu
 			glUnmapBuffer(GL_ARRAY_BUFFER);
@@ -162,7 +162,7 @@ namespace GL {
 				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 				//GPU要求图片宽度的大小一定是4的倍数，需要前置缩放，或者转为RGBA，因为RGBA图片一定是4的倍数
 				//使用内存对齐的方式来上传图片数据到gpu，这会损失一定的效率
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
+				glTexImage2D(GL_TEXTURE_2D, 0, gammaCorrection ? GL_SRGB : GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
 				glGenerateMipmap(GL_TEXTURE_2D);
 			}
 			if (specularTexture) {
@@ -170,7 +170,7 @@ namespace GL {
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, SPECULAR_TEXTURE);
 				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, specularTexture);
+				glTexImage2D(GL_TEXTURE_2D, 0, gammaCorrection ? GL_SRGB : GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, specularTexture);
 				glGenerateMipmap(GL_TEXTURE_2D);
 			}
 		}
@@ -357,7 +357,7 @@ namespace GL {
 		glGenBuffers(1, &PVBOS->at(VBO_NORMAL));
 		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_NORMAL));
 		glBufferData(GL_ARRAY_BUFFER, normalSize * sizeof(float), nullptr, GL_STATIC_DRAW);
-		float* normalBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, normalSize * sizeof(float), GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+		float* normalBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, normalSize * sizeof(float), GL_MAP_WRITE_BIT );//| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
 		if (!normalBuffer) return false;
 		std::memcpy(normalBuffer, this->normals, sizeof(float) * normalSize);
 		glUnmapBuffer(GL_ARRAY_BUFFER);

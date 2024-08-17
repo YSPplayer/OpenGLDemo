@@ -35,6 +35,7 @@ uniform Material material;
 uniform Light light;
 uniform int lightType;
 uniform bool blinn;
+uniform bool gamma;//伽马校正
 void main() {
 	vec3 objectColor = vec3(0.0, 0.0, 0.0);
 	vec3 ambient =  vec3(0.0, 0.0, 0.0);
@@ -93,6 +94,9 @@ void main() {
 			specular *= attenuation;   
 		} 
 		objectColor = ambient + diffuse + specular;
+		if(gamma) {// Gamma 校正
+			objectColor = pow(objectColor, vec3(1.0 / 2.2)); //gammaValue = 2.2
+		}
 	}
 	FragColor = vec4(objectColor, 1.0);
 } 

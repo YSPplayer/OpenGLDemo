@@ -41,7 +41,7 @@ namespace GL {
 		int isize = 0;
 		int tsize = 0;
 		glm::vec3 centerPos;
-		float lightMax = CreateX3pData(width - 1, height - 1, xoffset, yoffset, minZ,maxZ, zpointData,&pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, centerPos);
+		float lightMax = CreateX3pData(width - 1, height - 1, xoffset, yoffset, minZ, maxZ, zpointData, &pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, centerPos);
 		Model* model = new Model;
 		std::string vShader;
 		std::string cShader;
@@ -74,7 +74,7 @@ namespace GL {
 		int isize = 0;
 		int tsize = 0;
 		glm::vec3 centerPos;
-		CreateRandomData(udata.modelWidth, udata.modelHeight, udata.modelXOffset, udata.modelYOffset,0.0f,0.0f,nullptr, udata.modelRandomZ, udata.modelRandomRange,&pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, centerPos);
+		CreateRandomData(udata.modelWidth, udata.modelHeight, udata.modelXOffset, udata.modelYOffset, 0.0f, 0.0f, nullptr, udata.modelRandomZ, udata.modelRandomRange, &pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, centerPos);
 		Model* model = new Model;
 		std::string vShader;
 		std::string cShader;
@@ -164,7 +164,7 @@ namespace GL {
 
 			 6,  7,  8,  // Back face
 			 9, 10, 11,
-				
+
 			12, 13, 14,  // Left face
 			15, 16, 17,
 
@@ -256,7 +256,7 @@ namespace GL {
 			data.aspect = DEFAULT_ASPECT;//更新默认的视口缩放比例
 			data.yaw = -90.0f;//更新旋转轴参数
 			data.pitch = 0.0f; //更新旋转轴参数
-		} 
+		}
 		const glm::mat4& view = data.reset ? cmaera->ReSetPoisition() : cmaera->UpdatePoisition(data);
 		const glm::mat4& projection = cmaera->UpdateProjection(data);
 		for (int i = 0; i < models.size(); ++i) {
@@ -264,7 +264,7 @@ namespace GL {
 			if (model->TEXTURE) {
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, model->TEXTURE);
-			} 
+			}
 			if (model->SPECULAR_TEXTURE) {
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, model->SPECULAR_TEXTURE);
@@ -273,6 +273,9 @@ namespace GL {
 			Material& material = model->material;
 			const glm::mat4& mposition = data.reset ? model->ReSetPoisition() : model->UpdatePoisition(data);
 			shader->UseShader();
+			//Z轴高度
+		/*	shader->SetShaderFloat(data.zFactor, "zFactor");*/
+
 			//视角
 			shader->SetShaderMat4(view, "view");
 			//模型
@@ -295,7 +298,8 @@ namespace GL {
 			//光照
 			glm::vec3 diffuseColor = glm::vec3(data.colors[2][0], data.colors[2][1], data.colors[2][2]) * glm::vec3(0.5f);
 			glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
-			shader->SetShaderBoolean(data.blinn,"blinn");//光照类别
+			shader->SetShaderBoolean(data.blinn, "blinn");//是否启用blinn着色
+			shader->SetShaderBoolean(data.gammaCorrection, "gamma");//是否启用伽马校正
 			shader->SetShaderBoolean(data.useLight, "useLight");
 			shader->SetShaderInt(data.lightType, "lightType");//光照类别
 			shader->SetShaderVec3(ambientColor, "light.ambient");//环境光照分量
@@ -321,6 +325,7 @@ namespace GL {
 			shader->SetShaderVec3(material.diffuse, "material.diffuse");//模型的漫反射
 			shader->SetShaderVec3(material.specular, "material.specular");//模型的镜面反射
 			shader->SetShaderFloat(material.shininess, "material.shininess");//模型光的散射半径
+
 			model->Render(data);
 		}
 		//绘制灯光模型
@@ -351,7 +356,7 @@ namespace GL {
 #undef max
 		//if (xoffset > MAX_X_OFFSET) xoffset = MAX_X_OFFSET;
 		//if (yoffset > MAX_Y_OFFSET) yoffset = MAX_Y_OFFSET;
-		int max = width > height ? width : height;
+		int max = width > height ? width : height;//1225*1021  
 		aspectUnit = Util::DivideByTenCount(max);
 		int count = (height + 1) * (width + 1); //点云数量 = (模型长度 + 1) * (模型宽度 + 1)
 		std::vector<Point> points;
@@ -511,8 +516,8 @@ namespace GL {
 	}
 
 	float GlManager::CreateX3pData(unsigned int _width, unsigned int _height, float xoffset, float yoffset, float minZ, float maxZ,
-		float* pointsZ,float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize, int* tsize, glm::vec3& centerPos) {
-		return CreateRandomData(_width,_height, xoffset,yoffset,minZ,maxZ, pointsZ,false,0.0f,  vertices, indices, textures, vsize,
+		float* pointsZ, float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize, int* tsize, glm::vec3& centerPos) {
+		return CreateRandomData(_width, _height, xoffset, yoffset, minZ, maxZ, pointsZ, false, 0.0f, vertices, indices, textures, vsize,
 			isize, tsize, centerPos);
 	}
 
@@ -520,18 +525,18 @@ namespace GL {
 	/// 创建纹理
 	/// </summary>
 	/// <param name="path"></param>
-	void GlManager::CreateModelTexture(const char* path,Model* model,float* ptextures, int tsize) {
+	void GlManager::CreateModelTexture(const char* path, Model* model, float* ptextures, int tsize) {
 		if (!model) {
 			std::cout << "[GlManager::CreateModelTexture] model is nullptr." << std::endl;
 			return;
-		} 
+		}
 		int width, height, nrChannels;
 		unsigned char* data = nullptr;
 		unsigned char* specular_data = nullptr;
-		bool success = Util::CvLoadImage(std::string(path),data, specular_data, CWindow::data.alpha,CWindow::data.beta,
+		bool success = Util::CvLoadImage(std::string(path), data, specular_data, CWindow::data.alpha, CWindow::data.beta,
 			width, height, nrChannels);
 		//如果没有图片，我们不会存在贴图，如果没有纹理数组，我们不创建纹理对象
-		model->SetTexture(data, specular_data, width, height, nrChannels, ptextures, tsize);
+		model->SetTexture(data, specular_data, width, height, nrChannels, ptextures, tsize, CWindow::data.gammaCorrection);
 		Util::ReleasePointer(data, true);
 		Util::ReleasePointer(specular_data, true);
 	}
@@ -541,12 +546,12 @@ namespace GL {
 	/// </summary>
 	/// <param name="alpha"></param>
 	/// <param name="beta"></param>
-	void GlManager::ChangeModelSpecularImage(Model* model,double alpha, int beta) {
+	void GlManager::ChangeModelSpecularImage(Model* model, double alpha, int beta) {
 		int width, height, nrChannels;
 		unsigned char* specular_data = nullptr;
 		bool success = Util::CvImageToSpecularImage(specular_data, alpha, beta, width,
 			height, nrChannels);
-		model->SetTexture(nullptr, specular_data, width, height, nrChannels, nullptr, 0);
+		model->SetTexture(nullptr, specular_data, width, height, nrChannels, nullptr, 0, CWindow::data.gammaCorrection);
 		Util::ReleasePointer(specular_data, true);
 	}
 
