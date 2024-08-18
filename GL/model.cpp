@@ -9,6 +9,8 @@ namespace GL {
 		indices = nullptr;
 		pshader = nullptr;
 		normals = nullptr;
+		tangents = nullptr;
+		bitangents = nullptr;
 		eboMode = false;
 		hasTexture = false;
 		hasSpecularTexture = false;
@@ -19,6 +21,8 @@ namespace GL {
 		VAO = NULL;
 		EBO = NULL;
 		TEXTURE = NULL;
+		SPECULAR_TEXTURE = NULL;
+		NORMALS_TEXTURE = NULL;
 		position = glm::mat4(1.0f);
 		centerPosition = glm::vec3(0.0f,0.0f,0.0f);//默认模型的中心位置为0,0
 		material.ambient = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -126,6 +130,8 @@ namespace GL {
 	/// <returns></returns>
 	bool Model::SetTexture(unsigned char* texture, unsigned char* specularTexture,int width, int height, int nrChannels, float datas[], int size, bool gammaCorrection) {
 		if (datas != nullptr) {
+			this->uvs = datas;
+			this->uvsSize = size; 
 			glBindVertexArray(VAO);
 			glGenBuffers(1, &PVBOS->at(VBO_TEXTURE));
 			glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_TEXTURE));
@@ -354,6 +360,24 @@ namespace GL {
 			Util::WriteLog(L"vec3_normal"+ std::to_wstring(i) + L":" + std::to_wstring(normal.x) + L"," + std::to_wstring(normal.y) + L"," + std::to_wstring(normal.z));*/
 		}
 		delete[] normalsv3;
+		//绑定法线VBO
+		glBindVertexArray(VAO);
+		glGenBuffers(1, &PVBOS->at(VBO_NORMAL));
+		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_NORMAL));
+		glBufferData(GL_ARRAY_BUFFER, normalSize * sizeof(float), nullptr, GL_STATIC_DRAW);
+		float* normalBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, normalSize * sizeof(float), GL_MAP_WRITE_BIT);//| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+		if (!normalBuffer) return false;
+		std::memcpy(normalBuffer, this->normals, sizeof(float) * normalSize);
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(2);
+		return true;
+	}
+
+	/// <summary>
+	/// 计算法线贴图的相关的工作
+	/// </summary>
+	bool Model::CalculateNormalsTexture() {
 		if (width != 0 && height != 0) { //更新法线贴图
 			auto normalMap = Util::ConvertNormalsToNormalMap(normals, width - 1, height - 1);
 			glGenTextures(1, &NORMALS_TEXTURE);
@@ -367,12 +391,38 @@ namespace GL {
 			//法线贴图需要原始数据值，不需要用伽马校正
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, normalMap.data);
 			glGenerateMipmap(GL_TEXTURE_2D);
+			this->tangents = new float[verticesSize];
+			this->bitangents = new float[verticesSize];
+			//计算切线和副切线
+			Util::CalculateTangentAndBitangent(vertices,uvs,normals,verticesSize,tangents,bitangents);
+			glBindVertexArray(VAO);
+			//绑定切线和副切线VBO，大小都是vertices数组的大小
+			glGenBuffers(1, &PVBOS->at(VBO_TANGENTS));
+			glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_TANGENTS));
+			glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);
+			float* tangentsBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesSize * sizeof(float), GL_MAP_WRITE_BIT);
+			if (!tangentsBuffer) return false;
+			std::memcpy(tangentsBuffer, this->tangents, sizeof(float) * verticesSize);
+			glUnmapBuffer(GL_ARRAY_BUFFER);
+			glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(3);
+
+			glGenBuffers(1, &PVBOS->at(VBO_BITANGENTS));
+			glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_BITANGENTS));
+			glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);
+			float* bitangentsBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesSize * sizeof(float), GL_MAP_WRITE_BIT);
+			if (!bitangentsBuffer) return false;
+			std::memcpy(bitangentsBuffer, this->bitangents, sizeof(float) * verticesSize);
+			glUnmapBuffer(GL_ARRAY_BUFFER);
+			glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(4);
+			return true;
+			//值传入
 			// 将法线贴图转换为8位图像并保存
 			//normalMap.convertTo(normalMap, CV_8UC3, 255.0);
 			//cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
 			//cv::imwrite("E:\\open3d\\OpenGLDemo\\Shader\\a.png", normalMap);
 		}
-		return true;
 	}
 
 }

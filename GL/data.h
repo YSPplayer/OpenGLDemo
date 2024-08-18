@@ -78,6 +78,7 @@ namespace GL {
 		float zFactor;//Z轴放大倍数
 		bool blinn;//是否启用Blinn-Phong光照 高光更柔和，适合表现较为光滑、漫反射较多的表面。  Phong:高光点更尖锐，适合表现较硬的、高度反射的表面。
 		bool gammaCorrection;//光照伽马校正-图像亮度更自然，细节保留更好，整体视觉效果更符合人眼的感知
+		bool useNormalTexture;//是否启用法线贴图
 	};
 	//UI组件存放的数据
 	struct UData {

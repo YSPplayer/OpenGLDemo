@@ -25,8 +25,12 @@ out vec4 FragColor;
 in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
+in vec3 tangentLightPos;
+in vec3 tangentViewPos;
+in vec3 tangentFragPos;
 uniform sampler2D defaultTexture;//通常贴图(漫反射贴图)
 uniform sampler2D specularTexture;//镜面反射贴图
+uniform sampler2D normalMap;//法线贴图
 uniform bool useTexture;
 uniform bool useLight;
 uniform vec3 viewPos;
@@ -36,11 +40,13 @@ uniform Light light;
 uniform int lightType;
 uniform bool blinn;
 uniform bool gamma;//伽马校正
+uniform bool useNormalTexture;//是否启用法线贴图
 void main() {
 	vec3 objectColor = vec3(0.0, 0.0, 0.0);
 	vec3 ambient =  vec3(0.0, 0.0, 0.0);
 	vec3 diffuse = vec3(0.0, 0.0, 0.0);
 	vec3 specular = vec3(0.0, 0.0, 0.0);
+	vec3 norm = vec3(0.0, 0.0, 0.0);
 	if(useTexture) {
 	   objectColor = texture(defaultTexture, TexCoord).rgb;
 	} else {
@@ -48,22 +54,40 @@ void main() {
 	}
 	if(useLight) {
 		vec3 lightDir = vec3(0.0, 0.0, 0.0);
-		vec3 norm = normalize(Normal);
+		vec3 viewDir = vec3(0.0, 0.0, 0.0);
+		if(useNormalTexture) { //启用法线贴图
+			norm = texture(normalMap, TexCoord).rgb;
+			norm = normalize(norm * 2.0 - 1.0);//把值的范围从0-1转为-1到1
+		} else {
+ 			norm = normalize(Normal);
+		}
 		float attenuation = 0.0;
 		float distance = 0.0;
 		if(lightType == 0) { //平行光
 			lightDir = normalize(-light.direction);
 		} else if(lightType == 1) { //线性点光源
-			lightDir = normalize(light.position - FragPos); 
+			if(useNormalTexture) { //启用法线贴图
+				lightDir = normalize(tangentLightPos - tangentFragPos);
+			} else {
+				lightDir = normalize(light.position - FragPos); 
+			}
 		} else if(lightType == 2 || lightType == 3) { //非线性光源 非线性聚光
-			lightDir = normalize(light.position - FragPos);
-			distance = length(light.position - FragPos);
+			if(useNormalTexture) { //启用法线贴图
+				lightDir = normalize(tangentLightPos - tangentFragPos);
+				distance = length(tangentLightPos - tangentFragPos);
+			} else {
+				lightDir = normalize(light.position - FragPos);
+				distance = length(light.position - FragPos);
+			}
 			attenuation = 1.0 / (light.constant + light.linear * distance + 
 				light.quadratic * (distance * distance));   
 		} 
 		float diff = max(dot(norm, lightDir), 0.0);
-		vec3 viewDir = normalize(viewPos - FragPos);
-		
+		if(useNormalTexture) { //启用法线贴图
+			viewDir = normalize(tangentViewPos - tangentFragPos);
+		} else {
+			viewDir = normalize(viewPos - FragPos);
+		}
 		float spec = 0.0;
 		if(blinn) {//Blinn-Phong光照
 			vec3 halfwayDir = normalize(lightDir + viewDir);  

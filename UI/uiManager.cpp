@@ -411,6 +411,7 @@ namespace GL {
 						ImGui::Checkbox(u8"Blinn着色", &data.blinn);
 						ImGui::SameLine();
 						ImGui::Checkbox(u8"伽马校正", &data.gammaCorrection);
+						ImGui::Checkbox(u8"法线贴图", &data.useNormalTexture);
 						ImGui::Text(u8"");
 						ImGui::Text(u8"5.光源位置");
 						LightControl* lightControl = glmanager->GetLightControl();

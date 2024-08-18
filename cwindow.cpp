@@ -32,7 +32,7 @@ namespace GL {
 			data.showLightMode = false;
 			data.beta = 50;
 			data.useLight = true;
-			data.useTexture = false;
+			data.useTexture = true;
 			data.rotateZ = false;
 			data.rotateX = false;
 			data.gammaCorrection = true;
@@ -40,6 +40,7 @@ namespace GL {
 			data.pitch = 0.0f;
 			data.transparentBg = true;
 			data.sparsePoint = true;
+			data.useNormalTexture = true;
 			bool load = false;
 			if (!(load = Util::LoadConfig(data, UiManager::udata))) {
 				data.sensitivity = 0.1f;

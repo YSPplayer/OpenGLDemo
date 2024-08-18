@@ -34,18 +34,23 @@ namespace GL {
 			return hasTexture && hasSpecularTexture;
 		};
 		bool CalculateVertexNormals();
+		bool CalculateNormalsTexture();//法线贴图相关工作
 	private:
 		bool hasSpecularTexture;//是否有镜面贴图
 		bool hasTexture;//检查 当前模型是否有贴图
 		bool copy;//检测当前模型是否是拷贝出来的
 		float* vertices;//存放绘制图像的顶点数据
+		float* uvs;//存放贴图索引的数据
+		float* normals;//顶点法线数据
+		float* tangents;//法线切线数组
+		float* bitangents;//法线副切线数组
 		unsigned int* indices;//存放顶点数据的索引位数据
+		int uvsSize;//UV贴图数据的大小
 		int verticesSize;//顶点数据的大小
 		int indicesSize;//索引数据的大小
 		int normalSize;//顶点法线数据大小
 		unsigned int width;//模型的点云宽度数量
 		unsigned int height;//模型的点云长度数量
-		float* normals;//顶点法线数据
 		bool eboMode;
 		std::vector<GLuint>* PVBOS; //【顶点缓冲对象，主要存储顶点数据，然后发送给gpu渲染】
 		GLuint VAO;//对VBO进行统一管理的对象，方便后续调用

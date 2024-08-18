@@ -52,6 +52,7 @@ namespace GL {
 		bool success = model->CreateModel(vShader, cShader, false, pvertices, vsize, pindices, isize, outWidth, outHeight);
 		CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
 		model->CalculateVertexNormals();//计算法线
+		model->CalculateNormalsTexture();//计算法线贴图
 		model->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->ReSetPoisition();
@@ -88,6 +89,7 @@ namespace GL {
 		bool success = model->CreateModel(vShader, cShader, false, pvertices, vsize, pindices, isize, outWidth, outHeight);
 		CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
 		model->CalculateVertexNormals();//计算法线
+		model->CalculateNormalsTexture();//计算法线贴图
 		model->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->ReSetPoisition();
@@ -275,6 +277,10 @@ namespace GL {
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, model->SPECULAR_TEXTURE);
 			}
+			if (model->NORMALS_TEXTURE) {
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, model->NORMALS_TEXTURE);
+			}
 			Shader* shader = model->GetShader();
 			Material& material = model->material;
 			const glm::mat4& mposition = data.reset ? model->ReSetPoisition() : model->UpdatePoisition(data);
@@ -307,16 +313,19 @@ namespace GL {
 			shader->SetShaderBoolean(data.blinn, "blinn");//是否启用blinn着色
 			shader->SetShaderBoolean(data.gammaCorrection, "gamma");//是否启用伽马校正
 			shader->SetShaderBoolean(data.useLight, "useLight");
+			shader->SetShaderBoolean(data.useNormalTexture && model->NORMALS_TEXTURE,"useNormalTexture");//是否启用法线贴图
 			shader->SetShaderInt(data.lightType, "lightType");//光照类别
 			shader->SetShaderVec3(ambientColor, "light.ambient");//环境光照分量
 			shader->SetShaderVec3(diffuseColor, "light.diffuse");//漫反射分量
 			if (data.lightType == SPOT_LIGHT) { //聚光
+				shader->SetShaderVec3(cmaera->GetCameraPos(), "lightPos");
 				shader->SetShaderVec3(cmaera->GetCameraPos(), "light.position");
 				shader->SetShaderVec3(cmaera->GetCameraFront(), "light.direction");
 				shader->SetShaderFloat(glm::cos(glm::radians(12.5f)), "light.cutOff");
 				shader->SetShaderFloat(glm::cos(glm::radians(17.5f)), "light.outerCutOff");
 			}
 			else {
+				shader->SetShaderVec3(lightControl->lightPos, "lightPos");
 				shader->SetShaderVec3(lightControl->lightPos, "light.position");//光源位置
 				shader->SetShaderVec3(glm::vec3(-0.2f, -1.0f, -0.3f), "light.direction");//平行光位置
 				shader->SetShaderFloat(0.0f, "light.cutOff");
