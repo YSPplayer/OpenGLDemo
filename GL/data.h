@@ -67,6 +67,7 @@ namespace GL {
 		float reflectivity;//反射度因子
 		bool useLight;//是否使用灯光
 		bool useTexture;//是否启用贴图
+		bool textureFlip;//图片是否经过垂直翻转处理
 		double alpha;//镜面贴图对比度[1.0-10]
 		int beta;//镜面贴图亮度[0-100]
 		bool transparentBg;//imgui背景是否设置透明

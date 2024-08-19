@@ -281,6 +281,8 @@ namespace GL {
 					ImGui::Text(u8"");
 					if (ImGui::TreeNode(u8"贴图")) {
 						ImGui::Checkbox(u8"启用贴图", &data.useTexture);
+						ImGui::SameLine();
+						ImGui::Checkbox(u8"贴图镜像", &data.textureFlip);
 						if (!data.useTexture) data.gammaCorrection = false;//不启用贴图伽马校验取消
 						ImGui::Text(u8"");
 						float maxWidth = ImGui::GetContentRegionAvail().x;

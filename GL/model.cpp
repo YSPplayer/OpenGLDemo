@@ -389,7 +389,7 @@ namespace GL {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 			//法线贴图需要原始数据值，不需要用伽马校正
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, normalMap.data);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_BGR, width - 1, height - 1, 0, GL_BGR, GL_UNSIGNED_BYTE, normalMap.data);
 			glGenerateMipmap(GL_TEXTURE_2D);
 			this->tangents = new float[verticesSize];
 			this->bitangents = new float[verticesSize];
@@ -416,12 +416,13 @@ namespace GL {
 			glUnmapBuffer(GL_ARRAY_BUFFER);
 			glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 			glEnableVertexAttribArray(4);
-			return true;
 			//值传入
 			// 将法线贴图转换为8位图像并保存
-			//normalMap.convertTo(normalMap, CV_8UC3, 255.0);
-			//cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
-			//cv::imwrite("E:\\open3d\\OpenGLDemo\\Shader\\a.png", normalMap);
+			normalMap.convertTo(normalMap, CV_8UC3, 255.0);
+			cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
+			cv::imwrite("C:\\Users\\User\\Desktop\\Atest\\fast.png", normalMap);
+			return true;
+			
 		}
 	}
 
