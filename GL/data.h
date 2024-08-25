@@ -99,5 +99,11 @@ namespace GL {
 		glm::vec3 specular; //镜面高光的颜色   
 		float shininess;//光的散射半径
 	};
+	enum MapColorType {
+		Gold,
+		Rainbow,
+		Max
+	};
+
 
 }

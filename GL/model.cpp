@@ -48,7 +48,7 @@ namespace GL {
 	}
 
 	/// <summary>
-	/// ����ģ��
+	/// 创建模型
 	/// </summary>
 	/// <param name="vertices"></param>
 	/// <param name="vsize"></param>
@@ -211,7 +211,7 @@ namespace GL {
 
 
 	/// <summary>
-	/// ����ģ�͵�λ��
+	/// 更新模型位置
 	/// </summary>
 	/// <param name="data"></param>
 	/// <returns></returns>
@@ -325,6 +325,24 @@ namespace GL {
 	}
 
 	/// <summary>
+	/// 设置模型的colorMap
+	/// </summary>
+	/// <param name="type"></param>
+	void Model::SetColorMap(MapColorType type) {
+		glBindVertexArray(VAO);
+		if (!PVBOS->at(VBO_MAPCOLOR)) {
+			glGenBuffers(1, &PVBOS->at(VBO_MAPCOLOR));
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_MAPCOLOR));
+		glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);
+		float* colorMapsBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesSize * sizeof(float), GL_MAP_WRITE_BIT);
+		std::memcpy(colorMapsBuffer, this->colorMaps[type], sizeof(float) * verticesSize);
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(5);
+	}
+
+	/// <summary>
 	/// 计算当前模型的顶点法线
 	/// </summary>
 	bool Model::CalculateVertexNormals() {
@@ -429,9 +447,9 @@ namespace GL {
 			glEnableVertexAttribArray(4);
 			//值传入
 			// 将法线贴图转换为8位图像并保存
-			normalMap.convertTo(normalMap, CV_8UC3, 255.0);
-			cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
-			cv::imwrite("C:\\Users\\User\\Desktop\\Atest\\fast.png", normalMap);
+			//normalMap.convertTo(normalMap, CV_8UC3, 255.0);
+			//cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
+			//cv::imwrite("C:\\Users\\User\\Desktop\\Atest\\fast.png", normalMap);
 			return true;
 			
 		}

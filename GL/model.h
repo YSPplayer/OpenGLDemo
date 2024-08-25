@@ -33,8 +33,10 @@ namespace GL {
 		inline bool HasTexture() {
 			return hasTexture && hasSpecularTexture;
 		};
+		void SetColorMap(MapColorType type);
 		bool CalculateVertexNormals();
 		bool CalculateNormalsTexture();//法线贴图相关工作
+		float** colorMaps;
 	private:
 		bool hasSpecularTexture;//是否有镜面贴图
 		bool hasTexture;//检查 当前模型是否有贴图

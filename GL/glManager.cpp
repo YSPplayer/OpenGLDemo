@@ -43,8 +43,9 @@ namespace GL {
 		unsigned int outWidth;
 		unsigned int outHeight;
 		glm::vec3 centerPos;
+		float** colorMaps = nullptr;
 		float lightMax = CreateX3pData(width - 1, height - 1, xoffset, yoffset, minZ, maxZ, zpointData, &pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, centerPos,
-			outWidth, outHeight);
+			outWidth, outHeight, colorMaps);
 		Model* model = new Model;
 		std::string vShader;
 		std::string cShader;
@@ -54,6 +55,8 @@ namespace GL {
 		model->CalculateVertexNormals();//计算法线
 		//model->CalculateNormalsTexture();//计算法线贴图
 		model->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
+		model->colorMaps = colorMaps;
+		model->SetColorMap(MapColorType::Rainbow);
 		cmaera->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->ReSetPoisition();
 		lightControl->lightPos = glm::vec3(centerPos.x, centerPos.y + (lightMax / 2.0f) + 1.0f, centerPos.z);
@@ -80,8 +83,9 @@ namespace GL {
 		glm::vec3 centerPos;
 		unsigned int outWidth;
 		unsigned int outHeight;
+		float** colorMaps = nullptr;
 		CreateRandomData(udata.modelWidth, udata.modelHeight, udata.modelXOffset, udata.modelYOffset, 0.0f, 0.0f, nullptr, udata.modelRandomZ, udata.modelRandomRange,
-			&pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, centerPos, outWidth, outHeight);
+			&pvertices, &pindices, &ptextures, &vsize, &isize, &tsize, centerPos, outWidth, outHeight, colorMaps);
 		Model* model = new Model;
 		std::string vShader;
 		std::string cShader;
@@ -90,6 +94,8 @@ namespace GL {
 		CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
 		model->CalculateVertexNormals();//计算法线
 		//model->CalculateNormalsTexture();//计算法线贴图
+		model->colorMaps = colorMaps;
+		model->SetColorMap(MapColorType::Rainbow);
 		model->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->ReSetPoisition();
@@ -366,7 +372,7 @@ namespace GL {
 	/// <param name="vertices"></param>
 	/// <param name="indices"></param>
 	float GlManager::CreateRandomData(unsigned int width, unsigned int height, float xoffset, float yoffset, float minZ, float maxZ, float* pointsZ, bool random, float randomRange, float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize,
-		int* tsize, glm::vec3& centerPos, unsigned int& outWidth, unsigned int& outHeight) {
+		int* tsize, glm::vec3& centerPos, unsigned int& outWidth, unsigned int& outHeight, float**& colorMaps) {
 #undef min
 #undef max
 		//if (xoffset > MAX_X_OFFSET) xoffset = MAX_X_OFFSET;
@@ -494,13 +500,30 @@ namespace GL {
 		*vsize = points.size() * 3;
 		*vertices = new float[*vsize];
 		float lightMax = 0.0f;//因为归一化的原因，所以值的范围在0-1之间
+		colorMaps = new float* [MapColorType::Max];
+		this->mapColors.clear();
+		for (int i = 0; i < MapColorType::Max; ++i) {
+			colorMaps[i] = new float[*vsize];//colorMap对应每一个顶点坐标都有一个rgb值
+			if (i == MapColorType::Gold) {
+				this->mapColors.push_back(MapColor({ {60,23,21},{89,29,27}, {123,34,30},
+				{200,122,39 },{243,203,75},{246,245,191},{253,253,253} }, { 0,12,24,48,96,192,255 }));
+			}
+			else if (i == MapColorType::Rainbow) {
+				this->mapColors.push_back(MapColor({ {0,0,255},{0,254,255}, {0,254,0},
+					{255,255,0 },{255,126,0},{255,0,0},{255,255,255} }, { 0,12,24,48,96,192,255 }));
+			}
+		}
+		float amp = maxZ - minZ;
 		for (int i = 0; i < points.size(); ++i) {
 			Point& point = points[i];
 			(*vertices)[i * 3 + 0] = point.x;
 			(*vertices)[i * 3 + 1] = point.y;
 			float pointZ = 0.0f;
 			if (pointsZ) {
-				pointZ = (point.z - minZ) / (maxZ - minZ) / 5.0f;
+				float fraction = (point.z - minZ) / amp;
+				pointZ = fraction / 5.0f;
+				//存储colormap的数组
+				MapColor::SetColorForZ(colorMaps, fraction,i,this->mapColors);
 			}
 			else {
 				pointZ = point.z;
@@ -534,9 +557,9 @@ namespace GL {
 
 	float GlManager::CreateX3pData(unsigned int _width, unsigned int _height, float xoffset, float yoffset, float minZ, float maxZ,
 		float* pointsZ, float** vertices, unsigned int** indices, float** textures, int* vsize, int* isize, int* tsize, glm::vec3& centerPos
-		,unsigned int& outWidth, unsigned int& outHeight) {
+		,unsigned int& outWidth, unsigned int& outHeight, float**& colorMaps) {
 		return CreateRandomData(_width, _height, xoffset, yoffset, minZ, maxZ, pointsZ, false, 0.0f, vertices, indices, textures, vsize,
-			isize, tsize, centerPos, outWidth, outHeight);
+			isize, tsize, centerPos, outWidth, outHeight, colorMaps);
 	}
 
 	/// <summary>

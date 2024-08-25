@@ -131,6 +131,9 @@
     <ClInclude Include="..\Include\imgui\imgui_impl_opengl3_loader.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="GL\mapColor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\model.vs" />

@@ -182,6 +182,7 @@
     <ClInclude Include="GL\common.h" />
     <ClInclude Include="GL\data.h" />
     <ClInclude Include="GL\glManager.h" />
+    <ClInclude Include="GL\mapColor.h" />
     <ClInclude Include="GL\model.h" />
     <ClInclude Include="GL\shader.h" />
     <ClInclude Include="GL\lightControl.h" />
