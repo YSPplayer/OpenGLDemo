@@ -260,7 +260,7 @@ namespace GL {
 
                     // 正交化切线
                     tangent = glm::normalize(tangent - normal1 * glm::dot(normal1, tangent));
-
+                    tangent = glm::normalize(tangent);  // 确保切线是单位向量
                     // 将结果存储到数组中
                     tangents[i * 3] = tangent.x;
                     tangents[i * 3 + 1] = tangent.y;
@@ -340,6 +340,7 @@ namespace GL {
                         normalMap.at<cv::Vec3f>(y, x) = normal;
                     }
                 } 
+                cv::flip(normalMap, normalMap, 0);
                 return normalMap; 
             }
             /// <summary>
@@ -347,7 +348,7 @@ namespace GL {
             /// </summary>
             /// <param name="path"></param>
             /// <returns></returns>
-            static bool CvLoadImage(const std::string& path, unsigned char*& data, unsigned char*& specular_data, double alpha, int beta,int& width, int& height, int& nrChannels) {
+            static bool CvLoadImage(const std::string& path, unsigned char*& data, unsigned char*& specular_data, double alpha, int beta,int& width, int& height, int& nrChannels,bool textureFlip) {
                 if (path == "") return false;
                 // 读取图像
                 img = cv::imread(path,cv::ImreadModes::IMREAD_UNCHANGED);
@@ -366,7 +367,7 @@ namespace GL {
                     cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
                 }
                 // 将图像垂直翻转
-                cv::flip(img, img, 0);
+                if(textureFlip) cv::flip(img, img, 0);
                 // 确保图像是连续的，这对 OpenGL 处理很重要
                 if (!img.isContinuous())img = img.clone();
                 // 分配内存用于存储图像数据（需要在适当时候释放这块内存）

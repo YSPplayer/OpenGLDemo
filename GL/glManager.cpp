@@ -552,7 +552,7 @@ namespace GL {
 		unsigned char* data = nullptr;
 		unsigned char* specular_data = nullptr;
 		bool success = Util::CvLoadImage(std::string(path), data, specular_data, CWindow::data.alpha, CWindow::data.beta,
-			width, height, nrChannels);
+			width, height, nrChannels,CWindow::data.textureFlip);
 		//如果没有图片，我们不会存在贴图，如果没有纹理数组，我们不创建纹理对象
 		model->SetTexture(data, specular_data, width, height, nrChannels, ptextures, tsize, CWindow::data.gammaCorrection);
 		Util::ReleasePointer(data, true);

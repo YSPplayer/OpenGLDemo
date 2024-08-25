@@ -24,16 +24,16 @@ namespace GL {
 		SPECULAR_TEXTURE = NULL;
 		NORMALS_TEXTURE = NULL;
 		position = glm::mat4(1.0f);
-		centerPosition = glm::vec3(0.0f,0.0f,0.0f);//Ä¬ÈÏÄ£ÐÍµÄÖÐÐÄÎ»ÖÃÎª0,0
+		centerPosition = glm::vec3(0.0f,0.0f,0.0f);//Ä¬ï¿½ï¿½Ä£ï¿½Íµï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½Îª0,0
 		material.ambient = glm::vec3(0.0f, 0.0f, 0.0f);
 		material.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
 		material.specular = glm::vec3(0.0f, 0.0f, 0.0f);
 		material.shininess = 0.0f;
-		Util::LoadMaterial(material,L"default.material");//¼ÓÔØÄ£ÐÍµÄÄ¬ÈÏ²ÄÖÊ
+		Util::LoadMaterial(material,L"default.material");//ï¿½ï¿½ï¿½ï¿½Ä£ï¿½Íµï¿½Ä¬ï¿½Ï²ï¿½ï¿½ï¿½
 	}
 
 	Model::~Model() {
-		if (copy) return;//¿½±´µÄÄ£ÐÍ²»×öÄÚ´æµÄÊÍ·Å£¬Ö»ÊÍ·ÅÎ¨Ò»µÄÄÇÒ»¸ö
+		if (copy) return;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½Í²ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Í·Å£ï¿½Ö»ï¿½Í·ï¿½Î¨Ò»ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
 		if(EBO) glDeleteBuffers(1, &EBO);
 		if (TEXTURE) glDeleteTextures(1, &TEXTURE);
 		if (PVBOS) {
@@ -48,7 +48,7 @@ namespace GL {
 	}
 
 	/// <summary>
-	/// ´´½¨Ä£ÐÍ
+	/// ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½
 	/// </summary>
 	/// <param name="vertices"></param>
 	/// <param name="vsize"></param>
@@ -61,16 +61,16 @@ namespace GL {
 		this->height = height;
 		eboMode = true;
 		verticesSize = vsize;
-		if (copy) { //Èç¹ûÔÚÕ»Çø´´½¨£¬ÐèÒª¿½±´ÄÚ´æ
+		if (copy) { //ï¿½ï¿½ï¿½ï¿½ï¿½Õ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½
 			this->vertices = new float[verticesSize];
-			std::memcpy(this->vertices, vertices, sizeof(float) * verticesSize);  //¿½±´Êý¾ÝµÄÄÚ´æµ½Ö¸Õë
+			std::memcpy(this->vertices, vertices, sizeof(float) * verticesSize);  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½Ú´æµ½Ö¸ï¿½ï¿½
 			if (eboMode) {
 				indicesSize = isize;
 				this->indices = new unsigned int[indicesSize];
 				std::memcpy(this->indices, indices, sizeof(unsigned int) * indicesSize);
 			}
 		}
-		else { //Èç¹ûÒÑ¾­´´½¨ÁË¶ÑÇøÄÚ´æ£¬Ö±½Ó¸³Öµ¼´¿É
+		else { //ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½ï¿½Ú´æ£¬Ö±ï¿½Ó¸ï¿½Öµï¿½ï¿½ï¿½ï¿½
 			this->vertices = vertices;
 			if (eboMode) {
 				indicesSize = isize;
@@ -79,53 +79,53 @@ namespace GL {
 		}
 		
 		glGenVertexArrays(1, &VAO);
-		glBindVertexArray(VAO);// °ó¶¨VAO
-		glGenBuffers(1, &PVBOS->at(VBO_VERTEX));//newÒ»¸ö¶¥µã»º³å¶ÔÏó£¬´æÔÚVBOÖÐ
-		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_VERTEX)); //ÉèÖÃµ±Ç°VBOÉÏÏÂÎÄ
+		glBindVertexArray(VAO);// ï¿½ï¿½VAO
+		glGenBuffers(1, &PVBOS->at(VBO_VERTEX));//newÒ»ï¿½ï¿½ï¿½ï¿½ï¿½ã»ºï¿½ï¿½ï¿½ï¿½ó£¬´ï¿½ï¿½ï¿½VBOï¿½ï¿½
+		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_VERTEX)); //ï¿½ï¿½ï¿½Ãµï¿½Ç°VBOï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		/*
-		* Èç¹û¶¥µãÊý¾Ý¹ý¶à£¬ÔòÇ¨ÒÆµ½Ñ­»·ÖÐ·Ö¿é´¦Àí
-		  3¸ö²ÎÊýÓÃÓÚÌáÉýÏÔ¿¨äÖÈ¾Ð§ÂÊ£º
-		  GL_STATIC_DRAW Êý¾Ý²»±ä
-		  GL_DYNAMIC_DRAW Êý¾Ý»á¸Ä±äºÜ¶à
-		  GL_STREAM_DRAW Êý¾ÝÃ¿´Î»æÖÆ¶¼»á¸Ä±ä
+		* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¹ï¿½ï¿½à£¬ï¿½ï¿½Ç¨ï¿½Æµï¿½Ñ­ï¿½ï¿½ï¿½Ð·Ö¿é´¦ï¿½ï¿½
+		  3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¿ï¿½ï¿½ï¿½È¾Ð§ï¿½Ê£ï¿½
+		  GL_STATIC_DRAW ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½
+		  GL_DYNAMIC_DRAW ï¿½ï¿½ï¿½Ý»ï¿½Ä±ï¿½Ü¶ï¿½
+		  GL_STREAM_DRAW ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½Î»ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ä±ï¿½
 		*/
 		//glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(vertices), vertices, GL_STATIC_DRAW);
 		
-		glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);//ÏÈ°ó¶¨¿ÕÖ¸Õë£¬Ö±½Ó°ó¶¨´æÔÚÏÔ´æÒç³öµÄÎÊÌâ
-		// gpuÊý¾ÝÖ¸Õë³Ö¾ÃÓ³Éäcpu»º³åÇø
+		glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);//ï¿½È°ó¶¨¿ï¿½Ö¸ï¿½ë£¬Ö±ï¿½Ó°ó¶¨´ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		// gpuï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Ö¾ï¿½Ó³ï¿½ï¿½cpuï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		float* verticesBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesSize * sizeof(float), GL_MAP_WRITE_BIT);//| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
 		if (!verticesBuffer) return false;
-		std::memcpy(verticesBuffer, this->vertices, sizeof(float) * verticesSize);//¿½±´ÄÚ´æµ½gpu
-		glUnmapBuffer(GL_ARRAY_BUFFER);//±ØÐëÈ¡ÏûÓ³Éä
+		std::memcpy(verticesBuffer, this->vertices, sizeof(float) * verticesSize);//ï¿½ï¿½ï¿½ï¿½ï¿½Ú´æµ½gpu
+		glUnmapBuffer(GL_ARRAY_BUFFER);//ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½Ó³ï¿½ï¿½
 		/*
-			-1.ÉèÖÃ¶¥µãÊôÐÔÖ¸Õë
-			0.¶¥µãÊý¾ÝÊ×¸öÔªËØµÄË÷Òý
-			1.¶àÉÙ¸öÊý¾Ý×é³ÉÒ»¸övec¶ÔÏó
-			2.vec¶ÔÏóÊý¾ÝÀàÐÍ
-			3.ÊÇ·ñ°ÑÊý¾Ý¹éÒ»»¯(0-1)ÖÐ?
-			4.Ò»¸övec¶ÔÏóµÄ´óÐ¡
-			5.Êý¾ÝÔÚ»º³åÖÐÆðÊ¼Î»ÖÃµÄÆ«ÒÆÁ¿
+			-1.ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
+			0.ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¸ï¿½Ôªï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½
+			1.ï¿½ï¿½ï¿½Ù¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½vecï¿½ï¿½ï¿½ï¿½
+			2.vecï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+			3.ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ý¹ï¿½Ò»ï¿½ï¿½(0-1)ï¿½ï¿½?
+			4.Ò»ï¿½ï¿½vecï¿½ï¿½ï¿½ï¿½Ä´ï¿½Ð¡
+			5.ï¿½ï¿½ï¿½ï¿½ï¿½Ú»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼Î»ï¿½Ãµï¿½Æ«ï¿½ï¿½ï¿½ï¿½
 		*/
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);//Æô¶¯¶¥µãÊôÐÔ£¬Ä¬ÈÏË÷ÒýÎª0µÄµØ·½¿ªÊ¼ÆôÓÃ
+		glEnableVertexAttribArray(0);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª0ï¿½ÄµØ·ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½
 		if (eboMode) {
 			glGenBuffers(1, &EBO);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize * sizeof(unsigned int), nullptr, GL_STATIC_DRAW);
-			// gpuÊý¾ÝÖ¸Õë³Ö¾ÃÓ³Éäcpu»º³åÇø| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+			// gpuï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Ö¾ï¿½Ó³ï¿½ï¿½cpuï¿½ï¿½ï¿½ï¿½ï¿½ï¿½| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
 			unsigned int* indicesBuffer = (unsigned int*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, indicesSize * sizeof(unsigned int), GL_MAP_WRITE_BIT );
 			if (!indicesBuffer) return false;
-			std::memcpy(indicesBuffer, this->indices, sizeof(unsigned int) * indicesSize);//¿½±´ÄÚ´æµ½gpu
-			glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);//Èç¹û²»ÔÙÐèÒªcpuÉÏµÄgpuÖ¸Õë£¬¾ÍÈ¡ÏûÓ³Éä
+			std::memcpy(indicesBuffer, this->indices, sizeof(unsigned int) * indicesSize);//ï¿½ï¿½ï¿½ï¿½ï¿½Ú´æµ½gpu
+			glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªcpuï¿½Ïµï¿½gpuÖ¸ï¿½ë£¬ï¿½ï¿½È¡ï¿½ï¿½Ó³ï¿½ï¿½
 		}
-		//·Ö¿é°ÑÊý¾ÝÉÏ´«µ½gpu  55
-		position = glm::rotate(glm::mat4(1.0f), glm::radians(DEFAULT_MODEL_X_RADIANS), glm::vec3(1.0f, 0.0f, 0.0f)); //Ä¬ÈÏÄ£ÐÍÎªÌÉÏÂ45¶ÈµÄÐÎÊ½
+		//ï¿½Ö¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ï¿½ï¿½gpu  55
+		position = glm::rotate(glm::mat4(1.0f), glm::radians(DEFAULT_MODEL_X_RADIANS), glm::vec3(1.0f, 0.0f, 0.0f)); //Ä¬ï¿½ï¿½Ä£ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½45ï¿½Èµï¿½ï¿½ï¿½Ê½
 		pshader = new Shader;
 		return pshader->CreateShader(vertexShader,colorShader);
 	}
 
 	/// <summary>
-	/// ÉèÖÃÄ£ÐÍµÄÌùÍ¼
+	/// ï¿½ï¿½ï¿½ï¿½Ä£ï¿½Íµï¿½ï¿½ï¿½Í¼
 	/// </summary>
 	/// <returns></returns>
 	bool Model::SetTexture(unsigned char* texture, unsigned char* specularTexture,int width, int height, int nrChannels, float datas[], int size, bool gammaCorrection) {
@@ -135,41 +135,41 @@ namespace GL {
 			glBindVertexArray(VAO);
 			glGenBuffers(1, &PVBOS->at(VBO_TEXTURE));
 			glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_TEXTURE));
-			glBufferData(GL_ARRAY_BUFFER, size * sizeof(float), nullptr, GL_STATIC_DRAW);//°ó¶¨¿ÕÖ¸Õë| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+			glBufferData(GL_ARRAY_BUFFER, size * sizeof(float), nullptr, GL_STATIC_DRAW);//ï¿½ó¶¨¿ï¿½Ö¸ï¿½ï¿½| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
 			float* textureBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, size * sizeof(float), GL_MAP_WRITE_BIT );
 			if (!textureBuffer) return false;
-			std::memcpy(textureBuffer, datas, sizeof(float) * size);//¿½±´ÄÚ´æµ½gpu
+			std::memcpy(textureBuffer, datas, sizeof(float) * size);//ï¿½ï¿½ï¿½ï¿½ï¿½Ú´æµ½gpu
 			glUnmapBuffer(GL_ARRAY_BUFFER);
-			//ÒòÎªÎÆÀí¶ÔÏóµÄµ¥Î»³¤¶ÈÊÇ2.ËùÒÔÖ¸¶¨2
+			//ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½2.ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½2
 			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 			glEnableVertexAttribArray(1);
 			for (int i = 0; i < 2; ++i) {
-				//×÷ÓÃÎÆÀí
+				//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				glGenTextures(1, i == 0 ? &TEXTURE : &SPECULAR_TEXTURE);
 				i == 0 ? glActiveTexture(GL_TEXTURE0) : glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, i == 0 ? TEXTURE : SPECULAR_TEXTURE);
-				//µ±ÎÆÀí×ø±êµÄ·¶Î§³¬³ö0-1£¬³¬³ö·¶Î§ÓÃÃÖ²¹
+				//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½Î§ï¿½ï¿½ï¿½ï¿½0-1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½ï¿½Ö²ï¿½
 				float borderColor[] = { 255.0f, 255.0f, 255.0f, 1.0f };
 				glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 				/*
-					ÉèÖÃÎÆÀí¹ýÂË·½Ê½£¬µ±Ä£ÐÍ·Å´ó»òËõÐ¡Ê±ÎÆÀíµÄ±ä»¯·½Ê½£¬ÕâÀïÊ¹ÓÃÔ¶½ü²îÖµ·¨
+					ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë·ï¿½Ê½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½Í·Å´ï¿½ï¿½ï¿½ï¿½Ð¡Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ä»¯ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½
 				*/
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			}
 		}
 		else {
-			//¸øµ±Ç°µÄvboÎÆÀí¶ÔÏó°ó¶¨ÎÆÀíÍ¼Ïó
+			//ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½vboï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½
 			if (texture) {
 				hasTexture = true;
-				/*Èç¹ûÊÇ2´ÎÉèÖÃÌùÍ¼£¬opengl»á¸²¸Çµô¾ÉÌùÍ¼µÄÊý¾Ý£¬µ«ÊÇ²»»áÊÍ·ÅÄÚ´æ£¬Èç¹ûµÚÒ»´ÎµÄ
-				×÷ÓÃµÄÌùÍ¼ÄÚ´æ±ÈµÚ¶þ´Î´ó£¬Êµ¼ÊµÄÎÆÀí¶ÔÏóÄÚ´æ»¹ÊÇºÍµÚÒ»´ÎµÄÒ»Ñù£¬Ö»ÊÇÐÂ²¿·ÖµÄ¶ÔÏóÄÚ´æ±»
-				¸²¸ÇµôÁË*/
+				/*ï¿½ï¿½ï¿½ï¿½ï¿½2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½openglï¿½á¸²ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ú´æ£¬ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Îµï¿½
+				ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½Í¼ï¿½Ú´ï¿½ÈµÚ¶ï¿½ï¿½Î´ï¿½Êµï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´æ»¹ï¿½ÇºÍµï¿½Ò»ï¿½Îµï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½Â²ï¿½ï¿½ÖµÄ¶ï¿½ï¿½ï¿½ï¿½Ú´æ±»
+				ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½*/
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, TEXTURE);
 				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-				//GPUÒªÇóÍ¼Æ¬¿í¶ÈµÄ´óÐ¡Ò»¶¨ÊÇ4µÄ±¶Êý£¬ÐèÒªÇ°ÖÃËõ·Å£¬»òÕß×ªÎªRGBA£¬ÒòÎªRGBAÍ¼Æ¬Ò»¶¨ÊÇ4µÄ±¶Êý
-				//Ê¹ÓÃÄÚ´æ¶ÔÆëµÄ·½Ê½À´ÉÏ´«Í¼Æ¬Êý¾Ýµ½gpu£¬Õâ»áËðÊ§Ò»¶¨µÄÐ§ÂÊ
+				//GPUÒªï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½ÈµÄ´ï¿½Ð¡Ò»ï¿½ï¿½ï¿½ï¿½4ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÒªÇ°ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ï¿½ï¿½×ªÎªRGBAï¿½ï¿½ï¿½ï¿½ÎªRGBAÍ¼Æ¬Ò»ï¿½ï¿½ï¿½ï¿½4ï¿½Ä±ï¿½ï¿½ï¿½
+				//Ê¹ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½Ä·ï¿½Ê½ï¿½ï¿½ï¿½Ï´ï¿½Í¼Æ¬ï¿½ï¿½ï¿½Ýµï¿½gpuï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§Ò»ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½
 				glTexImage2D(GL_TEXTURE_2D, 0, gammaCorrection ? GL_SRGB : GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
 				glGenerateMipmap(GL_TEXTURE_2D);
 			}
@@ -211,20 +211,20 @@ namespace GL {
 
 
 	/// <summary>
-	/// ¸üÐÂÄ£ÐÍµÄÎ»ÖÃ
+	/// ï¿½ï¿½ï¿½ï¿½Ä£ï¿½Íµï¿½Î»ï¿½ï¿½
 	/// </summary>
 	/// <param name="data"></param>
 	/// <returns></returns>
 	glm::mat4 Model::UpdatePoisition(Data& data) {
 		if ((!data.rotateX && !data.rotateZ)) return position;//(!rotateX && !rotateZ) || 
-		// ÏÈ½«Ä£ÐÍÆ½ÒÆµ½Ö¸¶¨ÖÐÐÄ£¬ÒÔÊ¹µÃÄ£ÐÍÊ¼ÖÕÎ§ÈÆ×ÔÉíµÄÖÐÐÄÐý×ª
+		// ï¿½È½ï¿½Ä£ï¿½ï¿½Æ½ï¿½Æµï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½Ä£ï¿½ï¿½Ê¼ï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ª
 		glm::mat4 translationToCenter = glm::translate(glm::mat4(1.0f), centerPosition);
 		position = translationToCenter;
 		if (data.rotateX) {
 			float x = data.enable ? data.rotationX + data.lastRotationX : data.lastRotationX;//lastRotationX
 			float rotationAngle = Util::NormalizeAngle(x, 360.0f);
-			// ÏÞÖÆÐý×ª½Ç¶È
-			 // ½«´óÓÚ180¶ÈµÄ½Ç¶È×ª»»µ½¸º·½Ïò·¶Î§ÄÚ
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½Ç¶ï¿½
+			 // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½180ï¿½ÈµÄ½Ç¶ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½
 			//if (rotationAngle > 180.0f) {
 			//	rotationAngle -= 360.0f;
 			//}
@@ -235,7 +235,7 @@ namespace GL {
 			//	rotationAngle = 0.0f;
 			//}
 			//data.lastRotationX = rotationAngle;
-			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f)); //ÏÈ½øÐÐXÖáµÄÐý×ª
+			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f)); //ï¿½È½ï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½×ª
 		}
 		else {
 			float rotationAngle = Util::NormalizeAngle(data.lastRotationX, 360.0f);
@@ -249,41 +249,41 @@ namespace GL {
 				rotationAngle = 0.0f;
 			}
 			data.lastRotationX = rotationAngle;*/
-			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f)); //ÏÈ½øÐÐXÖáµÄÐý×ª
+			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f)); //ï¿½È½ï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½×ª
 		}
 		if (data.rotateZ) {
 			float z = data.enable ? data.rotationZ + data.lastRotationZ : data.lastRotationZ;
-			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(z, 360.0f)), glm::vec3(0.0f, 0.0f, 1.0f));//ÔÙÑØ×ÅZÖáÐý×ª£¬´ËÊ±¿ÉÒÔÊµÏÖÎ§ÈÆ×Ô¼º×Ô¶¯Ðý×ªµÄÐ§¹û
+			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(z, 360.0f)), glm::vec3(0.0f, 0.0f, 1.0f));//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Zï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½Î§ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½×ªï¿½ï¿½Ð§ï¿½ï¿½
 		}
 		else {
 			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(data.lastRotationZ, 360.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
 		}
-		// ÔÙ½«Ä£ÐÍÆ½ÒÆ»ØÔ­À´µÄÎ»ÖÃ
+		// ï¿½Ù½ï¿½Ä£ï¿½ï¿½Æ½ï¿½Æ»ï¿½Ô­ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
 		glm::mat4 translationBack = glm::translate(glm::mat4(1.0f), glm::vec3(-centerPosition.x, -centerPosition.y, 0.0f));
 		position = position * translationBack;
 		return position;
 	}
 
 	/// <summary>
-	/// äÖÈ¾»æÖÆ
+	/// ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½
 	/// </summary>
 	void Model::Render(const Data& data) {
 		glBindVertexArray(VAO);
-		if (data.drawMode == DRAW_MODE_POINT) { //»æÖÆµãÔÆ
+		if (data.drawMode == DRAW_MODE_POINT) { //ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glDrawElements(GL_POINTS, indicesSize, GL_UNSIGNED_INT, 0);
 		}
-		else if (data.drawMode == DRAW_MODE_GRID) { //»æÖÆÍø¸ñ
+		else if (data.drawMode == DRAW_MODE_GRID) { //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
 		}
 		else {
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); //»æÖÆÃæ
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
 		}
 		
 		//int indicesCount = indicesSize / 3;
-		//// ¶ÔÃ¿Ò»¿é¶¥µãÊý¾Ý£¬Öð¿éÉÏ´«Ë÷ÒýÊý¾Ý²¢»æÖÆ
+		//// ï¿½ï¿½Ã¿Ò»ï¿½é¶¥ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½ï¿½ï¿½
 		//for (int i = 0; i < indicesCount; i += PLANE_BLOCK_SIZE) {
 		//	int currentBlockSize = std::min(PLANE_BLOCK_SIZE, indicesCount - i);
 		//	int indicesIndex = i * 3;
@@ -293,52 +293,52 @@ namespace GL {
 		//	0,1,0,
 		//	1,1,0
 		//	*/
-		//	// ´´½¨Ò»¸öÁÙÊ±Êý×é´æ´¢ÐèÒªµÄ¶¥µãÊý¾Ý£¬Ò»¸öË÷ÒýÊý×é[0,1,2]´ú±í*3±¶ÊýµÄ¶¥µãÊý¾Ý
+		//	// ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½Òªï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½[0,1,2]ï¿½ï¿½ï¿½ï¿½*3ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		//	float* tempVertices = new float[currentBlockSize * 3 * 3];
 		//	int* tempIndices = new int[currentBlockSize * 3];
 		//	int tempIndex = 0;
-		//	for (int j = 0; j < currentBlockSize * 3; ++j) {//ÎÒÃÇÒ»´ÎÖ»¶ÁÈ¡ÁËË÷ÒýÊý×éÒ»¸öÎ»ÖÃµÄÖµ£¬Ò»¸öÎ»ÖÃµÄÖµ¶ÔÓ¦µÄ¶¥µãÊý¾ÝÊÇ3¸ö
+		//	for (int j = 0; j < currentBlockSize * 3; ++j) {//ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ö»ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Î»ï¿½Ãµï¿½Öµï¿½ï¿½Ò»ï¿½ï¿½Î»ï¿½Ãµï¿½Öµï¿½ï¿½Ó¦ï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½
 		//		int index = indices[indicesIndex++];
 		//		tempVertices[tempIndex++] = vertices[index * 3 + 0];
 		//		tempVertices[tempIndex++] = vertices[index * 3 + 1];
 		//		tempVertices[tempIndex++] = vertices[index * 3 + 2];
 		//		tempIndices[j] = j;
 		//	}
-		//	//ÉÏ´«ÁÙÊ±¶¥µãÊý¾Ýµ½VBO
+		//	//ï¿½Ï´ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½VBO
 		//	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		//	glBufferData(GL_ARRAY_BUFFER, currentBlockSize * 3 * 3 * sizeof(float), tempVertices, GL_DYNAMIC_DRAW);
-		//	//ÔÙ°ó¶¨EBO
+		//	//ï¿½Ù°ï¿½EBO
 		//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		//	//*3ÊÇÒòÎª´ú±íÒ»×éË÷ÒýÊý×é
+		//	//*3ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		//	glBufferData(GL_ELEMENT_ARRAY_BUFFER, currentBlockSize * 3 * sizeof(unsigned int), tempIndices, GL_DYNAMIC_DRAW);
-		//	// »æÖÆµ±Ç°¿éµÄ¶¥µã
+		//	// ï¿½ï¿½ï¿½Æµï¿½Ç°ï¿½ï¿½Ä¶ï¿½ï¿½ï¿½
 		//	glDrawElements(GL_TRIANGLES, currentBlockSize * 3, GL_UNSIGNED_INT, 0);
 		//}
 	}
 
 	/// <summary>
-	/// ÖØÖÃÄ£ÐÍµ½³õÊ¼×ø±ê
+	/// ï¿½ï¿½ï¿½ï¿½Ä£ï¿½Íµï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½
 	/// </summary>
 	glm::mat4 Model::ReSetPoisition() {
-		position = glm::rotate(glm::mat4(1.0f), glm::radians(DEFAULT_MODEL_X_RADIANS), glm::vec3(1.0f, 0.0f, 0.0f)); //Ä¬ÈÏÄ£ÐÍÎªÌÉÏÂ45¶ÈµÄÐÎÊ½
+		position = glm::rotate(glm::mat4(1.0f), glm::radians(DEFAULT_MODEL_X_RADIANS), glm::vec3(1.0f, 0.0f, 0.0f)); //Ä¬ï¿½ï¿½Ä£ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½45ï¿½Èµï¿½ï¿½ï¿½Ê½
 		return position;
 	}
 
 	/// <summary>
-	/// ¼ÆËãµ±Ç°Ä£ÐÍµÄ¶¥µã·¨Ïß
+	/// ï¿½ï¿½ï¿½ãµ±Ç°Ä£ï¿½ÍµÄ¶ï¿½ï¿½ã·¨ï¿½ï¿½
 	/// </summary>
 	bool Model::CalculateVertexNormals() {
-		//·¨Ïß¼ÆËãÐèÒª¶¥µãÊý¾ÝºÍË÷ÒýÊý×éµÄÊý¾Ý£¬Ã»ÓÐÖ±½Ó·µ»Ø
+		//ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½Ã»ï¿½ï¿½Ö±ï¿½Ó·ï¿½ï¿½ï¿½
 		if (!PVBOS->at(VBO_VERTEX) || !EBO) return false;
-		normalSize = verticesSize;//·¨ÏßÊý¾ÝÁ¿ºÍ¶¥µãÊý¾ÝÁ¿ÏàÍ¬
+		normalSize = verticesSize;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬
 		normals = new float[normalSize];
 		int normalsv3Size = normalSize / 3;
 		glm::vec3* normalsv3 = new glm::vec3[normalsv3Size];
 		for (int i = 0; i < normalsv3Size; ++i) {
-			normalsv3[i] = glm::vec3(0.0f, 0.0f, 0.0f); //³õÊ¼»¯Öµ
+			normalsv3[i] = glm::vec3(0.0f, 0.0f, 0.0f); //ï¿½ï¿½Ê¼ï¿½ï¿½Öµ
 		}
 		for (int i = 0; i < indicesSize; i += 3) {
-			//Èý¸öµã×é³ÉÒ»¸öÃæ£¬Ò»¸öµãÐèÒªÈý¸ö×ø±ê£¬ËùÒÔÐèÒª9¸ö×ø±êÊý¾Ý
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½æ£¬Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òª9ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			int index = i;
 			const glm::vec3& v1 = glm::vec3(vertices[indices[index] * 3 + 0], vertices[indices[index] * 3 + 1], vertices[indices[index] * 3 + 2]);
 			++index;
@@ -350,7 +350,7 @@ namespace GL {
 			normalsv3[indices[i + 1]] += normal;
 			normalsv3[indices[i + 2]] += normal;
 		}
-		//´æ´¢·¨ÏßµÄÊµ¼ÊÊý¾Ý
+		//ï¿½æ´¢ï¿½ï¿½ï¿½ßµï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		for (int i = 0; i < normalsv3Size; ++i) {
 			const glm::vec3& normal = glm::normalize(normalsv3[i]);
 			normals[i * 3 + 0] = normal.x;
@@ -360,7 +360,7 @@ namespace GL {
 			Util::WriteLog(L"vec3_normal"+ std::to_wstring(i) + L":" + std::to_wstring(normal.x) + L"," + std::to_wstring(normal.y) + L"," + std::to_wstring(normal.z));*/
 		}
 		delete[] normalsv3;
-		//°ó¶¨·¨ÏßVBO
+		//ï¿½ó¶¨·ï¿½ï¿½ï¿½VBO
 		glBindVertexArray(VAO);
 		glGenBuffers(1, &PVBOS->at(VBO_NORMAL));
 		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_NORMAL));
@@ -375,11 +375,11 @@ namespace GL {
 	}
 
 	/// <summary>
-	/// ¼ÆËã·¨ÏßÌùÍ¼µÄÏà¹ØµÄ¹¤×÷
+	/// ï¿½ï¿½ï¿½ã·¨ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ØµÄ¹ï¿½ï¿½ï¿½
 	/// </summary>
 	bool Model::CalculateNormalsTexture() {
 		
-		if (width != 0 && height != 0) { //¸üÐÂ·¨ÏßÌùÍ¼
+		if (width != 0 && height != 0) { //ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½Í¼
 			auto normalMap = Util::ConvertNormalsToNormalMap(normals, width - 1, height - 1);
 			normalMap.convertTo(normalMap, CV_8UC3, 255.0);
 			cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
@@ -399,15 +399,15 @@ namespace GL {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-			//·¨ÏßÌùÍ¼ÐèÒªÔ­Ê¼Êý¾ÝÖµ£¬²»ÐèÒªÓÃÙ¤ÂíÐ£Õý
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ÒªÔ­Ê¼ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Ù¤ï¿½ï¿½Ð£ï¿½ï¿½
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, normalMap.cols, normalMap.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 			glGenerateMipmap(GL_TEXTURE_2D);
 			this->tangents = new float[verticesSize];
 			this->bitangents = new float[verticesSize];
-			//¼ÆËãÇÐÏßºÍ¸±ÇÐÏß
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ßºÍ¸ï¿½ï¿½ï¿½ï¿½ï¿½
 			Util::CalculateTangentAndBitangent(vertices,uvs,normals,verticesSize,tangents,bitangents);
 			glBindVertexArray(VAO);
-			//°ó¶¨ÇÐÏßºÍ¸±ÇÐÏßVBO£¬´óÐ¡¶¼ÊÇverticesÊý×éµÄ´óÐ¡
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ßºÍ¸ï¿½ï¿½ï¿½ï¿½ï¿½VBOï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½verticesï¿½ï¿½ï¿½ï¿½Ä´ï¿½Ð¡
 			glGenBuffers(1, &PVBOS->at(VBO_TANGENTS));
 			glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_TANGENTS));
 			glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);
@@ -427,12 +427,13 @@ namespace GL {
 			glUnmapBuffer(GL_ARRAY_BUFFER);
 			glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 			glEnableVertexAttribArray(4);
+			//Öµï¿½ï¿½ï¿½ï¿½
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼×ªï¿½ï¿½Îª8Î»Í¼ï¿½ñ²¢±ï¿½ï¿½ï¿½
+			normalMap.convertTo(normalMap, CV_8UC3, 255.0);
+			cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
+			cv::imwrite("C:\\Users\\User\\Desktop\\Atest\\fast.png", normalMap);
 			return true;
-			//Öµ´«Èë
-			// ½«·¨ÏßÌùÍ¼×ª»»Îª8Î»Í¼Ïñ²¢±£´æ
-			//normalMap.convertTo(normalMap, CV_8UC3, 255.0);
-			//cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
-			//cv::imwrite("E:\\open3d\\OpenGLDemo\\Shader\\a.png", normalMap);
+			
 		}
 	}
 

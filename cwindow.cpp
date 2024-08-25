@@ -41,6 +41,7 @@ namespace GL {
 			data.transparentBg = true;
 			data.sparsePoint = true;
 			data.useNormalTexture = true;
+			data.textureFlip = false;
 			bool load = false;
 			if (!(load = Util::LoadConfig(data, UiManager::udata))) {
 				data.sensitivity = 0.1f;
