@@ -24,16 +24,16 @@ namespace GL {
 		SPECULAR_TEXTURE = NULL;
 		NORMALS_TEXTURE = NULL;
 		position = glm::mat4(1.0f);
-		centerPosition = glm::vec3(0.0f,0.0f,0.0f);//Ĭ��ģ�͵�����λ��Ϊ0,0
+		centerPosition = glm::vec3(0.0f,0.0f,0.0f);//默认模型的中心位置为0,0
 		material.ambient = glm::vec3(0.0f, 0.0f, 0.0f);
 		material.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
 		material.specular = glm::vec3(0.0f, 0.0f, 0.0f);
 		material.shininess = 0.0f;
-		Util::LoadMaterial(material,L"default.material");//����ģ�͵�Ĭ�ϲ���
+		Util::LoadMaterial(material,L"default.material");//加载模型的默认材质
 	}
 
 	Model::~Model() {
-		if (copy) return;//������ģ�Ͳ����ڴ���ͷţ�ֻ�ͷ�Ψһ����һ��
+		if (copy) return;//拷贝的模型不做内存的释放，只释放唯一的那一个
 		if(EBO) glDeleteBuffers(1, &EBO);
 		if (TEXTURE) glDeleteTextures(1, &TEXTURE);
 		if (PVBOS) {
@@ -61,16 +61,16 @@ namespace GL {
 		this->height = height;
 		eboMode = true;
 		verticesSize = vsize;
-		if (copy) { //�����ջ����������Ҫ�����ڴ�
+		if (copy) { //如果在栈区创建，需要拷贝内存
 			this->vertices = new float[verticesSize];
-			std::memcpy(this->vertices, vertices, sizeof(float) * verticesSize);  //�������ݵ��ڴ浽ָ��
+			std::memcpy(this->vertices, vertices, sizeof(float) * verticesSize);  //拷贝数据的内存到指针
 			if (eboMode) {
 				indicesSize = isize;
 				this->indices = new unsigned int[indicesSize];
 				std::memcpy(this->indices, indices, sizeof(unsigned int) * indicesSize);
 			}
 		}
-		else { //����Ѿ������˶����ڴ棬ֱ�Ӹ�ֵ����
+		else { //如果已经创建了堆区内存，直接赋值即可
 			this->vertices = vertices;
 			if (eboMode) {
 				indicesSize = isize;
@@ -79,53 +79,53 @@ namespace GL {
 		}
 		
 		glGenVertexArrays(1, &VAO);
-		glBindVertexArray(VAO);// ��VAO
-		glGenBuffers(1, &PVBOS->at(VBO_VERTEX));//newһ�����㻺����󣬴���VBO��
-		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_VERTEX)); //���õ�ǰVBO������
+		glBindVertexArray(VAO);// 绑定VAO
+		glGenBuffers(1, &PVBOS->at(VBO_VERTEX));//new一个顶点缓冲对象，存在VBO中
+		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_VERTEX)); //设置当前VBO上下文
 		/*
-		* ����������ݹ��࣬��Ǩ�Ƶ�ѭ���зֿ鴦��
-		  3���������������Կ���ȾЧ�ʣ�
-		  GL_STATIC_DRAW ���ݲ���
-		  GL_DYNAMIC_DRAW ���ݻ�ı�ܶ�
-		  GL_STREAM_DRAW ����ÿ�λ��ƶ���ı�
+		* 如果顶点数据过多，则迁移到循环中分块处理
+		  3个参数用于提升显卡渲染效率：
+		  GL_STATIC_DRAW 数据不变
+		  GL_DYNAMIC_DRAW 数据会改变很多
+		  GL_STREAM_DRAW 数据每次绘制都会改变
 		*/
 		//glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(vertices), vertices, GL_STATIC_DRAW);
 		
-		glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);//�Ȱ󶨿�ָ�룬ֱ�Ӱ󶨴����Դ����������
-		// gpu����ָ��־�ӳ��cpu������
+		glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);//先绑定空指针，直接绑定存在显存溢出的问题
+		// gpu数据指针持久映射cpu缓冲区
 		float* verticesBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesSize * sizeof(float), GL_MAP_WRITE_BIT);//| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
 		if (!verticesBuffer) return false;
-		std::memcpy(verticesBuffer, this->vertices, sizeof(float) * verticesSize);//�����ڴ浽gpu
-		glUnmapBuffer(GL_ARRAY_BUFFER);//����ȡ��ӳ��
+		std::memcpy(verticesBuffer, this->vertices, sizeof(float) * verticesSize);//拷贝内存到gpu
+		glUnmapBuffer(GL_ARRAY_BUFFER);//必须取消映射
 		/*
-			-1.���ö�������ָ��
-			0.���������׸�Ԫ�ص�����
-			1.���ٸ��������һ��vec����
-			2.vec������������
-			3.�Ƿ�����ݹ�һ��(0-1)��?
-			4.һ��vec����Ĵ�С
-			5.�����ڻ�������ʼλ�õ�ƫ����
+			-1.设置顶点属性指针
+			0.顶点数据首个元素的索引
+			1.多少个数据组成一个vec对象
+			2.vec对象数据类型
+			3.是否把数据归一化(0-1)中?
+			4.一个vec对象的大小
+			5.数据在缓冲中起始位置的偏移量
 		*/
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);//�����������ԣ�Ĭ������Ϊ0�ĵط���ʼ����
+		glEnableVertexAttribArray(0);//启动顶点属性，默认索引为0的地方开始启用
 		if (eboMode) {
 			glGenBuffers(1, &EBO);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize * sizeof(unsigned int), nullptr, GL_STATIC_DRAW);
-			// gpu����ָ��־�ӳ��cpu������| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+			// gpu数据指针持久映射cpu缓冲区| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
 			unsigned int* indicesBuffer = (unsigned int*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, indicesSize * sizeof(unsigned int), GL_MAP_WRITE_BIT );
 			if (!indicesBuffer) return false;
-			std::memcpy(indicesBuffer, this->indices, sizeof(unsigned int) * indicesSize);//�����ڴ浽gpu
-			glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);//���������Ҫcpu�ϵ�gpuָ�룬��ȡ��ӳ��
+			std::memcpy(indicesBuffer, this->indices, sizeof(unsigned int) * indicesSize);//拷贝内存到gpu
+			glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);//如果不再需要cpu上的gpu指针，就取消映射
 		}
-		//�ֿ�������ϴ���gpu  55
-		position = glm::rotate(glm::mat4(1.0f), glm::radians(DEFAULT_MODEL_X_RADIANS), glm::vec3(1.0f, 0.0f, 0.0f)); //Ĭ��ģ��Ϊ����45�ȵ���ʽ
+		//分块把数据上传到gpu  55
+		position = glm::rotate(glm::mat4(1.0f), glm::radians(DEFAULT_MODEL_X_RADIANS), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
 		pshader = new Shader;
 		return pshader->CreateShader(vertexShader,colorShader);
 	}
 
 	/// <summary>
-	/// ����ģ�͵���ͼ
+	/// 设置模型的贴图
 	/// </summary>
 	/// <returns></returns>
 	bool Model::SetTexture(unsigned char* texture, unsigned char* specularTexture,int width, int height, int nrChannels, float datas[], int size, bool gammaCorrection) {
@@ -135,41 +135,41 @@ namespace GL {
 			glBindVertexArray(VAO);
 			glGenBuffers(1, &PVBOS->at(VBO_TEXTURE));
 			glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_TEXTURE));
-			glBufferData(GL_ARRAY_BUFFER, size * sizeof(float), nullptr, GL_STATIC_DRAW);//�󶨿�ָ��| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+			glBufferData(GL_ARRAY_BUFFER, size * sizeof(float), nullptr, GL_STATIC_DRAW);//绑定空指针| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
 			float* textureBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, size * sizeof(float), GL_MAP_WRITE_BIT );
 			if (!textureBuffer) return false;
-			std::memcpy(textureBuffer, datas, sizeof(float) * size);//�����ڴ浽gpu
+			std::memcpy(textureBuffer, datas, sizeof(float) * size);//拷贝内存到gpu
 			glUnmapBuffer(GL_ARRAY_BUFFER);
-			//��Ϊ��������ĵ�λ������2.����ָ��2
+			//因为纹理对象的单位长度是2.所以指定2
 			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 			glEnableVertexAttribArray(1);
 			for (int i = 0; i < 2; ++i) {
-				//��������
+				//作用纹理
 				glGenTextures(1, i == 0 ? &TEXTURE : &SPECULAR_TEXTURE);
 				i == 0 ? glActiveTexture(GL_TEXTURE0) : glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, i == 0 ? TEXTURE : SPECULAR_TEXTURE);
-				//����������ķ�Χ����0-1��������Χ���ֲ�
+				//当纹理坐标的范围超出0-1，超出范围用弥补
 				float borderColor[] = { 255.0f, 255.0f, 255.0f, 1.0f };
 				glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 				/*
-					�����������˷�ʽ����ģ�ͷŴ����Сʱ�����ı仯��ʽ������ʹ��Զ����ֵ��
+				设置纹理过滤方式，当模型放大或缩小时纹理的变化方式，这里使用远近差值法
 				*/
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			}
 		}
 		else {
-			//����ǰ��vbo�������������ͼ��
+			//给当前的vbo纹理对象绑定纹理图象
 			if (texture) {
 				hasTexture = true;
-				/*�����2��������ͼ��opengl�Ḳ�ǵ�����ͼ�����ݣ����ǲ����ͷ��ڴ棬�����һ�ε�
-				���õ���ͼ�ڴ�ȵڶ��δ�ʵ�ʵ����������ڴ滹�Ǻ͵�һ�ε�һ����ֻ���²��ֵĶ����ڴ汻
-				���ǵ���*/
+				/*如果是2次设置贴图，opengl会覆盖掉旧贴图的数据，但是不会释放内存，如果第一次的
+				作用的贴图内存比第二次大，实际的纹理对象内存还是和第一次的一样，只是新部分的对象内存被
+				覆盖掉了*/
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, TEXTURE);
 				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-				//GPUҪ��ͼƬ���ȵĴ�Сһ����4�ı�������Ҫǰ�����ţ�����תΪRGBA����ΪRGBAͼƬһ����4�ı���
-				//ʹ���ڴ����ķ�ʽ���ϴ�ͼƬ���ݵ�gpu�������ʧһ����Ч��
+				//GPU要求图片宽度的大小一定是4的倍数，需要前置缩放，或者转为RGBA，因为RGBA图片一定是4的倍数
+				//使用内存对齐的方式来上传图片数据到gpu，这会损失一定的效率
 				glTexImage2D(GL_TEXTURE_2D, 0, gammaCorrection ? GL_SRGB : GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
 				glGenerateMipmap(GL_TEXTURE_2D);
 			}
@@ -217,14 +217,14 @@ namespace GL {
 	/// <returns></returns>
 	glm::mat4 Model::UpdatePoisition(Data& data) {
 		if ((!data.rotateX && !data.rotateZ)) return position;//(!rotateX && !rotateZ) || 
-		// �Ƚ�ģ��ƽ�Ƶ�ָ�����ģ���ʹ��ģ��ʼ��Χ��������������ת
+		// 先将模型平移到指定中心，以使得模型始终围绕自身的中心旋转
 		glm::mat4 translationToCenter = glm::translate(glm::mat4(1.0f), centerPosition);
 		position = translationToCenter;
 		if (data.rotateX) {
 			float x = data.enable ? data.rotationX + data.lastRotationX : data.lastRotationX;//lastRotationX
 			float rotationAngle = Util::NormalizeAngle(x, 360.0f);
-			// ������ת�Ƕ�
-			 // ������180�ȵĽǶ�ת����������Χ��
+			// 限制旋转角度
+			 // 将大于180度的角度转换到负方向范围内
 			//if (rotationAngle > 180.0f) {
 			//	rotationAngle -= 360.0f;
 			//}
@@ -258,32 +258,32 @@ namespace GL {
 		else {
 			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(data.lastRotationZ, 360.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
 		}
-		// �ٽ�ģ��ƽ�ƻ�ԭ����λ��
+		// 再将模型平移回原来的位置
 		glm::mat4 translationBack = glm::translate(glm::mat4(1.0f), glm::vec3(-centerPosition.x, -centerPosition.y, 0.0f));
 		position = position * translationBack;
 		return position;
 	}
 
 	/// <summary>
-	/// ��Ⱦ����
+	/// 渲染绘制
 	/// </summary>
 	void Model::Render(const Data& data) {
 		glBindVertexArray(VAO);
-		if (data.drawMode == DRAW_MODE_POINT) { //���Ƶ���
+		if (data.drawMode == DRAW_MODE_POINT) { //绘制点云
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glDrawElements(GL_POINTS, indicesSize, GL_UNSIGNED_INT, 0);
 		}
-		else if (data.drawMode == DRAW_MODE_GRID) { //��������
+		else if (data.drawMode == DRAW_MODE_GRID) { //绘制网格
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
 		}
 		else {
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); //������
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); //绘制面
 			glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
 		}
 		
 		//int indicesCount = indicesSize / 3;
-		//// ��ÿһ�鶥�����ݣ�����ϴ��������ݲ�����
+		//// 对每一块顶点数据，逐块上传索引数据并绘制
 		//for (int i = 0; i < indicesCount; i += PLANE_BLOCK_SIZE) {
 		//	int currentBlockSize = std::min(PLANE_BLOCK_SIZE, indicesCount - i);
 		//	int indicesIndex = i * 3;
@@ -293,31 +293,31 @@ namespace GL {
 		//	0,1,0,
 		//	1,1,0
 		//	*/
-		//	// ����һ����ʱ����洢��Ҫ�Ķ������ݣ�һ����������[0,1,2]����*3�����Ķ�������
+		//	// 创建一个临时数组存储需要的顶点数据，一个索引数组[0,1,2]代表*3倍数的顶点数据
 		//	float* tempVertices = new float[currentBlockSize * 3 * 3];
 		//	int* tempIndices = new int[currentBlockSize * 3];
 		//	int tempIndex = 0;
-		//	for (int j = 0; j < currentBlockSize * 3; ++j) {//����һ��ֻ��ȡ����������һ��λ�õ�ֵ��һ��λ�õ�ֵ��Ӧ�Ķ���������3��
+		//	for (int j = 0; j < currentBlockSize * 3; ++j) {//我们一次只读取了索引数组一个位置的值，一个位置的值对应的顶点数据是3个
 		//		int index = indices[indicesIndex++];
 		//		tempVertices[tempIndex++] = vertices[index * 3 + 0];
 		//		tempVertices[tempIndex++] = vertices[index * 3 + 1];
 		//		tempVertices[tempIndex++] = vertices[index * 3 + 2];
 		//		tempIndices[j] = j;
 		//	}
-		//	//�ϴ���ʱ�������ݵ�VBO
+		//	//上传临时顶点数据到VBO
 		//	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		//	glBufferData(GL_ARRAY_BUFFER, currentBlockSize * 3 * 3 * sizeof(float), tempVertices, GL_DYNAMIC_DRAW);
-		//	//�ٰ�EBO
+		//	//再绑定EBO
 		//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		//	//*3����Ϊ����һ����������
+		//	//*3是因为代表一组索引数组
 		//	glBufferData(GL_ELEMENT_ARRAY_BUFFER, currentBlockSize * 3 * sizeof(unsigned int), tempIndices, GL_DYNAMIC_DRAW);
-		//	// ���Ƶ�ǰ��Ķ���
+		//	// 绘制当前块的顶点
 		//	glDrawElements(GL_TRIANGLES, currentBlockSize * 3, GL_UNSIGNED_INT, 0);
 		//}
 	}
 
 	/// <summary>
-	/// ����ģ�͵���ʼ����
+	/// 重置模型到初始坐标
 	/// </summary>
 	glm::mat4 Model::ReSetPoisition() {
 		position = glm::rotate(glm::mat4(1.0f), glm::radians(DEFAULT_MODEL_X_RADIANS), glm::vec3(1.0f, 0.0f, 0.0f)); //Ĭ��ģ��Ϊ����45�ȵ���ʽ
@@ -325,20 +325,20 @@ namespace GL {
 	}
 
 	/// <summary>
-	/// ���㵱ǰģ�͵Ķ��㷨��
+	/// 计算当前模型的顶点法线
 	/// </summary>
 	bool Model::CalculateVertexNormals() {
-		//���߼�����Ҫ�������ݺ�������������ݣ�û��ֱ�ӷ���
+		//法线计算需要顶点数据和索引数组的数据，没有直接返回
 		if (!PVBOS->at(VBO_VERTEX) || !EBO) return false;
-		normalSize = verticesSize;//�����������Ͷ�����������ͬ
+		normalSize = verticesSize;//法线数据量和顶点数据量相同
 		normals = new float[normalSize];
 		int normalsv3Size = normalSize / 3;
 		glm::vec3* normalsv3 = new glm::vec3[normalsv3Size];
 		for (int i = 0; i < normalsv3Size; ++i) {
-			normalsv3[i] = glm::vec3(0.0f, 0.0f, 0.0f); //��ʼ��ֵ
+			normalsv3[i] = glm::vec3(0.0f, 0.0f, 0.0f); //初始化值
 		}
 		for (int i = 0; i < indicesSize; i += 3) {
-			//���������һ���棬һ������Ҫ�������꣬������Ҫ9����������
+			//三个点组成一个面，一个点需要三个坐标，所以需要9个坐标数据
 			int index = i;
 			const glm::vec3& v1 = glm::vec3(vertices[indices[index] * 3 + 0], vertices[indices[index] * 3 + 1], vertices[indices[index] * 3 + 2]);
 			++index;
@@ -350,7 +350,7 @@ namespace GL {
 			normalsv3[indices[i + 1]] += normal;
 			normalsv3[indices[i + 2]] += normal;
 		}
-		//�洢���ߵ�ʵ������
+		//存储法线的实际数据
 		for (int i = 0; i < normalsv3Size; ++i) {
 			const glm::vec3& normal = glm::normalize(normalsv3[i]);
 			normals[i * 3 + 0] = normal.x;
@@ -360,7 +360,7 @@ namespace GL {
 			Util::WriteLog(L"vec3_normal"+ std::to_wstring(i) + L":" + std::to_wstring(normal.x) + L"," + std::to_wstring(normal.y) + L"," + std::to_wstring(normal.z));*/
 		}
 		delete[] normalsv3;
-		//�󶨷���VBO
+		//绑定法线VBO
 		glBindVertexArray(VAO);
 		glGenBuffers(1, &PVBOS->at(VBO_NORMAL));
 		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_NORMAL));
@@ -375,11 +375,11 @@ namespace GL {
 	}
 
 	/// <summary>
-	/// ���㷨����ͼ����صĹ���
+	/// 计算法线贴图的相关的工作
 	/// </summary>
 	bool Model::CalculateNormalsTexture() {
 		
-		if (width != 0 && height != 0) { //���·�����ͼ
+		if (width != 0 && height != 0) { //更新法线贴图
 			auto normalMap = Util::ConvertNormalsToNormalMap(normals, width - 1, height - 1);
 			normalMap.convertTo(normalMap, CV_8UC3, 255.0);
 			cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
@@ -399,15 +399,15 @@ namespace GL {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-			//������ͼ��Ҫԭʼ����ֵ������Ҫ��٤��У��
+			//法线贴图需要原始数据值，不需要用伽马校正
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, normalMap.cols, normalMap.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 			glGenerateMipmap(GL_TEXTURE_2D);
 			this->tangents = new float[verticesSize];
 			this->bitangents = new float[verticesSize];
-			//�������ߺ͸�����
+			//计算切线和副切线
 			Util::CalculateTangentAndBitangent(vertices,uvs,normals,verticesSize,tangents,bitangents);
 			glBindVertexArray(VAO);
-			//�����ߺ͸�����VBO����С����vertices����Ĵ�С
+			//绑定切线和副切线VBO，大小都是vertices数组的大小
 			glGenBuffers(1, &PVBOS->at(VBO_TANGENTS));
 			glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_TANGENTS));
 			glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);
@@ -427,8 +427,8 @@ namespace GL {
 			glUnmapBuffer(GL_ARRAY_BUFFER);
 			glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 			glEnableVertexAttribArray(4);
-			//ֵ����
-			// ��������ͼת��Ϊ8λͼ�񲢱���
+			//值传入
+			// 将法线贴图转换为8位图像并保存
 			normalMap.convertTo(normalMap, CV_8UC3, 255.0);
 			cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
 			cv::imwrite("C:\\Users\\User\\Desktop\\Atest\\fast.png", normalMap);
