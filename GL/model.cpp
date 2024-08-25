@@ -378,8 +378,19 @@ namespace GL {
 	/// 计算法线贴图的相关的工作
 	/// </summary>
 	bool Model::CalculateNormalsTexture() {
+		
 		if (width != 0 && height != 0) { //更新法线贴图
 			auto normalMap = Util::ConvertNormalsToNormalMap(normals, width - 1, height - 1);
+			normalMap.convertTo(normalMap, CV_8UC3, 255.0);
+			cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
+			unsigned char* data = new unsigned char[normalMap.total() * normalMap.elemSize()];
+			std::memcpy(data, normalMap.data, normalMap.total() * normalMap.elemSize());
+			/*auto normalMap = cv::imread("E:\\open3d\\OpenGLDemo\\x64\\Debug\\Data\\a.jpg", cv::ImreadModes::IMREAD_UNCHANGED);
+			cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
+			cv::flip(normalMap, normalMap, 0);
+			if (!normalMap.isContinuous())normalMap = normalMap.clone();*/
+			/*unsigned char* data = new unsigned char[normalMap.total() * normalMap.elemSize()];
+			std::memcpy(data, normalMap.data, normalMap.total() * normalMap.elemSize());*/
 			glGenTextures(1, &NORMALS_TEXTURE);
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, NORMALS_TEXTURE);
@@ -389,7 +400,7 @@ namespace GL {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 			//法线贴图需要原始数据值，不需要用伽马校正
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, normalMap.data);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, normalMap.cols, normalMap.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 			glGenerateMipmap(GL_TEXTURE_2D);
 			this->tangents = new float[verticesSize];
 			this->bitangents = new float[verticesSize];

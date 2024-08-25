@@ -52,7 +52,7 @@ namespace GL {
 		bool success = model->CreateModel(vShader, cShader, false, pvertices, vsize, pindices, isize, outWidth, outHeight);
 		CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
 		model->CalculateVertexNormals();//计算法线
-		model->CalculateNormalsTexture();//计算法线贴图
+		//model->CalculateNormalsTexture();//计算法线贴图
 		model->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->ReSetPoisition();
@@ -89,7 +89,7 @@ namespace GL {
 		bool success = model->CreateModel(vShader, cShader, false, pvertices, vsize, pindices, isize, outWidth, outHeight);
 		CreateModelTexture("", model, ptextures, tsize);//初始化纹理对象
 		model->CalculateVertexNormals();//计算法线
-		model->CalculateNormalsTexture();//计算法线贴图
+		//model->CalculateNormalsTexture();//计算法线贴图
 		model->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->ReSetPoisition();

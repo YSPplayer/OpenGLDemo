@@ -230,7 +230,7 @@ namespace GL {
             /// <param name="bitangents"></param>
             static void CalculateTangentAndBitangent(const float* vertices, const float* uvs, const float* normals,
                 int vertexCount, float* tangents, float* bitangents) {
-                for (int i = 0; i < vertexCount / 3; i += 3) {
+                for (int i = 0; i < vertexCount / 3; i+=3) {
                     // 获取三角形的三个顶点
                     glm::vec3 vertex1(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2]);
                     glm::vec3 vertex2(vertices[(i + 1) * 3], vertices[(i + 1) * 3 + 1], vertices[(i + 1) * 3 + 2]);
@@ -270,6 +270,56 @@ namespace GL {
                     bitangents[i * 3 + 1] = bitangent.y;
                     bitangents[i * 3 + 2] = bitangent.z;
                 }
+                //std::vector<glm::vec3> tempTangents(vertexCount / 3, glm::vec3(0.0f));
+                //std::vector<glm::vec3> tempBitangents(vertexCount / 3, glm::vec3(0.0f));
+
+                //for (int i = 0; i < vertexCount / 3; i += 3) { // 这里的i是三角形的顶点索引
+                //    // 获取三角形的三个顶点
+                //    glm::vec3 vertex1(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2]);
+                //    glm::vec3 vertex2(vertices[(i + 1) * 3], vertices[(i + 1) * 3 + 1], vertices[(i + 1) * 3 + 2]);
+                //    glm::vec3 vertex3(vertices[(i + 2) * 3], vertices[(i + 2) * 3 + 1], vertices[(i + 2) * 3 + 2]);
+
+                //    // 获取三角形的三个UV坐标
+                //    glm::vec2 uv1(uvs[i * 2], uvs[i * 2 + 1]);
+                //    glm::vec2 uv2(uvs[(i + 1) * 2], uvs[(i + 1) * 2 + 1]);
+                //    glm::vec2 uv3(uvs[(i + 2) * 2], uvs[(i + 2) * 2 + 1]);
+
+                //    // 计算三角形的边和UV差异
+                //    glm::vec3 edge1 = vertex2 - vertex1;
+                //    glm::vec3 edge2 = vertex3 - vertex1;
+                //    glm::vec2 deltaUV1 = uv2 - uv1;
+                //    glm::vec2 deltaUV2 = uv3 - uv1;
+
+                //    // 计算f因子
+                //    float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+                //    // 计算切线和副切线
+                //    glm::vec3 tangent = f * (deltaUV2.y * edge1 - deltaUV1.y * edge2);
+                //    glm::vec3 bitangent = f * (deltaUV1.x * edge2 - deltaUV2.x * edge1);
+
+                //    // 将结果累加到所有三个顶点上
+                //    tempTangents[i] += tangent;
+                //    tempTangents[i + 1] += tangent;
+                //    tempTangents[i + 2] += tangent;
+
+                //    tempBitangents[i] += bitangent;
+                //    tempBitangents[i + 1] += bitangent;
+                //    tempBitangents[i + 2] += bitangent;
+                //}
+
+                //// 正规化并复制到输出数组
+                //for (int i = 0; i < vertexCount / 3; i+= 3) {
+                //    glm::vec3 normTangent = glm::normalize(tempTangents[i]);
+                //    glm::vec3 normBitangent = glm::normalize(tempBitangents[i]);
+
+                //    tangents[i * 3] = normTangent.x;
+                //    tangents[i * 3 + 1] = normTangent.y;
+                //    tangents[i * 3 + 2] = normTangent.z;
+
+                //    bitangents[i * 3] = normBitangent.x;
+                //    bitangents[i * 3 + 1] = normBitangent.y;
+                //    bitangents[i * 3 + 2] = normBitangent.z;
+                //}
             }
 
             /// <summary>
