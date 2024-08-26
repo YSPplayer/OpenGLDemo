@@ -28,11 +28,13 @@ in vec3 FragPos;
 in vec3 tangentLightPos;
 in vec3 tangentViewPos;
 in vec3 tangentFragPos;
+in vec3 ColorMap;
 uniform sampler2D defaultTexture;//通常贴图(漫反射贴图)
 uniform sampler2D specularTexture;//镜面反射贴图
 uniform sampler2D normalMap;//法线贴图
 uniform bool useTexture;
 uniform bool useLight;
+uniform bool useColorMap;
 uniform vec3 viewPos;
 uniform vec3 defaultObjectColor;
 uniform Material material;
@@ -49,6 +51,8 @@ void main() {
 	vec3 norm = vec3(0.0, 0.0, 0.0);
 	if(useTexture) {
 	   objectColor = texture(defaultTexture, TexCoord).rgb;
+	} else if(useColorMap) {
+		objectColor = ColorMap;
 	} else {
 		objectColor = defaultObjectColor;
 	}
@@ -102,7 +106,11 @@ void main() {
 			specular = light.specular * (spec * texture(specularTexture, TexCoord).rgb);//镜面光  
 		} else {
 			ambient = light.ambient * material.ambient;//环境光
-			diffuse = light.diffuse * (diff * material.diffuse);//漫反射光     
+			if(useColorMap) {
+				diffuse = light.diffuse * (diff * objectColor);//用colorMap替换模型颜色
+			} else {
+				diffuse = light.diffuse * (diff * material.diffuse);//漫反射光  
+			}
 			specular = light.specular * (spec * material.specular);//镜面光   
 		}
 		if(lightType == 3) {//聚光调节,为了让聚光的边缘看起来变化的更平缓

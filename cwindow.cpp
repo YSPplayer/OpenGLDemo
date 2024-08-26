@@ -35,6 +35,7 @@ namespace GL {
 			data.useTexture = true;
 			data.rotateZ = false;
 			data.rotateX = false;
+			data.useColorMap = true;
 			data.gammaCorrection = true;
 			data.yaw = -90.0f;
 			data.pitch = 0.0f;

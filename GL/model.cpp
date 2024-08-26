@@ -235,7 +235,7 @@ namespace GL {
 			//	rotationAngle = 0.0f;
 			//}
 			//data.lastRotationX = rotationAngle;
-			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f)); //�Ƚ���X�����ת
+			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f)); 
 		}
 		else {
 			float rotationAngle = Util::NormalizeAngle(data.lastRotationX, 360.0f);
@@ -249,11 +249,11 @@ namespace GL {
 				rotationAngle = 0.0f;
 			}
 			data.lastRotationX = rotationAngle;*/
-			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f)); //�Ƚ���X�����ת
+			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f));
 		}
 		if (data.rotateZ) {
 			float z = data.enable ? data.rotationZ + data.lastRotationZ : data.lastRotationZ;
-			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(z, 360.0f)), glm::vec3(0.0f, 0.0f, 1.0f));//������Z����ת����ʱ����ʵ��Χ���Լ��Զ���ת��Ч��
+			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(z, 360.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
 		}
 		else {
 			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(data.lastRotationZ, 360.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -320,7 +320,7 @@ namespace GL {
 	/// 重置模型到初始坐标
 	/// </summary>
 	glm::mat4 Model::ReSetPoisition() {
-		position = glm::rotate(glm::mat4(1.0f), glm::radians(DEFAULT_MODEL_X_RADIANS), glm::vec3(1.0f, 0.0f, 0.0f)); //Ĭ��ģ��Ϊ����45�ȵ���ʽ
+		position = glm::rotate(glm::mat4(1.0f), glm::radians(DEFAULT_MODEL_X_RADIANS), glm::vec3(1.0f, 0.0f, 0.0f)); 
 		return position;
 	}
 
@@ -333,6 +333,7 @@ namespace GL {
 		if (!PVBOS->at(VBO_MAPCOLOR)) {
 			glGenBuffers(1, &PVBOS->at(VBO_MAPCOLOR));
 		}
+		//下次再次调用会替换原先的内存，不用重新创建一个vbo
 		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_MAPCOLOR));
 		glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);
 		float* colorMapsBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesSize * sizeof(float), GL_MAP_WRITE_BIT);

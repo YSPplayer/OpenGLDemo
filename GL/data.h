@@ -39,6 +39,11 @@ namespace GL {
 		unsigned int index2;
 		unsigned int index3;
 	};
+	enum MapColorType {
+		Gold,
+		Rainbow,
+		Max
+	};
 	struct Data {
 		//屏幕长宽
 		int width;
@@ -80,6 +85,8 @@ namespace GL {
 		bool blinn;//是否启用Blinn-Phong光照 高光更柔和，适合表现较为光滑、漫反射较多的表面。  Phong:高光点更尖锐，适合表现较硬的、高度反射的表面。
 		bool gammaCorrection;//光照伽马校正-图像亮度更自然，细节保留更好，整体视觉效果更符合人眼的感知
 		bool useNormalTexture;//是否启用法线贴图
+		bool useColorMap;//是否启用colorMap
+		MapColorType colorMapType;//colorMap的类型
 	};
 	//UI组件存放的数据
 	struct UData {
@@ -99,11 +106,7 @@ namespace GL {
 		glm::vec3 specular; //镜面高光的颜色   
 		float shininess;//光的散射半径
 	};
-	enum MapColorType {
-		Gold,
-		Rainbow,
-		Max
-	};
+
 
 
 }

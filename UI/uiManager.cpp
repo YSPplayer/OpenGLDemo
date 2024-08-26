@@ -319,6 +319,7 @@ namespace GL {
 					float(*colors)[4] = data.colors;
 					static float color[4] = { 255.0f, 255.0f, 255.0f, 255.0f };
 					if (ImGui::TreeNode(u8"颜色")) {
+						ImGui::Text(u8"1.原色");
 						float maxWidth = ImGui::GetContentRegionAvail().x;
 						if (ImGui::ColorButton("##colorbutton0", ImVec4(colors[0][0], colors[0][1], colors[0][2], colors[0][3]), ImGuiColorEditFlags_NoTooltip, ImVec2(maxWidth / 8.0f, maxWidth / 12.0f))) {
 							colors[0][0] = color[0];
@@ -345,6 +346,22 @@ namespace GL {
 						ImGui::SameLine();
 						ImGui::Text(u8"光照颜色");
 						ImGui::ColorPicker4("##picker", color);
+						ImGui::Text(u8"");
+						ImGui::Text(u8"2.伪彩色");
+						ImGui::Checkbox(u8"启用伪彩色", &data.useColorMap);
+						const char* color1 = u8"黄铜色";
+						const char* color2 = u8"七彩色";
+						for (int i = 0; i < 2; i++) {
+
+							if (ImGui::Selectable(i == 0 ? color1 : color2 , data.colorMapType == i)) {
+								MapColorType colorMapType = static_cast<MapColorType>(i);
+								if (data.colorMapType != colorMapType) {
+									data.colorMapType = colorMapType;
+									Model* model = glmanager->GetCurrentModel();
+									model->SetColorMap(colorMapType);
+								}
+							}
+						}
 						ImGui::TreePop();
 					}
 					ImGui::Text(u8"");

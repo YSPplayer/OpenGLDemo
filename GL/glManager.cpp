@@ -56,7 +56,7 @@ namespace GL {
 		//model->CalculateNormalsTexture();//计算法线贴图
 		model->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		model->colorMaps = colorMaps;
-		model->SetColorMap(MapColorType::Rainbow);
+		model->SetColorMap(CWindow::data.colorMapType);
 		cmaera->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->ReSetPoisition();
 		lightControl->lightPos = glm::vec3(centerPos.x, centerPos.y + (lightMax / 2.0f) + 1.0f, centerPos.z);
@@ -95,7 +95,7 @@ namespace GL {
 		model->CalculateVertexNormals();//计算法线
 		//model->CalculateNormalsTexture();//计算法线贴图
 		model->colorMaps = colorMaps;
-		model->SetColorMap(MapColorType::Rainbow);
+		model->SetColorMap(CWindow::data.colorMapType);
 		model->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->SetModelCenterPoisition(glm::vec3(centerPos.x, centerPos.y, 0.0f));
 		cmaera->ReSetPoisition();
@@ -307,6 +307,9 @@ namespace GL {
 
 			//模型颜色
 			shader->SetShaderVec3(glm::vec3(data.colors[1][0], data.colors[1][1], data.colors[1][2]), "defaultObjectColor");
+
+			//伪彩色
+			shader->SetShaderBoolean(data.useColorMap,"useColorMap");
 
 			//模型贴图
 			shader->SetShaderBoolean(data.useTexture && model->HasTexture(), "useTexture");
