@@ -64,6 +64,7 @@ namespace GL {
 		float yaw;
 		bool isYaw;
 		bool reset;//重置模型+相机位置
+		bool angleLimite;//限制旋转角度
 		int drawMode;//绘制模式
 		float ambientStrength;//环境光照调节因子
 		float specularStrength;//镜面光照调节因子

@@ -449,6 +449,13 @@ namespace GL {
 						ImGui::Checkbox(u8"背景透明", &data.transparentBg);
 						ImGui::SameLine();
 						ImGui::Checkbox(u8"背面剔除", &data.cullBackFace);
+						ImGui::SameLine();
+						bool checkboxValue = data.angleLimite;  // 复制原始值
+						ImGui::Checkbox(u8"旋转限制", &data.angleLimite);
+						if (checkboxValue != data.angleLimite) {
+							//checkbox变化时触发，角度限制发生变化时一律先重置模型
+							data.reset = true;
+						}
 						ImGui::Text(u8"");
 						ImGui::SliderFloat(u8"相机移动速度", &data.moveSpeedUnit, 1.0f, 10.0f);
 						ImGui::Text(u8"");

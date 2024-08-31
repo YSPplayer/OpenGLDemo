@@ -34,6 +34,7 @@ namespace GL {
 			data.beta = 50;
 			data.useLight = true;
 			data.useTexture = true;
+			data.angleLimite = false;
 			data.rotateZ = false;
 			data.rotateX = false;
 			data.useColorMap = true;
@@ -203,41 +204,38 @@ namespace GL {
 			else {
 				firstMouse = true;//重置相机视角的移动变量
 				if (self->mousePressed) {
-					float increment_z;
-					data.lastRotationZ += (xpos - self->lastX) * data.modelSensitivity / 3.0f;
-					data.lastRotationZ = fmod(data.lastRotationZ, 360.0f); // 规范化角度到0-360度
-					if (data.lastRotationZ < 0) data.lastRotationZ += 360.0f; // 处理负角度的情况
-
-					data.rotateZ = true;
-
-					self->lastX = xpos;
-					float increment_x = (ypos - self->lastY) * data.modelSensitivity / 3.0f;
-
-					data.lastRotationX += increment_x;
-					data.lastRotationX = fmod(data.lastRotationX, 360.0f); // 同样规范化X轴角度
-					if (data.lastRotationX < 0) data.lastRotationX += 360.0f;
-
-					data.rotateX = true;
-					self->lastY = ypos;
-					//float increment_z;
-					//data.lastRotationZ = data.lastRotationZ + ((xpos - self->lastX) * data.modelSensitivity / 3.0f);
-					//data.rotateZ = true;
-					//int axle = 0;
-					//if (data.lastRotationZ > 0.0f) increment_z = static_cast<int>(data.lastRotationZ) % 360;
-					//else increment_z = static_cast<float>(static_cast<int>(data.lastRotationZ) % 360) + 360.0f; // 对整数角度进行模数运算
-					//if (increment_z > 90.0f && increment_z <= 180.0f) axle = 1;
-					//else if (increment_z > 180.0f && increment_z <= 270.0f) axle = 2;
-					//else if (increment_z > 270.0f && increment_z <= 360.0f) axle = 3;
-					//else axle = 0;
-					//if (data.lastRotationX > 0 && data.lastRotationX < 90) axle = (axle + 2) % 4; 
-					//self->lastX = xpos;
-					//float increment_x = ((ypos - self->lastY) * data.modelSensitivity / 3.0f);
-					//if ((data.lastRotationX + increment_x <= 90.0f && data.lastRotationX + increment_x >= 0.0f)
-					//	|| (data.lastRotationX + increment_x < 0.0f && data.lastRotationX + increment_x >= -90.0f)) {
-					//	data.rotateX = true;
-					//	data.lastRotationX += (ypos - self->lastY) / 3.0f;
-					//	self->lastY = ypos;
-					//}
+					if (data.angleLimite) {
+						float increment_z;
+						data.lastRotationZ = data.lastRotationZ + ((xpos - self->lastX) * data.modelSensitivity / 3.0f);
+						data.rotateZ = true;
+						int axle = 0;
+						if (data.lastRotationZ > 0.0f) increment_z = static_cast<int>(data.lastRotationZ) % 360;
+						else increment_z = static_cast<float>(static_cast<int>(data.lastRotationZ) % 360) + 360.0f; // 对整数角度进行模数运算
+						if (increment_z > 90.0f && increment_z <= 180.0f) axle = 1;
+						else if (increment_z > 180.0f && increment_z <= 270.0f) axle = 2;
+						else if (increment_z > 270.0f && increment_z <= 360.0f) axle = 3;
+						else axle = 0;
+						if (data.lastRotationX > 0 && data.lastRotationX < 90) axle = (axle + 2) % 4; 
+						self->lastX = xpos;
+						float increment_x = ((ypos - self->lastY) * data.modelSensitivity / 3.0f);
+						if ((data.lastRotationX + increment_x <= 90.0f && data.lastRotationX + increment_x >= 0.0f)
+							|| (data.lastRotationX + increment_x < 0.0f && data.lastRotationX + increment_x >= -90.0f)) {
+							data.rotateX = true;
+							data.lastRotationX += (ypos - self->lastY) / 3.0f;
+							self->lastY = ypos;
+						}
+					}
+					else {
+						data.lastRotationZ += (xpos - self->lastX) * data.modelSensitivity / 3.0f;
+						data.lastRotationZ = Util::NormalizeAngle(data.lastRotationZ, 360.0f); // 规范化角度到0-360度
+						data.rotateZ = true;
+						self->lastX = xpos;
+						float increment_x = (ypos - self->lastY) * data.modelSensitivity / 3.0f;
+						data.lastRotationX += increment_x;
+						data.lastRotationX = Util::NormalizeAngle(data.lastRotationX, 360.0f); // 同样规范化X轴角度
+						data.rotateX = true;
+						self->lastY = ypos;
+					}
 				}
 			}
 			data.enable = self->mousePressed;
@@ -264,7 +262,7 @@ namespace GL {
 		void CWindow::UpdateScroll(GLFWwindow* window, double xoffset, double yoffset) {
 			if (data.aspect >= 0.0f && data.aspect <= 3.0f) data.aspect = data.aspect - (yoffset / ((20 - GlManager::aspectUnit) * 10.0f));
 			if (data.aspect <= 0.0f)
-				data.aspect = 0.0f;
+				data.aspect = 0.0f; 
 			if (data.aspect >= 3.0f)
 				data.aspect = 3.0f;
 		}
@@ -278,11 +276,11 @@ namespace GL {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//启用深度测试需要GL_DEPTH_BUFFER_BIT
 			glfwGetWindowSize(window, &data.width, &data.height);//获取到当前窗口的宽高
 			glmanager->Render(data);
+			data.reset = false;
 			uimanager->Render(data);//先绘制模型，后渲染ui，ui层级在模型之上
 			data.rotateZ = false;
 			data.rotateX = false;
 			data.isYaw = false;
-			data.reset = false;
 		}
 
 		void CWindow::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
