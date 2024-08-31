@@ -270,6 +270,8 @@ namespace GL {
 			data.aspect = DEFAULT_ASPECT;//更新默认的视口缩放比例
 			data.yaw = -90.0f;//更新旋转轴参数
 			data.pitch = 0.0f; //更新旋转轴参数
+			data.lastRotationZ = 0.0f; //更新模型旋转位置
+			data.lastRotationX = 0.0f;//更新模型旋转位置
 		}
 		const glm::mat4& view = data.reset ? cmaera->ReSetPoisition() : cmaera->UpdatePoisition(data);
 		const glm::mat4& projection = cmaera->UpdateProjection(data);

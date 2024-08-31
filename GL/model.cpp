@@ -216,54 +216,18 @@ namespace GL {
 	/// <param name="data"></param>
 	/// <returns></returns>
 	glm::mat4 Model::UpdatePoisition(Data& data) {
-		if ((!data.rotateX && !data.rotateZ)) return position;//(!rotateX && !rotateZ) || 
+		if ((!data.rotateX && !data.rotateZ)) return position;
 		// 先将模型平移到指定中心，以使得模型始终围绕自身的中心旋转
 		glm::mat4 translationToCenter = glm::translate(glm::mat4(1.0f), centerPosition);
 		position = translationToCenter;
-		if (data.rotateX) {
-			float x = data.enable ? data.rotationX + data.lastRotationX : data.lastRotationX;//lastRotationX
-			float rotationAngle = Util::NormalizeAngle(x, 360.0f);
-			// 限制旋转角度
-			 // 将大于180度的角度转换到负方向范围内
-			//if (rotationAngle > 180.0f) {
-			//	rotationAngle -= 360.0f;
-			//}
-			//if (rotationAngle > 90.0f) {
-			//	rotationAngle = 90.0f;
-			//}
-			//else if (rotationAngle < 0.0f) {
-			//	rotationAngle = 0.0f;
-			//}
-			//data.lastRotationX = rotationAngle;
-			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f)); 
-		}
-		else {
-			float rotationAngle = Util::NormalizeAngle(data.lastRotationX, 360.0f);
-	/*		if (rotationAngle > 180.0f) {
-				rotationAngle -= 360.0f;
-			}
-			if (rotationAngle > 90.0f) {
-				rotationAngle = 90.0f;
-			}
-			else if (rotationAngle < 0.0f) {
-				rotationAngle = 0.0f;
-			}
-			data.lastRotationX = rotationAngle;*/
-			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f));
-		}
-		if (data.rotateZ) {
-			float z = data.enable ? data.rotationZ + data.lastRotationZ : data.lastRotationZ;
-			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(z, 360.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
-		}
-		else {
-			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(data.lastRotationZ, 360.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
-		}
+		position = glm::rotate(position, glm::radians(data.lastRotationX), glm::vec3(1.0f, 0.0f, 0.0f));
+		position = glm::rotate(position, glm::radians(data.lastRotationZ), glm::vec3(0.0f, 0.0f, 1.0f));
 		// 再将模型平移回原来的位置
 		glm::mat4 translationBack = glm::translate(glm::mat4(1.0f), glm::vec3(-centerPosition.x, -centerPosition.y, 0.0f));
 		position = position * translationBack;
 		return position;
 	}
-
+	                  
 	/// <summary>
 	/// 渲染绘制
 	/// </summary>

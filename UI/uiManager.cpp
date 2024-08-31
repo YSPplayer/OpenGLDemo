@@ -453,6 +453,8 @@ namespace GL {
 						ImGui::SliderFloat(u8"相机移动速度", &data.moveSpeedUnit, 1.0f, 10.0f);
 						ImGui::Text(u8"");
 						ImGui::SliderFloat(u8"相机视角灵敏度", &data.sensitivity, 0.01f, 0.1f);
+						ImGui::Text(u8"");
+						ImGui::SliderFloat(u8"模型旋转灵敏度", &data.modelSensitivity, 0.01f, 1.0f);
 						ImGui::TreePop();
 					}
 				}

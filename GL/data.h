@@ -53,11 +53,9 @@ namespace GL {
 		float moveSpeed;//相机最终移动速度，带有帧率
 		float moveSpeedUnit; //[1-10]
 		float sensitivity;//相机视角灵敏度[0.01-0.1]
-		float rotationZ;
 		float lastRotationZ;
 		float colors[3][4];//存放背景、模型、光照颜色
 		bool rotateZ;
-		float rotationX;
 		float lastRotationX;
 		bool enable;
 		bool rotateX;
@@ -79,6 +77,7 @@ namespace GL {
 		int lightType;//光的类型（平行光 点光源 聚光）
 		float phi;//球体方位角[0 - π] 垂直
 		float theta;//球体极角[-π - π] 水平旋转
+		float modelSensitivity;
 		bool showLightMode;
 		bool sparsePoint;//点云稀疏
 		float zFactor;//Z轴放大倍数

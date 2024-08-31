@@ -29,6 +29,7 @@ namespace GL {
 			data.zFactor = 1.0f;
 			data.blinn = false;
 			data.phi = 0.0f;
+			data.modelSensitivity = 1.0;//数值越小,灵敏度越低
 			data.showLightMode = false;
 			data.beta = 50;
 			data.useLight = true;
@@ -118,9 +119,15 @@ namespace GL {
 			if (button == GLFW_MOUSE_BUTTON_LEFT) {
 				if (action == GLFW_PRESS) {
 					self->mousePressed = true;
-				}
+					double xpos, ypos;
+					glfwGetCursorPos(window, &xpos, &ypos);
+					self->lastX = xpos;
+					self->lastY = ypos;
+				}   
 				else if (action == GLFW_RELEASE) {
 					self->mousePressed = false;
+					self->lastX = 0.0;
+					self->lastY = 0.0;
 				}
 			}
 			else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
@@ -196,34 +203,41 @@ namespace GL {
 			else {
 				firstMouse = true;//重置相机视角的移动变量
 				if (self->mousePressed) {
-					if (self->lastX == 0.0 && self->lastY == 0.0) {
-						self->lastX = xpos;
-						self->lastY = ypos;
-						return;
-					}
-					double xoffset = xpos - self->lastX;
-					double yoffset = ypos - self->lastY;
-					// 使用更小的缩放因子以平滑旋转
-					const double zscaleFactor = 0.3;  // 减小这个值可以减小旋转的灵敏度
-					const double xscaleFactor = 0.08;
-					if (fabs(xoffset) > 8.0) {  // 只有当鼠标移动超过2像素时才更新
-						data.rotateZ = true;
-						data.rotationZ += xoffset * zscaleFactor;
-					}
-					if (fabs(yoffset) > 8.0) {  // 同样的阈值适用于Y轴
-						data.rotateX = true;
-						data.rotationX += yoffset * xscaleFactor;
-					}
+					float increment_z;
+					data.lastRotationZ += (xpos - self->lastX) * data.modelSensitivity / 3.0f;
+					data.lastRotationZ = fmod(data.lastRotationZ, 360.0f); // 规范化角度到0-360度
+					if (data.lastRotationZ < 0) data.lastRotationZ += 360.0f; // 处理负角度的情况
+
+					data.rotateZ = true;
+
 					self->lastX = xpos;
+					float increment_x = (ypos - self->lastY) * data.modelSensitivity / 3.0f;
+
+					data.lastRotationX += increment_x;
+					data.lastRotationX = fmod(data.lastRotationX, 360.0f); // 同样规范化X轴角度
+					if (data.lastRotationX < 0) data.lastRotationX += 360.0f;
+
+					data.rotateX = true;
 					self->lastY = ypos;
-				}
-				else {
-					self->lastX = 0.0;
-					self->lastY = 0.0;
-					data.lastRotationZ += data.rotationZ;
-					data.lastRotationX += data.rotationX;
-					data.rotationZ = 0.0f;
-					data.rotationX = 0.0f;
+					//float increment_z;
+					//data.lastRotationZ = data.lastRotationZ + ((xpos - self->lastX) * data.modelSensitivity / 3.0f);
+					//data.rotateZ = true;
+					//int axle = 0;
+					//if (data.lastRotationZ > 0.0f) increment_z = static_cast<int>(data.lastRotationZ) % 360;
+					//else increment_z = static_cast<float>(static_cast<int>(data.lastRotationZ) % 360) + 360.0f; // 对整数角度进行模数运算
+					//if (increment_z > 90.0f && increment_z <= 180.0f) axle = 1;
+					//else if (increment_z > 180.0f && increment_z <= 270.0f) axle = 2;
+					//else if (increment_z > 270.0f && increment_z <= 360.0f) axle = 3;
+					//else axle = 0;
+					//if (data.lastRotationX > 0 && data.lastRotationX < 90) axle = (axle + 2) % 4; 
+					//self->lastX = xpos;
+					//float increment_x = ((ypos - self->lastY) * data.modelSensitivity / 3.0f);
+					//if ((data.lastRotationX + increment_x <= 90.0f && data.lastRotationX + increment_x >= 0.0f)
+					//	|| (data.lastRotationX + increment_x < 0.0f && data.lastRotationX + increment_x >= -90.0f)) {
+					//	data.rotateX = true;
+					//	data.lastRotationX += (ypos - self->lastY) / 3.0f;
+					//	self->lastY = ypos;
+					//}
 				}
 			}
 			data.enable = self->mousePressed;
