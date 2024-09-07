@@ -216,7 +216,7 @@ namespace GL {
 	/// <param name="data"></param>
 	/// <returns></returns>
 	glm::mat4 Model::UpdatePoisition(Data& data) {
-		if ((!data.rotateX && !data.rotateZ)) return position;
+		if (!data.rotateX && !data.rotateZ) return position;
 		// 先将模型平移到指定中心，以使得模型始终围绕自身的中心旋转
 		glm::mat4 translationToCenter = glm::translate(glm::mat4(1.0f), centerPosition);
 		position = translationToCenter;
