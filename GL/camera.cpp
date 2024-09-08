@@ -44,8 +44,14 @@ namespace GL {
 	/// <param name="data"></param>
 	/// <returns></returns>
 	glm::mat4 Camera::UpdateProjection(const Data& data) {
-		projection = glm::perspective(data.aspect, static_cast<float>(data.width) / static_cast<float>(data.height), 0.1f, 100.0f);
-		return projection;
+		if (data.isParallel) { //平行视口
+			projection = glm::ortho(
+				-data.parallel, data.parallel, -data.parallel * static_cast<float>(data.height) / static_cast<float>(data.width), data.parallel * static_cast<float>(data.height) / static_cast<float>(data.width), 0.1f, 10.0f);
+		}
+		else { //透视视口
+			projection = glm::perspective(data.aspect, static_cast<float>(data.width) / static_cast<float>(data.height), 0.1f, 100.0f);
+		}
+		return projection;        
 	}
 
 	/// <summary>

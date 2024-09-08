@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "shader.h"
 #include "data.h"
+#include "camera.h"
 #include "common.h"
 namespace GL {
 	class Model {
@@ -21,7 +22,7 @@ namespace GL {
 		inline glm::vec3 GetModelCenterPoisition() {
 			return centerPosition;
 		}
-		glm::mat4 UpdatePoisition(Data& data);
+		glm::mat4 UpdatePoisition(Data& data, Camera* camera);
 		void Render(const Data& data);
 		inline Shader* GetShader() {
 			return pshader;

@@ -215,16 +215,28 @@ namespace GL {
 	/// </summary>
 	/// <param name="data"></param>
 	/// <returns></returns>
-	glm::mat4 Model::UpdatePoisition(Data& data) {
-		if (!data.rotateX && !data.rotateZ) return position;
+	glm::mat4 Model::UpdatePoisition(Data& data, Camera* camera) {
+		if (!data.rotateXZ && !data.moveXY && !data.isZScalingMutiple) return position;
 		// 先将模型平移到指定中心，以使得模型始终围绕自身的中心旋转
-		glm::mat4 translationToCenter = glm::translate(glm::mat4(1.0f), centerPosition);
+		const glm::mat4& translationToCenter = glm::translate(glm::mat4(1.0f), centerPosition);
 		position = translationToCenter;
 		position = glm::rotate(position, glm::radians(data.lastRotationX), glm::vec3(1.0f, 0.0f, 0.0f));
 		position = glm::rotate(position, glm::radians(data.lastRotationZ), glm::vec3(0.0f, 0.0f, 1.0f));
 		// 再将模型平移回原来的位置
-		glm::mat4 translationBack = glm::translate(glm::mat4(1.0f), glm::vec3(-centerPosition.x, -centerPosition.y, 0.0f));
+		const glm::mat4& translationBack = glm::translate(glm::mat4(1.0f), glm::vec3(-centerPosition.x, -centerPosition.y, 0.0f));
 		position = position * translationBack;
+		//XY轴的平移
+		const glm::mat4& translateXY = glm::translate(glm::mat4(1.0f), glm::vec3(data.lastMoveX, data.lastMoveY, 0.0f));
+		position = position * translateXY;
+		// 添加Z轴的缩放
+		const glm::mat4& scaleZ = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, data.zScalingMutiple));
+		position = position * scaleZ;
+		if (data.isZScalingMutiple) {
+			//更新模型的中心坐标
+			centerPosition = glm::vec3(centerPosition.x, centerPosition.y, centerPosition.z * data.zScalingMutiple);
+			camera->SetModelCenterPoisition(centerPosition);
+			camera->ReSetPoisition();
+		}
 		return position;
 	}
 	                  

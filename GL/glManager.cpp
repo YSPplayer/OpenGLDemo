@@ -272,6 +272,8 @@ namespace GL {
 			data.pitch = 0.0f; //更新旋转轴参数
 			data.lastRotationZ = 0.0f; //更新模型旋转位置
 			data.lastRotationX = 0.0f;//更新模型旋转位置
+			data.lastMoveX = 0.0f; //更新模型移动位置
+			data.lastMoveY = 0.0f;//更新模型移动位置
 		}
 		const glm::mat4& view = data.reset ? cmaera->ReSetPoisition() : cmaera->UpdatePoisition(data);
 		const glm::mat4& projection = cmaera->UpdateProjection(data);
@@ -291,7 +293,7 @@ namespace GL {
 			}
 			Shader* shader = model->GetShader();
 			Material& material = model->material;
-			const glm::mat4& mposition = data.reset ? model->ReSetPoisition() : model->UpdatePoisition(data);
+			const glm::mat4& mposition = data.reset ? model->ReSetPoisition() : model->UpdatePoisition(data, cmaera);
 			shader->UseShader();
 			//Z轴高度
 		/*	shader->SetShaderFloat(data.zFactor, "zFactor");*/
@@ -360,7 +362,7 @@ namespace GL {
 			lightControl->lightModelPos = glm::translate(glm::mat4(1.0f), lightControl->lightPos);//更新光源位置
 			lightControl->lightModelPos = glm::scale(lightControl->lightModelPos, glm::vec3(0.2f));
 			Shader* shader = lightModel->GetShader();
-			const glm::mat4& mposition = data.reset ? lightModel->ReSetPoisition() : lightModel->UpdatePoisition(data);
+			const glm::mat4& mposition = data.reset ? lightModel->ReSetPoisition() : lightModel->UpdatePoisition(data, cmaera);
 			shader->UseShader();
 			shader->SetShaderMat4(view, "view");
 			shader->SetShaderMat4(lightControl->lightModelPos, "model");//灯光模型固定一个位置

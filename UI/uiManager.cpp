@@ -452,6 +452,8 @@ namespace GL {
 						ImGui::SameLine();
 						bool checkboxValue = data.angleLimite;  // 复制原始值
 						ImGui::Checkbox(u8"旋转限制", &data.angleLimite);
+						ImGui::SameLine();
+						ImGui::Checkbox(u8"平行视口", &data.isParallel);
 						if (checkboxValue != data.angleLimite) {
 							//checkbox变化时触发，角度限制发生变化时一律先重置模型
 							data.reset = true;

@@ -21,7 +21,8 @@ namespace GL {
 #define MAX_Y_OFFSET 10.0f
 //-0.0 -55.0
 #define DEFAULT_MODEL_X_RADIANS 0.0f //默认模型的开始X轴角度
-#define DEFAULT_ASPECT 0.3f //默认的缩放大小
+#define DEFAULT_ASPECT 0.3f //默认的FOV视口大小
+#define DEFAULT_PARALLEL 0.83f //平行视口大小
 	struct Param {
 		int w;
 		int h;
@@ -55,11 +56,17 @@ namespace GL {
 		float sensitivity;//相机视角灵敏度[0.01-0.1]
 		float lastRotationZ;
 		float colors[3][4];//存放背景、模型、光照颜色
-		bool rotateZ;
+		bool rotateXZ;
 		float lastRotationX;
+		float lastMoveX;
+		float lastMoveY;
+		float zScalingMutiple;
+		bool isZScalingMutiple;
 		bool enable;
-		bool rotateX;
+		bool moveXY;
 		float aspect;//相机视野大小
+		float parallel;//平行视口视野大小
+		bool isParallel;//是否为平行视口
 		float pitch;
 		float yaw;
 		bool isYaw;

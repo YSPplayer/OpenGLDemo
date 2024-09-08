@@ -1,6 +1,9 @@
 #include "Util/util.h"
 #include "cwindow.h"
 #include <iostream>
+#ifndef M_PI
+#define M_PI 3.1415926535897931
+#endif
 namespace GL {
 	namespace Window {
 		using namespace Tool;
@@ -9,7 +12,9 @@ namespace GL {
 		float CWindow::lastX2 = 400.0f;
 		float CWindow::lastY2 = 300.0f;
 		bool CWindow::mousePressed = false;
+		bool CWindow::mouseRightPressed = false;
 		bool CWindow::shiftPressed = false;
+		bool CWindow::shiftControl = false;
 		bool CWindow::firstMouse = false;
 		Data CWindow::data;
 		CWindow::CWindow() {
@@ -18,16 +23,22 @@ namespace GL {
 			deltaTime = 0.0f;
 			lastFrame = 0.0f;
 			data.aspect = DEFAULT_ASPECT;
+			data.parallel = DEFAULT_PARALLEL;
+			data.isParallel = false;
 			data.ambientStrength = 0.5f;
 			data.specularStrength = 0.5f;
 			data.lastRotationZ = 0.0f;
 			data.lastRotationX = 0.0f;
+			data.lastMoveX = 0.0f;
+			data.lastMoveY = 0.0f;
 			data.reflectivity = 3.0f;
 			data.alpha = 2.0;
 			data.lightType = NON_LINEAR_POINT_LIGHT;
 			data.theta = 0.0f;
 			data.zFactor = 1.0f;
+			data.zScalingMutiple = 1.0f;
 			data.blinn = false;
+			data.isZScalingMutiple = false;
 			data.phi = 0.0f;
 			data.modelSensitivity = 1.0;//数值越小,灵敏度越低
 			data.showLightMode = false;
@@ -35,8 +46,8 @@ namespace GL {
 			data.useLight = true;
 			data.useTexture = true;
 			data.angleLimite = false;
-			data.rotateZ = false;
-			data.rotateX = false;
+			data.rotateXZ = false;
+			data.moveXY = false;
 			data.useColorMap = true;
 			data.gammaCorrection = true;
 			data.yaw = -90.0f;
@@ -114,7 +125,7 @@ namespace GL {
 		}
 		CWindow::~CWindow() {}
 
-		void CWindow::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+		void CWindow::MouseButtonClick(GLFWwindow* window, int button, int action, int mods) {
 			if (UiManager::MouseButtonCallback(window, button, action, mods)) return;
 			CWindow* self = static_cast<CWindow*>(glfwGetWindowUserPointer(window));
 			if (button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -132,12 +143,18 @@ namespace GL {
 				}
 			}
 			else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-				/*	if (action == GLFW_PRESS) {
-						self->rightButtonPressed = true;
-					}
-					else if (action == GLFW_RELEASE) {
-						self->rightButtonPressed = false;
-					}*/
+				if (action == GLFW_PRESS) {
+					self->mouseRightPressed = true;
+					double xpos, ypos;
+					glfwGetCursorPos(window, &xpos, &ypos);
+					self->lastX = xpos;
+					self->lastY = ypos;
+				}
+				else if (action == GLFW_RELEASE) {
+					self->mouseRightPressed = false;
+					self->lastX = 0.0;
+					self->lastY = 0.0;
+				}
 			}
 		}
 
@@ -168,13 +185,13 @@ namespace GL {
 			glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) {
 				glViewport(0, 0, width, height);
 				});
-			glfwSetMouseButtonCallback(window, MouseButtonCallback);
-			glfwSetCursorPosCallback(window, UpdatePoint);
-			glfwSetScrollCallback(window, UpdateScroll);
+			glfwSetMouseButtonCallback(window, MouseButtonClick);
+			glfwSetCursorPosCallback(window, MouseMoveUpdatePoint);
+			glfwSetScrollCallback(window, MouseWheelUpdateScroll);
 			glfwSetKeyCallback(window, KeyCallback);
 		}
 
-		void CWindow::UpdatePoint(GLFWwindow* window, double xposIn, double yposIn) {
+		void CWindow::MouseMoveUpdatePoint(GLFWwindow* window, double xposIn, double yposIn) {
 			if (UiManager::CursorPosCallback(window, xposIn, yposIn)) return;
 			CWindow* self = static_cast<CWindow*>(glfwGetWindowUserPointer(window));
 			//更换相机视角
@@ -203,11 +220,10 @@ namespace GL {
 			}
 			else {
 				firstMouse = true;//重置相机视角的移动变量
-				if (self->mousePressed) {
+				if (self->mousePressed) {//左键按下
 					if (data.angleLimite) {
 						float increment_z;
 						data.lastRotationZ = data.lastRotationZ + ((xpos - self->lastX) * data.modelSensitivity / 3.0f);
-						data.rotateZ = true;
 						int axle = 0;
 						if (data.lastRotationZ > 0.0f) increment_z = static_cast<int>(data.lastRotationZ) % 360;
 						else increment_z = static_cast<float>(static_cast<int>(data.lastRotationZ) % 360) + 360.0f; // 对整数角度进行模数运算
@@ -220,22 +236,31 @@ namespace GL {
 						float increment_x = ((ypos - self->lastY) * data.modelSensitivity / 3.0f);
 						if ((data.lastRotationX + increment_x <= 90.0f && data.lastRotationX + increment_x >= 0.0f)
 							|| (data.lastRotationX + increment_x < 0.0f && data.lastRotationX + increment_x >= -90.0f)) {
-							data.rotateX = true;
 							data.lastRotationX += (ypos - self->lastY) / 3.0f;
 							self->lastY = ypos;
 						}
+						data.rotateXZ = true;
 					}
 					else {
 						data.lastRotationZ += (xpos - self->lastX) * data.modelSensitivity / 3.0f;
 						data.lastRotationZ = Util::NormalizeAngle(data.lastRotationZ, 360.0f); // 规范化角度到0-360度
-						data.rotateZ = true;
 						self->lastX = xpos;
 						float increment_x = (ypos - self->lastY) * data.modelSensitivity / 3.0f;
 						data.lastRotationX += increment_x;
 						data.lastRotationX = Util::NormalizeAngle(data.lastRotationX, 360.0f); // 同样规范化X轴角度
-						data.rotateX = true;
+						data.rotateXZ = true;
 						self->lastY = ypos;
 					}
+				}
+				else if (self->mouseRightPressed) {
+					//DEFAULT_ASPECT
+					float offset_X = (xpos - self->lastX) / 1000.0f * (data.aspect / DEFAULT_ASPECT);
+					float offset_Y = (self->lastY - ypos) / 1000.0f * (data.aspect / DEFAULT_ASPECT);
+					data.lastMoveX += offset_X;
+					data.lastMoveY += offset_Y;
+					self->lastX = xpos;
+					self->lastY = ypos;
+					data.moveXY = true;
 				}
 			}
 			data.enable = self->mousePressed;
@@ -259,12 +284,33 @@ namespace GL {
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		}
 
-		void CWindow::UpdateScroll(GLFWwindow* window, double xoffset, double yoffset) {
-			if (data.aspect >= 0.0f && data.aspect <= 3.0f) data.aspect = data.aspect - (yoffset / ((20 - GlManager::aspectUnit) * 10.0f));
+		void CWindow::MouseWheelUpdateScroll(GLFWwindow* window, double xoffset, double yoffset) {
+			/*if (data.aspect >= 0.0f && data.aspect <= 3.0f) data.aspect = data.aspect - (yoffset / ((20 - GlManager::aspectUnit) * 10.0f));
 			if (data.aspect <= 0.0f)
-				data.aspect = 0.0f; 
+				data.aspect = 0.0f;
 			if (data.aspect >= 3.0f)
-				data.aspect = 3.0f;
+				data.aspect = 3.0f;*/
+			if (shiftControl) { //放大-缩小Z轴
+				data.isZScalingMutiple = true;
+				if (yoffset < 0 && (data.zScalingMutiple / 2.0f) >= 1e-5) data.zScalingMutiple /= 1.5f;
+				else if (yoffset > 0 && (data.zScalingMutiple + 0.5f) <= 40) data.zScalingMutiple += 0.5f;
+			}
+			else {
+				if (data.isParallel) { //平行视口
+					if (yoffset > 0) data.parallel /= 1.30f;
+					else data.parallel *= 1.30f;
+				}
+				else { //透视视口
+					//data.aspect -= yoffset / 60.0f * static_cast<float>(M_PI) / (6 * 180.0f);
+					//data.aspect = data.aspect < M_PI / 360 ? static_cast<float>(M_PI) / 360 : data.aspect;
+					//data.aspect = data.aspect > 3.14f ? 3.14f : data.aspect;
+					if (data.aspect >= 0.0f && data.aspect <= 3.0f) data.aspect = data.aspect - (yoffset / ((20 - GlManager::aspectUnit) * 10.0f));
+					if (data.aspect <= 0.0f)
+						data.aspect = 0.0f;
+					if (data.aspect >= 3.0f)
+						data.aspect = 3.0f;
+				}
+			}
 		}
 
 		/// <summary>
@@ -278,8 +324,9 @@ namespace GL {
 			glmanager->Render(data);
 			data.reset = false;
 			uimanager->Render(data);//先绘制模型，后渲染ui，ui层级在模型之上
-			data.rotateZ = false;
-			data.rotateX = false;
+			data.rotateXZ = false;
+			data.isZScalingMutiple = false;
+			data.moveXY = false;
 			data.isYaw = false;
 		}
 
@@ -292,6 +339,14 @@ namespace GL {
 				else if (action == GLFW_RELEASE) {
 					shiftPressed = false;
 					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); //正常模式下显示鼠标
+				}
+			}
+			else if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL) {
+				if (action == GLFW_PRESS) {
+					shiftControl = true;
+				}
+				else if (action == GLFW_RELEASE) {
+					shiftControl = false;
 				}
 			}
 			UiManager::KeyCallback(window, key, scancode, action, mods);
