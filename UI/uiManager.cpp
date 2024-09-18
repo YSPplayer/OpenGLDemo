@@ -196,6 +196,8 @@ namespace GL {
 				ImGui::Text(u8"方位角:");
 				ImGui::SetNextItemWidth(maxWidth / 2.0f);
 				ImGui::SliderFloat(u8"##极角", &data.theta, 0.0f, 180.0f, "%.8f");//[-π - π]
+				ImGui::Text(u8"光照强度");
+				ImGui::SliderFloat(u8"##光照强度滚动条", &data.lightIntensity, 1.0f, 10.0f);
 				//if (ImGui::Button(u8"上")) {
 				//	ff -= 0.1F;
 				//	std::cout << ff << std::endl;

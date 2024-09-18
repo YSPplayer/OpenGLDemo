@@ -37,6 +37,7 @@ namespace GL {
 			data.theta = 0.0f;
 			data.zFactor = 1.0f;
 			data.zScalingMutiple = 1.0f;
+			data.lightIntensity = 1.0f;
 			data.blinn = false;
 			data.isZScalingMutiple = false;
 			data.phi = 0.0f;

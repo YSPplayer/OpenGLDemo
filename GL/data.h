@@ -69,6 +69,7 @@ namespace GL {
 		bool isParallel;//是否为平行视口
 		float pitch;
 		float yaw;
+		float lightIntensity;//光照强度因子
 		bool isYaw;
 		bool reset;//重置模型+相机位置
 		bool angleLimite;//限制旋转角度

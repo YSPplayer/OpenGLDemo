@@ -268,6 +268,7 @@ namespace GL {
 		data.cullBackFace ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);//是否使用面剔除功能
 		if (data.reset) {
 			data.aspect = DEFAULT_ASPECT;//更新默认的视口缩放比例
+			data.parallel = DEFAULT_PARALLEL;
 			data.yaw = -90.0f;//更新旋转轴参数
 			data.pitch = 0.0f; //更新旋转轴参数
 			data.lastRotationZ = 0.0f; //更新模型旋转位置
@@ -275,7 +276,7 @@ namespace GL {
 			data.lastMoveX = 0.0f; //更新模型移动位置
 			data.lastMoveY = 0.0f;//更新模型移动位置
 		}
-		const glm::mat4& view = data.reset ? cmaera->ReSetPoisition() : cmaera->UpdatePoisition(data);
+		glm::mat4 view = data.reset ? cmaera->ReSetPoisition() : cmaera->UpdatePoisition(data);
 		const glm::mat4& projection = cmaera->UpdateProjection(data);
 		for (int i = 0; i < models.size(); ++i) {
 			Model* model = models[i];
@@ -294,6 +295,9 @@ namespace GL {
 			Shader* shader = model->GetShader();
 			Material& material = model->material;
 			const glm::mat4& mposition = data.reset ? model->ReSetPoisition() : model->UpdatePoisition(data, cmaera);
+			if (data.isZScalingMutiple) {
+				view = cmaera->ReSetPoisition();
+			}
 			shader->UseShader();
 			//Z轴高度
 		/*	shader->SetShaderFloat(data.zFactor, "zFactor");*/
@@ -344,7 +348,7 @@ namespace GL {
 				shader->SetShaderFloat(0.0f, "light.cutOff");
 			}
 
-			shader->SetShaderVec3(glm::vec3(1.0f, 1.0f, 1.0f), "light.specular"); //镜面反射
+			shader->SetShaderVec3(glm::vec3(1.0f, 1.0f, 1.0f)* data.lightIntensity, "light.specular"); //镜面反射，控制灯光亮度
 			shader->SetShaderFloat(1.0f, "light.constant");//非线性常量1
 			shader->SetShaderFloat(0.09f, "light.linear");//非线性常量2
 			shader->SetShaderFloat(0.032f, "light.quadratic");//非线性常量3
