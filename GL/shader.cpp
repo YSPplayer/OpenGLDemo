@@ -9,7 +9,7 @@ namespace GL {
 	}
 
 	Shader::~Shader() {
-		//ÊÍ·Å×ÅÉ«Æ÷¹ÜÀí¶ÔÏóÄÚ´æ
+		//é‡Šæ”¾ç€è‰²å™¨ç®¡ç†å¯¹è±¡å†…å­˜
 		if (shaderProgram) glDeleteProgram(shaderProgram);
 	}
 
@@ -18,30 +18,30 @@ namespace GL {
 	}
 
 	/// <summary>
-	/// °ó¶¨¶¥µã×ÅÉ«Æ÷+Æ¬¶Î×ÅÉ«Æ÷¶ÔÏó
+	/// ç»‘å®šé¡¶ç‚¹ç€è‰²å™¨+ç‰‡æ®µç€è‰²å™¨å¯¹è±¡
 	/// </summary>
 	/// <param name="vertexShader"></param>
 	/// <param name="colorShader"></param>
 	/// <returns></returns>
 	bool Shader::CreateShader(const std::string& vertexShader, const std::string& colorShader) {
-		shaderProgram = glCreateProgram();//×ÅÉ«Æ÷³ÌĞò¶ÔÏó£¬ÓÃÓÚ¹ÜÀí¶à¸ö×ÅÉ«Æ÷¶ÔÏó
-		GLuint vShader = CreateShader(GL_VERTEX_SHADER, vertexShader); //¶¥µã×ÅÉ«Æ÷
-		GLuint cShader = CreateShader(GL_FRAGMENT_SHADER, colorShader); //Æ¬¶Î×ÅÉ«Æ÷
+		shaderProgram = glCreateProgram();//ç€è‰²å™¨ç¨‹åºå¯¹è±¡ï¼Œç”¨äºç®¡ç†å¤šä¸ªç€è‰²å™¨å¯¹è±¡
+		GLuint vShader = CreateShader(GL_VERTEX_SHADER, vertexShader); //é¡¶ç‚¹ç€è‰²å™¨
+		GLuint cShader = CreateShader(GL_FRAGMENT_SHADER, colorShader); //ç‰‡æ®µç€è‰²å™¨
 		if (vShader && cShader) {
 			glAttachShader(shaderProgram, vShader);
 			glAttachShader(shaderProgram, cShader);
 			glLinkProgram(shaderProgram);
 			glValidateProgram(shaderProgram);
-			//Á´½ÓÍê³ÉÖ®ºóÊÍ·ÅÖ¸ÕëÄÚ´æ
+			//é“¾æ¥å®Œæˆä¹‹åé‡Šæ”¾æŒ‡é’ˆå†…å­˜
 			glDeleteShader(vShader);
 			glDeleteShader(cShader);
 			int success;
 			std::string infoLog;
 			glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
 			if (!success) {
-				glGetShaderInfoLog(shaderProgram, 512, NULL, &infoLog[0]); //»ñÈ¡±àÒëµÄ´íÎóÏûÏ¢
+				glGetShaderInfoLog(shaderProgram, 512, NULL, &infoLog[0]); //è·å–ç¼–è¯‘çš„é”™è¯¯æ¶ˆæ¯
 				std::cout << "[Error]{Shader::BindShader}" << infoLog << std::endl;
-				return false;//Á´½ÓÆ÷±àÒëÊ§°Ü 
+				return false;//é“¾æ¥å™¨ç¼–è¯‘å¤±è´¥ 
 			}
 			return true;
 		}
@@ -49,7 +49,7 @@ namespace GL {
 	}
 
 	/// <summary>
-	/// ÉèÖÃshaderÈ«¾Ö±äÁ¿
+	/// è®¾ç½®shaderå…¨å±€å˜é‡
 	/// </summary>
 	/// <param name="mat4"></param>
 	/// <param name="key"></param>
@@ -79,7 +79,7 @@ namespace GL {
 	}
 
 	/// <summary>
-	/// ÉèÖÃshaderÖĞµÄ²¼¶û±äÁ¿
+	/// è®¾ç½®shaderä¸­çš„å¸ƒå°”å˜é‡
 	/// </summary>
 	/// <param name="value"></param>
 	/// <param name="key"></param>
@@ -89,27 +89,27 @@ namespace GL {
 	}
 
 	/// <summary>
-    /// ´´½¨µ¥¸öµÄ×ÅÉ«Æ÷¶ÔÏó
+    /// åˆ›å»ºå•ä¸ªçš„ç€è‰²å™¨å¯¹è±¡
     /// </summary>
     /// <param name="type"></param>
     /// <param name="strShader"></param>
     /// <returns></returns>
     GLuint Shader::CreateShader(GLuint type, const std::string& strShader) {
 		GLuint shader;  
-		shader = glCreateShader(type); //´´½¨Ò»¸ö×ÅÉ«Æ÷¶ÔÏó
-		const char* source = strShader.c_str(); //shader´úÂë
-		glShaderSource(shader, 1, &source, NULL);//´«Èëshader´úÂë½øĞĞ±àÒë
+		shader = glCreateShader(type); //åˆ›å»ºä¸€ä¸ªç€è‰²å™¨å¯¹è±¡
+		const char* source = strShader.c_str(); //shaderä»£ç 
+		glShaderSource(shader, 1, &source, NULL);//ä¼ å…¥shaderä»£ç è¿›è¡Œç¼–è¯‘
 		glCompileShader(shader);
 		int success;
 		std::string infoLog;
 		glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-		if (!success) {//±àÒëÊ§°Ü
+		if (!success) {//ç¼–è¯‘å¤±è´¥
 			GLint infoLogLength;
 			glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
 			std::vector<char> infoLog(infoLogLength);
 			glGetShaderInfoLog(shader, infoLogLength, NULL, infoLog.data());
 			std::cerr << "[Error]{Shader::CreateShader} " << infoLog.data() << std::endl;
-			return NULL;//±àÒëÊ§°Ü·µ»Ø¿ÕÖ¸Õë 
+			return NULL;//ç¼–è¯‘å¤±è´¥è¿”å›ç©ºæŒ‡é’ˆ 
 		}
 		return shader;
     }

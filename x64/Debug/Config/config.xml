@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Root>
+    <Model>
+        <Width>2000</Width>
+        <Height>1200</Height>
+        <XOffset>10</XOffset>
+        <YOffset>10</YOffset>
+        <ZRandomRange>2</ZRandomRange>
+        <ZRandom>1</ZRandom>
+        <ShowMode>2</ShowMode>
+    </Model>
+    <Texture>
+        <Path>D:\Yueshaopu\GLFW\OpenGLDemo\x64\Release\Data\imgdata.bmp</Path>
+    </Texture>
+    <Color>
+        <Background>0.100000,0.100000,0.100000,1.000000</Background>
+        <Model>0.992157,0.941176,0.807843,1.000000</Model>
+        <Light>1.000000,1.000000,1.000000,1.000000</Light>
+    </Color>
+    <System>
+        <CullBack>0</CullBack>
+        <CameraSpeed>5.5</CameraSpeed>
+        <CameraSensitivity>0.064000003</CameraSensitivity>
+    </System>
+</Root>

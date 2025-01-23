@@ -10,6 +10,7 @@ namespace GL {
 		//光源的当前位置
 		glm::vec3 lightPos;
 		Model* lightModel;//光源模型
+		float radiusMax;
 		void EnableLightModel();
 	private:
 	};

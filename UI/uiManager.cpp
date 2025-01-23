@@ -10,7 +10,7 @@ namespace GL {
 		using namespace GL::Tool;
 		using namespace CPlusSDK::X3pFormatDll;
 		UData UiManager::udata;
-		UiManager::UiManager(GlManager* glmanager,bool load) :glmanager(glmanager) {
+		UiManager::UiManager(GlManager* glmanager, bool load) :glmanager(glmanager) {
 			if (!load) {
 				std::string selectedFilePath = " ";//初始化数据
 				strncpy_s(udata.pathBuf, selectedFilePath.c_str(), IM_ARRAYSIZE(udata.pathBuf) - 1);
@@ -39,7 +39,7 @@ namespace GL {
 			ImGui::CreateContext();
 			ImGuiIO& io = ImGui::GetIO();
 			//设置配置文件保存路径  Util::WStringToChar((Util::GetRootPath() + L"imgui.ini"))
-		    io.IniFilename = nullptr;
+			io.IniFilename = nullptr;
 			ImFontConfig fontCfg;//支持中文显示，获取字体路径
 			io.Fonts->AddFontFromFileTTF(Util::WStringToString((Util::GetRootPath() + L"Font/YoungRound_CN.TTF")).c_str(), 14.0f, &fontCfg, io.Fonts->GetGlyphRangesChineseFull());
 			ImGui::StyleColorsDark();
@@ -74,7 +74,7 @@ namespace GL {
 
 		void UiManager::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 		{
-			ImGui_ImplGlfw_KeyCallback(window,key,scancode, action, mods);
+			ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
 		}
 
 		/// <summary>
@@ -95,9 +95,9 @@ namespace GL {
 								std::string selectedFilePath = outPath;
 								X3pData data;
 								//加载x3p模型
-								bool success = LoadX3p(selectedFilePath.c_str(),&data,false,nullptr);
+								bool success = LoadX3p(selectedFilePath.c_str(), &data, false, nullptr);
 								glmanager->ClearModels();
-								glmanager->CreateX3pModel(data.sizeX,data.sizeY, data.axes[0].increment, data.axes[1].increment,data.pointData,data.minZ,data.maxZ);
+								glmanager->CreateX3pModel(data.sizeX, data.sizeY, data.axes[0].increment, data.axes[1].increment, data.pointData, data.minZ, data.maxZ);
 							}
 							else if (result == NFD_CANCEL) {
 								std::cout << "User pressed cancel." << std::endl;
@@ -110,13 +110,13 @@ namespace GL {
 					}
 					if (ImGui::BeginMenu(u8"配置")) {
 						if (ImGui::MenuItem(u8"保存配置")) {
-							bool success = Util::CreateConfig(data,udata);
-					/*		if (success) {
-								std::cout << "Create config success!" << std::endl;
-							}
-							else {
-								std::cout << "Create config fail!" << std::endl;
-							}*/
+							bool success = Util::CreateConfig(data, udata);
+							/*		if (success) {
+										std::cout << "Create config success!" << std::endl;
+									}
+									else {
+										std::cout << "Create config fail!" << std::endl;
+									}*/
 						}
 						if (ImGui::MenuItem(u8"加载材质")) {
 							Material& material = glmanager->GetCurrentModel()->material;
@@ -126,7 +126,7 @@ namespace GL {
 							if (result == NFD_OKAY) {
 								std::string selectedFilePath = outPath;
 								if (!selectedFilePath.empty()) {
-									Util::LoadMaterial(material, Util::StringToWString(selectedFilePath),true);
+									Util::LoadMaterial(material, Util::StringToWString(selectedFilePath), true);
 									//存储模型颜色
 									data.colors[1][0] = material.diffuse[0];
 									data.colors[1][1] = material.diffuse[1];
@@ -162,7 +162,7 @@ namespace GL {
 							else {
 								std::cout << "Error: " << NFD_GetError() << std::endl;
 							}
-				
+
 						}
 						ImGui::EndMenu();
 					}
@@ -170,6 +170,86 @@ namespace GL {
 				ImGui::EndMainMenuBar();
 			}
 
+			//光照移动容器
+			{
+				float menuBarHeight = ImGui::GetFrameHeight();
+				float menuWidth = static_cast<float>(data.width) / 10.0f;
+				ImGui::SetNextWindowPos(ImVec2(float(data.width - menuWidth), float(menuBarHeight)));
+				ImGui::SetNextWindowSize(ImVec2(menuWidth, menuWidth));//设置ui渲染区域
+				ImGui::Begin(u8"##光照", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+				LightControl* lcontrol = glmanager->GetLightControl();
+				Model* model = glmanager->GetCurrentModel();
+				/*
+				   方位角theta(y) 极角phi(z)
+				*/
+				/*	++data.phi;
+					if (data.phi >= 180.0f) data.phi = -180.0f;*/
+					/*	data.phi = 10.0f;
+						++data.theta;
+						if (data.theta >= 180.0f) data.theta = -180.0f;*/
+				float maxWidth = ImGui::GetContentRegionAvail().x;
+				//因为opengl的坐标系和标准坐标系不一样
+				ImGui::Checkbox(u8"启用光照模型", &data.showLightMode);
+				ImGui::Text(u8"极角:");
+				ImGui::SetNextItemWidth(maxWidth / 2.0f);
+				ImGui::SliderFloat(u8"##方位角", &data.phi, -90.0f, 90.0f, "%.8f"); //[0 - π]
+				ImGui::Text(u8"方位角:");
+				ImGui::SetNextItemWidth(maxWidth / 2.0f);
+				ImGui::SliderFloat(u8"##极角", &data.theta, 0.0f, 180.0f, "%.8f");//[-π - π]
+				ImGui::Text(u8"光照强度");
+				ImGui::SliderFloat(u8"##光照强度滚动条", &data.lightIntensity, 1.0f, 10.0f);
+				//lcontrol->lightPos = Util::CalculateNewSphericalCoordinates(model->GetModelCenterPoisition(), lcontrol->lightPos, glm::radians(data.theta), glm::radians(data.phi));
+				// 设定矩形区域大小
+				ImVec2 rectSize(100.0f, 100.0f);  // 控制矩形的大小
+				ImVec2 rectPos = ImGui::GetCursorScreenPos();  // 当前 ImGui 控件的坐标位置
+				// 绘制矩形区域
+				ImGui::InvisibleButton("##LightControlRectangle", rectSize);
+				ImDrawList* drawList = ImGui::GetWindowDrawList();
+				drawList->AddRect(rectPos, ImVec2(rectPos.x + rectSize.x, rectPos.y + rectSize.y), IM_COL32(255, 255, 255, 255));
+				if (ImGui::IsItemActive() && (ImGui::IsMouseClicked(0) || ImGui::IsMouseDragging(0))) {
+					ImVec2 mousePos = ImGui::GetIO().MousePos;
+					// 计算鼠标点击在矩形区域中的相对坐标
+					float relativeMouseX = mousePos.x - rectPos.x;
+					float relativeMouseY = mousePos.y - rectPos.y;
+					// 计算相对坐标，将它们映射到 [-1, 1] 范围
+					float x_ratio = (relativeMouseX - 100.0f / 2.0f) / (100.0f / 2.0f); // X轴范围映射
+					float y_ratio = -(relativeMouseY - 100.0f / 2.0f) / (100.0f / 2.0f); // Y轴范围映射
+					if (x_ratio == 0.0f && y_ratio == 0.0f)
+					{
+						lcontrol->lightPos.x = 0.0f;
+						lcontrol->lightPos.y = 0.0f;
+						lcontrol->lightPos.z = 3.0f;
+					}
+					else
+					{
+						float xy_length = std::sqrt(std::pow(x_ratio, 2) + std::pow(y_ratio, 2));
+						float xy_length_ratio = std::min(xy_length, 1.0f); // 确保结果不超过 1.0
+						lcontrol->lightPos.x = xy_length_ratio * lcontrol->radiusMax * x_ratio / xy_length;
+						lcontrol->lightPos.y = xy_length_ratio * lcontrol->radiusMax * y_ratio / xy_length;
+						lcontrol->lightPos.z = 3.0f;
+					}
+				}
+				//if (ImGui::Button(u8"上")) {
+				//	ff -= 0.1F;
+				//	std::cout << ff << std::endl;
+				//	spherical = Util::SetSpherical(glm::pi<float>(),0.0f ,spherical); // std::max(0.0f, spherical.z - 0.1f);
+				//}
+				//ImGui::SameLine();
+				//if (ImGui::Button(u8"下")) {
+				//	spherical.z = std::min(glm::pi<float>() / 2.0f, spherical.z + 0.1f);
+				//}
+				//ImGui::Text(u8"");
+				//if (ImGui::Button(u8"左")) {
+				//	spherical.y = std::max(-glm::pi<float>() / 2.0f, spherical.y - 0.1f);
+				//}
+				//ImGui::SameLine();
+				//if (ImGui::Button(u8"右")) {
+				//	spherical.y = std::min(glm::pi<float>() / 2.0f, spherical.y + 0.1f);
+				//}
+				//球面坐标转回笛卡尔坐标 Util::SphericalToCartesian(model->GetModelCenterPoisition(), spherical);
+
+				ImGui::End();
+			}
 			//设置菜单容器
 			{
 				// 获取菜单栏的高度
@@ -184,6 +264,9 @@ namespace GL {
 						if (ImGui::Button(u8"重置场景")) {
 							glmanager->ClearModels();
 						}
+						ImGui::Checkbox(u8"点云稀疏", &data.sparsePoint);
+						ImGui::SetNextItemWidth(maxWidth / 2.0f);
+						ImGui::SliderFloat(u8"#Z轴倍数", &data.zFactor, 1.0f, 10.0f, "%.5f");
 						//标准化模型
 						ImGui::Text(u8"");
 						ImGui::Text(u8"标准化模型");
@@ -219,7 +302,7 @@ namespace GL {
 						const char* grid = u8"网格";
 						const char* surface = u8"面";
 						for (int i = 0; i < 3; i++) {
-							
+
 							if (ImGui::Selectable(i == 0 ? point : i == 1 ? grid : surface, udata.selectedRadio == i)) {
 								udata.selectedRadio = i;
 								data.drawMode = i;
@@ -230,6 +313,9 @@ namespace GL {
 					ImGui::Text(u8"");
 					if (ImGui::TreeNode(u8"贴图")) {
 						ImGui::Checkbox(u8"启用贴图", &data.useTexture);
+						ImGui::SameLine();
+						ImGui::Checkbox(u8"贴图镜像", &data.textureFlip);
+						if (!data.useTexture) data.gammaCorrection = false;//不启用贴图伽马校验取消
 						ImGui::Text(u8"");
 						float maxWidth = ImGui::GetContentRegionAvail().x;
 						ImGui::SetNextItemWidth(maxWidth / 1.2f);
@@ -257,14 +343,15 @@ namespace GL {
 							}
 						}
 						if (ImGui::Button(u8"加载贴图")) {
-							glmanager->CreateModelTexture(udata.pathBuf,glmanager->GetCurrentModel(),nullptr,0);
+							glmanager->CreateModelTexture(udata.pathBuf, glmanager->GetCurrentModel(), nullptr, 0);
 						}
 						ImGui::TreePop();
 					}
 					ImGui::Text(u8"");
-					float (*colors)[4] = data.colors;
+					float(*colors)[4] = data.colors;
 					static float color[4] = { 255.0f, 255.0f, 255.0f, 255.0f };
 					if (ImGui::TreeNode(u8"颜色")) {
+						ImGui::Text(u8"1.原色");
 						float maxWidth = ImGui::GetContentRegionAvail().x;
 						if (ImGui::ColorButton("##colorbutton0", ImVec4(colors[0][0], colors[0][1], colors[0][2], colors[0][3]), ImGuiColorEditFlags_NoTooltip, ImVec2(maxWidth / 8.0f, maxWidth / 12.0f))) {
 							colors[0][0] = color[0];
@@ -291,6 +378,22 @@ namespace GL {
 						ImGui::SameLine();
 						ImGui::Text(u8"光照颜色");
 						ImGui::ColorPicker4("##picker", color);
+						ImGui::Text(u8"");
+						ImGui::Text(u8"2.伪彩色");
+						ImGui::Checkbox(u8"启用伪彩色", &data.useColorMap);
+						const char* color1 = u8"黄铜色";
+						const char* color2 = u8"七彩色";
+						for (int i = 0; i < 2; i++) {
+
+							if (ImGui::Selectable(i == 0 ? color1 : color2 , data.colorMapType == i)) {
+								MapColorType colorMapType = static_cast<MapColorType>(i);
+								if (data.colorMapType != colorMapType) {
+									data.colorMapType = colorMapType;
+									Model* model = glmanager->GetCurrentModel();
+									model->SetColorMap(colorMapType);
+								}
+							}
+						}
 						ImGui::TreePop();
 					}
 					ImGui::Text(u8"");
@@ -336,12 +439,14 @@ namespace GL {
 						ImGui::SetNextItemWidth(maxWidth / 3.0f);
 						ImGui::InputInt(u8"亮度", &data.beta, 0, 100);
 						if (ImGui::Button(u8"重置镜面贴图")) {
-							glmanager->ChangeModelSpecularImage(glmanager->GetCurrentModel(),data.alpha,data.beta);
+							glmanager->ChangeModelSpecularImage(glmanager->GetCurrentModel(), data.alpha, data.beta);
 						}
 						ImGui::Text(u8"");
 						ImGui::SliderFloat(u8"光泽度", &material.shininess, 0.00001f, 256.0f);
 						ImGui::SetNextItemWidth(maxWidth / 3.0f);
 						ImGui::InputFloat(u8"##光泽度", &material.shininess, 0.00001f, 256.0f, "%.10f");
+						ImGui::Text(u8"");
+						ImGui::Text(u8"3.光照类别");
 						const char* parallelLight = u8"平行光";
 						const char* linearPointLight = u8"线性点光源";
 						const char* nonlinearPointLight = u8"非线性点光源";
@@ -352,6 +457,23 @@ namespace GL {
 								data.lightType = i;
 							}
 						}
+						ImGui::Text(u8"");
+						ImGui::Text(u8"4.光照细化");
+						ImGui::Checkbox(u8"Blinn着色", &data.blinn);
+						ImGui::SameLine();
+						ImGui::Checkbox(u8"伽马校正", &data.gammaCorrection);
+						ImGui::Checkbox(u8"法线贴图", &data.useNormalTexture);
+						ImGui::Text(u8"");
+						ImGui::Text(u8"5.光源位置");
+						LightControl* lightControl = glmanager->GetLightControl();
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						ImGui::InputFloat(u8"##光照位置X", &lightControl->lightPos.x, 0.0, 1.0, "%.5f");
+						ImGui::SameLine();
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						ImGui::InputFloat(u8"##光照位置Y", &lightControl->lightPos.y, 0.0, 1.0, "%.5f");
+						ImGui::SameLine();
+						ImGui::SetNextItemWidth(maxWidth / 6.0f);
+						ImGui::InputFloat(u8"##光照位置Z", &lightControl->lightPos.z, 0.0, 1.0, "%.5f");
 						ImGui::TreePop();
 					}
 					ImGui::Text(u8"");
@@ -359,10 +481,21 @@ namespace GL {
 						ImGui::Checkbox(u8"背景透明", &data.transparentBg);
 						ImGui::SameLine();
 						ImGui::Checkbox(u8"背面剔除", &data.cullBackFace);
+						ImGui::SameLine();
+						bool checkboxValue = data.angleLimite;  // 复制原始值
+						ImGui::Checkbox(u8"旋转限制", &data.angleLimite);
+						ImGui::SameLine();
+						ImGui::Checkbox(u8"平行视口", &data.isParallel);
+						if (checkboxValue != data.angleLimite) {
+							//checkbox变化时触发，角度限制发生变化时一律先重置模型
+							data.reset = true;
+						}
 						ImGui::Text(u8"");
 						ImGui::SliderFloat(u8"相机移动速度", &data.moveSpeedUnit, 1.0f, 10.0f);
 						ImGui::Text(u8"");
 						ImGui::SliderFloat(u8"相机视角灵敏度", &data.sensitivity, 0.01f, 0.1f);
+						ImGui::Text(u8"");
+						ImGui::SliderFloat(u8"模型旋转灵敏度", &data.modelSensitivity, 0.01f, 1.0f);
 						ImGui::TreePop();
 					}
 				}
@@ -385,7 +518,7 @@ namespace GL {
 			//设置背景是否透明
 			style.Colors[ImGuiCol_WindowBg].w = transparent;
 			style.Colors[ImGuiCol_PopupBg].w = transparent;
-			
+
 		}
 	}
 }

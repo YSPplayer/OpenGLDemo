@@ -15,6 +15,7 @@
 #include <glm/glm.hpp>
 #include <tinyxml2/tinyxml2.h>
 #include <opencv2/opencv.hpp>
+#include <glm/gtc/constants.hpp>
 namespace GL {
 	namespace Tool {
         using namespace tinyxml2;
@@ -75,7 +76,93 @@ namespace GL {
                 }
                 return ss.str(); // 返回构建的字符串
             }
+            
+            /*
+            球面坐标系由三个参数定义：
+            半径 radius(x)、方位角 theta(y)（绕 Z 轴的角度，从 X 轴正方向开始计算）
+            ，以及极角 phi(z)（从 Z 轴正方向到点的角度）。
+            */
 
+            /// <summary>
+            /// 球面坐标转笛卡尔坐标
+            /// </summary>
+            /// <param name="center"></param>
+            /// <param name="spherical"></param>
+            /// <returns></returns>
+            static glm::vec3 SphericalToCartesian(const glm::vec3& center, const glm::vec3& spherical) {
+                float radius = spherical.x;
+                float theta = spherical.y;  // 方位角 (在xy平面内的角度)
+                float phi = spherical.z;    // 极角 (从z轴开始的角度)
+                float x = center.x + radius * sin(phi) * cos(theta);
+                float y = center.y + radius * sin(phi) * sin(theta);
+                float z = center.z + radius * cos(phi);
+                return { x, y, z };
+            }
+
+            /// <summary>
+            /// 笛卡尔坐标转球面坐标
+            /// </summary>
+            /// <param name="center"></param>
+            /// <param name="point"></param>
+            /// <returns></returns>
+            static glm::vec3 CartesianToSpherical(const glm::vec3& center, const glm::vec3& point) {
+                // 计算与模型中心的距离
+                float dx = point.x - center.x;
+                float dy = point.y - center.y;
+                float dz = point.z - center.z;
+                // 计算半径（距离）
+                float radius = sqrt(dx * dx + dy * dy + dz * dz);
+                // 计算方位角（theta）
+                float theta = atan2(dy, dx);  // 计算xy平面内的方位角
+                float phi = acos(dz / radius);  // 计算极角（从z轴到点的夹角）
+                return glm::vec3(radius, theta, phi);  // 返回球面坐标 {radius, theta, phi}
+            }
+
+            /// <summary>
+            /// 设置当前球面坐标
+            /// </summary>
+            /// <param name="center"></param>
+            /// <param name="point"></param>
+            /// <returns></returns>
+            static glm::vec3 CalculateNewSphericalCoordinates(const glm::vec3& center, const glm::vec3& point, float phi, float theta) {
+                // 1. 将笛卡尔坐标转为球面坐标系
+                glm::vec3 spherical = CartesianToSpherical(center, point); // 获取当前光照点的球面坐标
+                // 2. 使用给定的极角和方位角计算新的位置
+                // radius: 光源与中心的距离不变
+                float radius = spherical.x;
+                // 计算新的极角（phi）和方位角（theta）
+                // 极角（phi）范围：0 ~ π (0 ~ 180°)
+                // 方位角（theta）范围：-π ~ π (-90° ~ 90°)
+                float newX = radius * sin(phi) * cos(theta);  // 根据球面坐标公式计算x坐标
+                float newY = radius * sin(phi) * sin(theta);  // 根据球面坐标公式计算y坐标
+                float newZ = radius * cos(phi);  // 根据球面坐标公式计算z坐标
+                // 3. 将计算的坐标转换为笛卡尔坐标
+                glm::vec3 newPoint = center + glm::vec3(newX, newY, newZ);  // 基于模型中心点的全局坐标
+                return newPoint;
+            }
+
+
+
+            /// <summary>
+            /// 移动度数
+            /// </summary>
+            /// <param name="phiChange"></param>
+            /// <param name="thetaChange"></param>
+            /// <param name="currentSpherical"></param>
+            /// <returns></returns>
+            static glm::vec3 SetSpherical(float newPhi, float newTheta, const glm::vec3& currentSpherical) {
+                // 限制 phi 在 0 到 π 之间
+                newPhi = std::max(0.0f, std::min(glm::pi<float>(), newPhi));
+                // 将 theta 规范到 -π 到 π 的范围
+                if (newTheta > glm::pi<float>()) {
+                    newTheta -= 2 * glm::pi<float>();
+                }
+                else if (newTheta < -glm::pi<float>()) {
+                    newTheta += 2 * glm::pi<float>();
+                }
+                return { currentSpherical.x, newTheta, newPhi }; // radius 不变，新的 theta 和 phi
+
+            }
             static bool SaveMaterial(Material& material, const std::wstring& name, bool completePath = false) {
                 const std::wstring& path = completePath ? name : (Util::GetRootPath() + L"Material\\" + name);
                 std::ofstream cfile; 
@@ -144,13 +231,136 @@ namespace GL {
                 nrChannels = img.channels();
                 return true;
             }
+            /// <summary>
+            /// 计算切线和副切线数组
+            /// </summary>
+            /// <param name="vertices"></param>
+            /// <param name="uvs"></param>
+            /// <param name="normals"></param>
+            /// <param name="vertexCount"></param>
+            /// <param name="tangents"></param>
+            /// <param name="bitangents"></param>
+            static void CalculateTangentAndBitangent(const float* vertices, const float* uvs, const float* normals,
+                int vertexCount, float* tangents, float* bitangents) {
+                for (int i = 0; i < vertexCount / 3; i+=3) {
+                    // 获取三角形的三个顶点
+                    glm::vec3 vertex1(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2]);
+                    glm::vec3 vertex2(vertices[(i + 1) * 3], vertices[(i + 1) * 3 + 1], vertices[(i + 1) * 3 + 2]);
+                    glm::vec3 vertex3(vertices[(i + 2) * 3], vertices[(i + 2) * 3 + 1], vertices[(i + 2) * 3 + 2]);
 
+                    // 获取三角形的三个UV坐标
+                    glm::vec2 uv1(uvs[i * 2], uvs[i * 2 + 1]);
+                    glm::vec2 uv2(uvs[(i + 1) * 2], uvs[(i + 1) * 2 + 1]);
+                    glm::vec2 uv3(uvs[(i + 2) * 2], uvs[(i + 2) * 2 + 1]);
+
+                    // 获取三角形的法线
+                    glm::vec3 normal1(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
+
+                    // 计算三角形的边和UV差异
+                    glm::vec3 edge1 = vertex2 - vertex1;
+                    glm::vec3 edge2 = vertex3 - vertex1;
+                    glm::vec2 deltaUV1 = uv2 - uv1;
+                    glm::vec2 deltaUV2 = uv3 - uv1;
+
+                    // 计算f因子
+                    float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+                    // 计算切线和副切线
+                    glm::vec3 tangent, bitangent;
+                    tangent = f * (deltaUV2.y * edge1 - deltaUV1.y * edge2);
+                    bitangent = f * (deltaUV1.x * edge2 - deltaUV2.x * edge1);
+
+                    // 正交化切线
+                    tangent = glm::normalize(tangent - normal1 * glm::dot(normal1, tangent));
+                    tangent = glm::normalize(tangent);  // 确保切线是单位向量
+                    // 将结果存储到数组中
+                    tangents[i * 3] = tangent.x;
+                    tangents[i * 3 + 1] = tangent.y;
+                    tangents[i * 3 + 2] = tangent.z;
+
+                    bitangents[i * 3] = bitangent.x;
+                    bitangents[i * 3 + 1] = bitangent.y;
+                    bitangents[i * 3 + 2] = bitangent.z;
+                }
+                //std::vector<glm::vec3> tempTangents(vertexCount / 3, glm::vec3(0.0f));
+                //std::vector<glm::vec3> tempBitangents(vertexCount / 3, glm::vec3(0.0f));
+
+                //for (int i = 0; i < vertexCount / 3; i += 3) { // 这里的i是三角形的顶点索引
+                //    // 获取三角形的三个顶点
+                //    glm::vec3 vertex1(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2]);
+                //    glm::vec3 vertex2(vertices[(i + 1) * 3], vertices[(i + 1) * 3 + 1], vertices[(i + 1) * 3 + 2]);
+                //    glm::vec3 vertex3(vertices[(i + 2) * 3], vertices[(i + 2) * 3 + 1], vertices[(i + 2) * 3 + 2]);
+
+                //    // 获取三角形的三个UV坐标
+                //    glm::vec2 uv1(uvs[i * 2], uvs[i * 2 + 1]);
+                //    glm::vec2 uv2(uvs[(i + 1) * 2], uvs[(i + 1) * 2 + 1]);
+                //    glm::vec2 uv3(uvs[(i + 2) * 2], uvs[(i + 2) * 2 + 1]);
+
+                //    // 计算三角形的边和UV差异
+                //    glm::vec3 edge1 = vertex2 - vertex1;
+                //    glm::vec3 edge2 = vertex3 - vertex1;
+                //    glm::vec2 deltaUV1 = uv2 - uv1;
+                //    glm::vec2 deltaUV2 = uv3 - uv1;
+
+                //    // 计算f因子
+                //    float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+                //    // 计算切线和副切线
+                //    glm::vec3 tangent = f * (deltaUV2.y * edge1 - deltaUV1.y * edge2);
+                //    glm::vec3 bitangent = f * (deltaUV1.x * edge2 - deltaUV2.x * edge1);
+
+                //    // 将结果累加到所有三个顶点上
+                //    tempTangents[i] += tangent;
+                //    tempTangents[i + 1] += tangent;
+                //    tempTangents[i + 2] += tangent;
+
+                //    tempBitangents[i] += bitangent;
+                //    tempBitangents[i + 1] += bitangent;
+                //    tempBitangents[i + 2] += bitangent;
+                //}
+
+                //// 正规化并复制到输出数组
+                //for (int i = 0; i < vertexCount / 3; i+= 3) {
+                //    glm::vec3 normTangent = glm::normalize(tempTangents[i]);
+                //    glm::vec3 normBitangent = glm::normalize(tempBitangents[i]);
+
+                //    tangents[i * 3] = normTangent.x;
+                //    tangents[i * 3 + 1] = normTangent.y;
+                //    tangents[i * 3 + 2] = normTangent.z;
+
+                //    bitangents[i * 3] = normBitangent.x;
+                //    bitangents[i * 3 + 1] = normBitangent.y;
+                //    bitangents[i * 3 + 2] = normBitangent.z;
+                //}
+            }
+
+            /// <summary>
+            /// 将法线数组转换为法线贴图的函数
+            /// </summary>
+            /// <param name="normals"></param>
+            /// <param name="width"></param>
+            /// <param name="height"></param>
+            /// <returns></returns>
+            static cv::Mat ConvertNormalsToNormalMap(float* normals, int width, int height) {
+                cv::Mat normalMap(height, width, CV_32FC3);
+                for (int y = 0; y < height; ++y) {
+                    for (int x = 0; x < width; ++x) {
+                        int index = (y * width + x) * 3; // 计算法线数组的索引
+                        cv::Vec3f normal(normals[index], normals[index + 1], normals[index + 2]);
+                        // 将法线映射到[0, 1]范围
+                        normal = (normal + cv::Vec3f(1.0f, 1.0f, 1.0f)) * 0.5f;
+                        normalMap.at<cv::Vec3f>(y, x) = normal;
+                    }
+                } 
+                cv::flip(normalMap, normalMap, 0);
+                return normalMap; 
+            }
             /// <summary>
             /// 加载图片
             /// </summary>
             /// <param name="path"></param>
             /// <returns></returns>
-            static bool CvLoadImage(const std::string& path, unsigned char*& data, unsigned char*& specular_data, double alpha, int beta,int& width, int& height, int& nrChannels) {
+            static bool CvLoadImage(const std::string& path, unsigned char*& data, unsigned char*& specular_data, double alpha, int beta,int& width, int& height, int& nrChannels,bool textureFlip) {
                 if (path == "") return false;
                 // 读取图像
                 img = cv::imread(path,cv::ImreadModes::IMREAD_UNCHANGED);
@@ -169,7 +379,7 @@ namespace GL {
                     cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
                 }
                 // 将图像垂直翻转
-                cv::flip(img, img, 0);
+                if(textureFlip) cv::flip(img, img, 0);
                 // 确保图像是连续的，这对 OpenGL 处理很重要
                 if (!img.isContinuous())img = img.clone();
                 // 分配内存用于存储图像数据（需要在适当时候释放这块内存）
@@ -348,7 +558,16 @@ namespace GL {
                 return charPtr;
             }
             
-
+            static int GetSparseSize(int n, int step, bool& border) {
+                border = false;
+                int sparseWidth = (n + step - 1) / step;
+                if ((n - 1) % step != 0) {
+                    sparseWidth++;
+                    border = true;//有边界
+                }
+                return sparseWidth;
+            }
+            
             /// <summary>
             /// 读取外部shader
             /// </summary>

@@ -8,6 +8,7 @@ namespace GL {
 		lightModelPos = glm::translate(glm::mat4(1.0f), lightPos);
 		lightModelPos = glm::scale(lightModelPos, glm::vec3(0.2f)); //Ä£ÐÍËõÐ¡
 		lightModel = new Model;
+		radiusMax = 3.0f;
 	}
 
 	/// <summary>

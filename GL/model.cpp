@@ -9,35 +9,39 @@ namespace GL {
 		indices = nullptr;
 		pshader = nullptr;
 		normals = nullptr;
+		tangents = nullptr;
+		bitangents = nullptr;
 		eboMode = false;
 		hasTexture = false;
 		hasSpecularTexture = false;
 		verticesSize = 0;
 		indicesSize = 0;
 		normalSize = 0;
-		PVBOS = new std::vector<GLuint>(VBO_MAX,NULL);
+		PVBOS = new std::vector<GLuint>(VBO_MAX, NULL);
 		VAO = NULL;
 		EBO = NULL;
 		TEXTURE = NULL;
+		SPECULAR_TEXTURE = NULL;
+		NORMALS_TEXTURE = NULL;
 		position = glm::mat4(1.0f);
-		centerPosition = glm::vec3(0.0f,0.0f,0.0f);//默认模型的中心位置为0,0
+		centerPosition = glm::vec3(0.0f, 0.0f, 0.0f);//默认模型的中心位置为0,0
 		material.ambient = glm::vec3(0.0f, 0.0f, 0.0f);
 		material.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
 		material.specular = glm::vec3(0.0f, 0.0f, 0.0f);
 		material.shininess = 0.0f;
-		Util::LoadMaterial(material,L"default.material");//加载模型的默认材质
+		Util::LoadMaterial(material, L"default.material");//加载模型的默认材质
 	}
 
 	Model::~Model() {
 		if (copy) return;//拷贝的模型不做内存的释放，只释放唯一的那一个
-		if(EBO) glDeleteBuffers(1, &EBO);
+		if (EBO) glDeleteBuffers(1, &EBO);
 		if (TEXTURE) glDeleteTextures(1, &TEXTURE);
 		if (PVBOS) {
-			for (int i = 0; i < PVBOS->size(); ++i) 
+			for (int i = 0; i < PVBOS->size(); ++i)
 				glDeleteBuffers(1, &PVBOS->at(i));
 			Util::ReleasePointer(PVBOS);
 		}
-	 	if(VAO) glDeleteVertexArrays(1,&VAO);
+		if (VAO) glDeleteVertexArrays(1, &VAO);
 		Util::ReleasePointer(vertices, true);
 		Util::ReleasePointer(indices, true);
 		Util::ReleasePointer(pshader);
@@ -51,8 +55,10 @@ namespace GL {
 	/// <param name="indices"></param>
 	/// <param name="isize"></param>
 	/// <returns></returns>
-	bool Model::CreateModel(const std::string& vertexShader, const std::string& colorShader,bool copy, float vertices[], int vsize, unsigned int indices[], int isize) {
-	/*	eboMode = (indices != nullptr);*/
+	bool Model::CreateModel(const std::string& vertexShader, const std::string& colorShader, bool copy, float vertices[], int vsize, unsigned int indices[], int isize, unsigned int width, unsigned int height) {
+		/*	eboMode = (indices != nullptr);*/
+		this->width = width;
+		this->height = height;
 		eboMode = true;
 		verticesSize = vsize;
 		if (copy) { //如果在栈区创建，需要拷贝内存
@@ -71,7 +77,7 @@ namespace GL {
 				this->indices = indices;
 			}
 		}
-		
+
 		glGenVertexArrays(1, &VAO);
 		glBindVertexArray(VAO);// 绑定VAO
 		glGenBuffers(1, &PVBOS->at(VBO_VERTEX));//new一个顶点缓冲对象，存在VBO中
@@ -84,10 +90,10 @@ namespace GL {
 		  GL_STREAM_DRAW 数据每次绘制都会改变
 		*/
 		//glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(vertices), vertices, GL_STATIC_DRAW);
-		
+
 		glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);//先绑定空指针，直接绑定存在显存溢出的问题
-		// gpu数据指针持久映射cpu缓冲区  | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
-		float* verticesBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesSize * sizeof(float), GL_MAP_WRITE_BIT);
+		// gpu数据指针持久映射cpu缓冲区
+		float* verticesBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesSize * sizeof(float), GL_MAP_WRITE_BIT);//| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
 		if (!verticesBuffer) return false;
 		std::memcpy(verticesBuffer, this->vertices, sizeof(float) * verticesSize);//拷贝内存到gpu
 		glUnmapBuffer(GL_ARRAY_BUFFER);//必须取消映射
@@ -106,8 +112,8 @@ namespace GL {
 			glGenBuffers(1, &EBO);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize * sizeof(unsigned int), nullptr, GL_STATIC_DRAW);
-			// gpu数据指针持久映射cpu缓冲区 | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
-			unsigned int* indicesBuffer = (unsigned int*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, indicesSize * sizeof(unsigned int), GL_MAP_WRITE_BIT );
+			// gpu数据指针持久映射cpu缓冲区| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+			unsigned int* indicesBuffer = (unsigned int*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, indicesSize * sizeof(unsigned int), GL_MAP_WRITE_BIT);
 			if (!indicesBuffer) return false;
 			std::memcpy(indicesBuffer, this->indices, sizeof(unsigned int) * indicesSize);//拷贝内存到gpu
 			glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);//如果不再需要cpu上的gpu指针，就取消映射
@@ -115,20 +121,22 @@ namespace GL {
 		//分块把数据上传到gpu  55
 		position = glm::rotate(glm::mat4(1.0f), glm::radians(DEFAULT_MODEL_X_RADIANS), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
 		pshader = new Shader;
-		return pshader->CreateShader(vertexShader,colorShader);
+		return pshader->CreateShader(vertexShader, colorShader);
 	}
 
 	/// <summary>
 	/// 设置模型的贴图
 	/// </summary>
 	/// <returns></returns>
-	bool Model::SetTexture(unsigned char* texture, unsigned char* specularTexture,int width, int height, int nrChannels, float datas[], int size) {
+	bool Model::SetTexture(unsigned char* texture, unsigned char* specularTexture, int width, int height, int nrChannels, float datas[], int size, bool gammaCorrection) {
 		if (datas != nullptr) {
+			this->uvs = datas;
+			this->uvsSize = size;
 			glBindVertexArray(VAO);
 			glGenBuffers(1, &PVBOS->at(VBO_TEXTURE));
 			glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_TEXTURE));
-			glBufferData(GL_ARRAY_BUFFER, size * sizeof(float), nullptr, GL_STATIC_DRAW);//绑定空指针 | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
-			float* textureBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, size * sizeof(float), GL_MAP_WRITE_BIT );
+			glBufferData(GL_ARRAY_BUFFER, size * sizeof(float), nullptr, GL_STATIC_DRAW);//绑定空指针| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+			float* textureBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, size * sizeof(float), GL_MAP_WRITE_BIT);
 			if (!textureBuffer) return false;
 			std::memcpy(textureBuffer, datas, sizeof(float) * size);//拷贝内存到gpu
 			glUnmapBuffer(GL_ARRAY_BUFFER);
@@ -144,7 +152,7 @@ namespace GL {
 				float borderColor[] = { 255.0f, 255.0f, 255.0f, 1.0f };
 				glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 				/*
-					设置纹理过滤方式，当模型放大或缩小时纹理的变化方式，这里使用远近差值法
+				设置纹理过滤方式，当模型放大或缩小时纹理的变化方式，这里使用远近差值法
 				*/
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -162,7 +170,7 @@ namespace GL {
 				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 				//GPU要求图片宽度的大小一定是4的倍数，需要前置缩放，或者转为RGBA，因为RGBA图片一定是4的倍数
 				//使用内存对齐的方式来上传图片数据到gpu，这会损失一定的效率
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
+				glTexImage2D(GL_TEXTURE_2D, 0, gammaCorrection ? GL_SRGB : GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
 				glGenerateMipmap(GL_TEXTURE_2D);
 			}
 			if (specularTexture) {
@@ -170,7 +178,7 @@ namespace GL {
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, SPECULAR_TEXTURE);
 				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, specularTexture);
+				glTexImage2D(GL_TEXTURE_2D, 0, gammaCorrection ? GL_SRGB : GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, specularTexture);
 				glGenerateMipmap(GL_TEXTURE_2D);
 			}
 		}
@@ -203,57 +211,79 @@ namespace GL {
 
 
 	/// <summary>
-	/// 更新模型的位置
+	/// 更新模型位置
 	/// </summary>
 	/// <param name="data"></param>
 	/// <returns></returns>
-	glm::mat4 Model::UpdatePoisition(Data& data) {
-		if ((!data.rotateX && !data.rotateZ)) return position;//(!rotateX && !rotateZ) || 
+	glm::mat4 Model::UpdatePoisition(Data& data, Camera* cmaera) {
+		if (!data.rotateXZ && !data.moveXY && !data.isZScalingMutiple) return position;
 		// 先将模型平移到指定中心，以使得模型始终围绕自身的中心旋转
-		glm::mat4 translationToCenter = glm::translate(glm::mat4(1.0f), centerPosition);
+		const glm::mat4& translationToCenter = glm::translate(glm::mat4(1.0f), changeCenterPosition);
 		position = translationToCenter;
-		if (data.rotateX) {
-			float x = data.enable ? data.rotationX + data.lastRotationX : data.lastRotationX;//lastRotationX
-			float rotationAngle = Util::NormalizeAngle(x, 360.0f);
-			// 限制旋转角度
-			 // 将大于180度的角度转换到负方向范围内
-			//if (rotationAngle > 180.0f) {
-			//	rotationAngle -= 360.0f;
-			//}
-			//if (rotationAngle > 90.0f) {
-			//	rotationAngle = 90.0f;
-			//}
-			//else if (rotationAngle < 0.0f) {
-			//	rotationAngle = 0.0f;
-			//}
-			//data.lastRotationX = rotationAngle;
-			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f)); //先进行X轴的旋转
-		}
-		else {
-			float rotationAngle = Util::NormalizeAngle(data.lastRotationX, 360.0f);
-	/*		if (rotationAngle > 180.0f) {
-				rotationAngle -= 360.0f;
-			}
-			if (rotationAngle > 90.0f) {
-				rotationAngle = 90.0f;
-			}
-			else if (rotationAngle < 0.0f) {
-				rotationAngle = 0.0f;
-			}
-			data.lastRotationX = rotationAngle;*/
-			position = glm::rotate(position, glm::radians(rotationAngle), glm::vec3(1.0f, 0.0f, 0.0f)); //先进行X轴的旋转
-		}
-		if (data.rotateZ) {
-			float z = data.enable ? data.rotationZ + data.lastRotationZ : data.lastRotationZ;
-			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(z, 360.0f)), glm::vec3(0.0f, 0.0f, 1.0f));//再沿着Z轴旋转，此时可以实现围绕自己自动旋转的效果
-		}
-		else {
-			position = glm::rotate(position, glm::radians(Util::NormalizeAngle(data.lastRotationZ, 360.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
-		}
+		position = glm::rotate(position, glm::radians(data.lastRotationX), glm::vec3(1.0f, 0.0f, 0.0f));
+		position = glm::rotate(position, glm::radians(data.lastRotationZ), glm::vec3(0.0f, 0.0f, 1.0f));
 		// 再将模型平移回原来的位置
-		glm::mat4 translationBack = glm::translate(glm::mat4(1.0f), glm::vec3(-centerPosition.x, -centerPosition.y, 0.0f));
+		const glm::mat4& translationBack = glm::translate(glm::mat4(1.0f), glm::vec3(-changeCenterPosition.x, -changeCenterPosition.y, 0.0f));
 		position = position * translationBack;
+		//XY轴的平移
+		const glm::mat4& translateXY = glm::translate(glm::mat4(1.0f), glm::vec3(data.lastMoveX, data.lastMoveY, 0.0f));
+		position = position * translateXY;
+		changeCenterPosition = glm::vec3(translateXY * glm::vec4(centerPosition, 1.0f));
+		// 添加Z轴的缩放
+		/*const glm::mat4& scaleZ = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, data.zScalingMutiple));
+		position = position * scaleZ;*/
+		//if (data.isZScalingMutiple) {
+		//	//更新模型的中心坐标
+		//	centerPosition = glm::vec3(centerPosition.x, centerPosition.y, centerPosition.z * data.zScalingMutiple);
+		//	cmaera->SetModelCenterPoisition(centerPosition);
+		//}
 		return position;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		//if (!data.rotateXZ && !data.moveXY && !data.isZScalingMutiple) return position;
+		//// 先将模型平移到指定中心，以使得模型始终围绕自身的中心旋转
+		//const glm::mat4& translationToCenter = glm::translate(glm::mat4(1.0f), centerPosition);
+		//position = translationToCenter;
+		//position = glm::rotate(position, glm::radians(data.lastRotationX), glm::vec3(1.0f, 0.0f, 0.0f));
+		//position = glm::rotate(position, glm::radians(data.lastRotationZ), glm::vec3(0.0f, 0.0f, 1.0f));
+		//// 再将模型平移回原来的位置
+		//const glm::mat4& translationBack = glm::translate(glm::mat4(1.0f), glm::vec3(-centerPosition.x, -centerPosition.y, 0.0f));
+		//position = position * translationBack;
+		////XY轴的平移
+		//const glm::mat4& translateXY = glm::translate(glm::mat4(1.0f), glm::vec3(data.lastMoveX, data.lastMoveY, 0.0f));
+		//position = position * translateXY;
+		//// 添加Z轴的缩放
+		//const glm::mat4& scaleZ = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, data.zScalingMutiple));
+		//position = position * scaleZ;
+		//if (data.isZScalingMutiple) {
+		//	//更新模型的中心坐标
+		//	centerPosition = glm::vec3(centerPosition.x, centerPosition.y, centerPosition.z * data.zScalingMutiple);
+		//	changeCenterPosition = centerPosition;
+		//	cmaera->SetModelCenterPoisition(centerPosition);
+		//}
+		//return position;
 	}
 
 	/// <summary>
@@ -270,10 +300,11 @@ namespace GL {
 			glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
 		}
 		else {
+			//indices
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); //绘制面
 			glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
 		}
-		
+
 		//int indicesCount = indicesSize / 3;
 		//// 对每一块顶点数据，逐块上传索引数据并绘制
 		//for (int i = 0; i < indicesCount; i += PLANE_BLOCK_SIZE) {
@@ -312,8 +343,27 @@ namespace GL {
 	/// 重置模型到初始坐标
 	/// </summary>
 	glm::mat4 Model::ReSetPoisition() {
-		position = glm::rotate(glm::mat4(1.0f), glm::radians(DEFAULT_MODEL_X_RADIANS), glm::vec3(1.0f, 0.0f, 0.0f)); //默认模型为躺下45度的形式
+		position = glm::rotate(glm::mat4(1.0f), glm::radians(DEFAULT_MODEL_X_RADIANS), glm::vec3(1.0f, 0.0f, 0.0f));
 		return position;
+	}
+
+	/// <summary>
+	/// 设置模型的colorMap
+	/// </summary>
+	/// <param name="type"></param>
+	void Model::SetColorMap(MapColorType type) {
+		glBindVertexArray(VAO);
+		if (!PVBOS->at(VBO_MAPCOLOR)) {
+			glGenBuffers(1, &PVBOS->at(VBO_MAPCOLOR));
+		}
+		//下次再次调用会替换原先的内存，不用重新创建一个vbo
+		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_MAPCOLOR));
+		glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);
+		float* colorMapsBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesSize * sizeof(float), GL_MAP_WRITE_BIT);
+		std::memcpy(colorMapsBuffer, this->colorMaps[type], sizeof(float) * verticesSize);
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(5);
 	}
 
 	/// <summary>
@@ -348,22 +398,85 @@ namespace GL {
 			normals[i * 3 + 0] = normal.x;
 			normals[i * 3 + 1] = normal.y;
 			normals[i * 3 + 2] = normal.z;
-		/*	Util::WriteLog(L"========");
-			Util::WriteLog(L"vec3_normal"+ std::to_wstring(i) + L":" + std::to_wstring(normal.x) + L"," + std::to_wstring(normal.y) + L"," + std::to_wstring(normal.z));*/
+			/*	Util::WriteLog(L"========");
+				Util::WriteLog(L"vec3_normal"+ std::to_wstring(i) + L":" + std::to_wstring(normal.x) + L"," + std::to_wstring(normal.y) + L"," + std::to_wstring(normal.z));*/
 		}
 		delete[] normalsv3;
 		//绑定法线VBO
 		glBindVertexArray(VAO);
 		glGenBuffers(1, &PVBOS->at(VBO_NORMAL));
 		glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_NORMAL));
-		glBufferData(GL_ARRAY_BUFFER, normalSize * sizeof(float), nullptr, GL_STATIC_DRAW);//| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
-		float* normalBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, normalSize * sizeof(float), GL_MAP_WRITE_BIT );
+		glBufferData(GL_ARRAY_BUFFER, normalSize * sizeof(float), nullptr, GL_STATIC_DRAW);
+		float* normalBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, normalSize * sizeof(float), GL_MAP_WRITE_BIT);//| GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
 		if (!normalBuffer) return false;
 		std::memcpy(normalBuffer, this->normals, sizeof(float) * normalSize);
 		glUnmapBuffer(GL_ARRAY_BUFFER);
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(2);
 		return true;
+	}
+
+	/// <summary>
+	/// 计算法线贴图的相关的工作
+	/// </summary>
+	bool Model::CalculateNormalsTexture() {
+
+		if (width != 0 && height != 0) { //更新法线贴图
+			auto normalMap = Util::ConvertNormalsToNormalMap(normals, width - 1, height - 1);
+			normalMap.convertTo(normalMap, CV_8UC3, 255.0);
+			cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
+			unsigned char* data = new unsigned char[normalMap.total() * normalMap.elemSize()];
+			std::memcpy(data, normalMap.data, normalMap.total() * normalMap.elemSize());
+			/*auto normalMap = cv::imread("E:\\open3d\\OpenGLDemo\\x64\\Debug\\Data\\a.jpg", cv::ImreadModes::IMREAD_UNCHANGED);
+			cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
+			cv::flip(normalMap, normalMap, 0);
+			if (!normalMap.isContinuous())normalMap = normalMap.clone();*/
+			/*unsigned char* data = new unsigned char[normalMap.total() * normalMap.elemSize()];
+			std::memcpy(data, normalMap.data, normalMap.total() * normalMap.elemSize());*/
+			glGenTextures(1, &NORMALS_TEXTURE);
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, NORMALS_TEXTURE);
+			float borderColor[] = { 255.0f, 255.0f, 255.0f, 1.0f };
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			//法线贴图需要原始数据值，不需要用伽马校正
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, normalMap.cols, normalMap.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			glGenerateMipmap(GL_TEXTURE_2D);
+			this->tangents = new float[verticesSize];
+			this->bitangents = new float[verticesSize];
+			//计算切线和副切线
+			Util::CalculateTangentAndBitangent(vertices, uvs, normals, verticesSize, tangents, bitangents);
+			glBindVertexArray(VAO);
+			//绑定切线和副切线VBO，大小都是vertices数组的大小
+			glGenBuffers(1, &PVBOS->at(VBO_TANGENTS));
+			glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_TANGENTS));
+			glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);
+			float* tangentsBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesSize * sizeof(float), GL_MAP_WRITE_BIT);
+			if (!tangentsBuffer) return false;
+			std::memcpy(tangentsBuffer, this->tangents, sizeof(float) * verticesSize);
+			glUnmapBuffer(GL_ARRAY_BUFFER);
+			glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(3);
+
+			glGenBuffers(1, &PVBOS->at(VBO_BITANGENTS));
+			glBindBuffer(GL_ARRAY_BUFFER, PVBOS->at(VBO_BITANGENTS));
+			glBufferData(GL_ARRAY_BUFFER, verticesSize * sizeof(float), nullptr, GL_STATIC_DRAW);
+			float* bitangentsBuffer = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesSize * sizeof(float), GL_MAP_WRITE_BIT);
+			if (!bitangentsBuffer) return false;
+			std::memcpy(bitangentsBuffer, this->bitangents, sizeof(float) * verticesSize);
+			glUnmapBuffer(GL_ARRAY_BUFFER);
+			glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(4);
+			//值传入
+			// 将法线贴图转换为8位图像并保存
+			//normalMap.convertTo(normalMap, CV_8UC3, 255.0);
+			//cv::cvtColor(normalMap, normalMap, cv::COLOR_BGR2RGB);
+			//cv::imwrite("C:\\Users\\User\\Desktop\\Atest\\fast.png", normalMap);
+			return true;
+
+		}
 	}
 
 }

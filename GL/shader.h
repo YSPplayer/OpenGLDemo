@@ -17,6 +17,6 @@ namespace GL {
 		void SetShaderBoolean(bool value,const std::string& key);
 	private:
 		GLuint CreateShader(GLuint type, const std::string& strShader);
-		GLuint shaderProgram;//着色器程序管理对象
+		GLuint shaderProgram;//鐫�鑹插櫒绋嬪簭绠＄悊瀵硅薄
 	};
 }
